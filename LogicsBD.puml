@@ -1,0 +1,55 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+entity User {
+    + id: Long
+    + email: String
+    + password: String
+    + name: String
+    + role: String
+    + created_at: Date?String
+}
+
+entity Product {
+    + id: Long
+    + name: String
+    + description: String
+    + price: Long
+    + category_id: Long
+    + created_at: Date?String
+}
+
+entity Category {
+    + id: Long
+    + name: String
+    + description: String
+    + created_at: Date?String
+}
+
+entity Order {
+    + id: Long
+    + user_id: Long
+    + total_amount: Long
+    + status: String
+    + created_at: Date?String
+}
+
+entity OrderItem {
+    + id: Long
+    + order_id: Long
+    + product_id: Long
+    + quantity: Integer
+    + price: Long
+}
+
+entity Favorite {
+    + id: Long
+    + user_id: Long
+    + product_id: Long
+}
+User "1" -- "0..*" Order
+User "1" -- "0..*" Favorite
+Category "1" -- "0..*" Product
+Order "1" -- "0..*" OrderItem
+Product "1" -- "0..*" OrderItem
+@enduml
