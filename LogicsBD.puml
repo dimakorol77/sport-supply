@@ -1,55 +1,251 @@
 @startuml
 'https://plantuml.com/sequence-diagram
 
-entity User {
+class User {
     + id: Long
     + email: String
     + password: String
     + name: String
-    + role: String
-    + created_at: Date?String
+    + role:  RoleEnum
+    + created_at: DateTime
+    + updatedAt: DateTime
+    + phoneNumber: String
+
 }
 
-entity Product {
+class Product {
+        + id: Long
+        + name: String
+        + description: String
+        + price: BigDecimal
+        + discountPrice: BigDecimal
+        + categoryId: Long
+        + brandId: Long
+        + images: List<Image>
+        + proteinType: ProteinType
+        + vitaminGroup: String
+        + form: Form
+        + createdAt: DateTime
+        + updatedAt: DateTime
+}
+
+class Category {
     + id: Long
     + name: String
     + description: String
-    + price: Long
-    + category_id: Long
-    + created_at: Date?String
+    + parentCategoryId: Long
+    + createdAt: DateTime
+    + updatedAt: DateTime
 }
 
-entity Category {
+class Brand {
     + id: Long
     + name: String
     + description: String
-    + created_at: Date?String
+    + createdAt: DateTime
+    + updatedAt: DateTime
 }
 
-entity Order {
+class Image {
     + id: Long
-    + user_id: Long
-    + total_amount: Long
-    + status: String
-    + created_at: Date?String
+    + productId: Long
+    + url: String
+    + altText: String
+    + createdAt: DateTime
+    + updatedAt: DateTime
 }
 
-entity OrderItem {
+class Cart {
     + id: Long
-    + order_id: Long
-    + product_id: Long
+    + userId: Long
+    + createdAt: DateTime
+    + updatedAt: DateTime
+}
+
+class CartItem {
+    + id: Long
+    + cartId: Long
+    + productId: Long
     + quantity: Integer
-    + price: Long
+    + price: BigDecimal
+    + discountPrice: BigDecimal
 }
 
-entity Favorite {
+class Order {
     + id: Long
-    + user_id: Long
-    + product_id: Long
+    + userId: Long
+    + totalAmount: BigDecimal
+    + status: OrderStatus
+    + deliveryMethod: DeliveryMethod
+    + deliveryAddress: String
+    + contactInfo: String
+    + createdAt: DateTime
+    + updatedAt: DateTime
 }
-User "1" -- "0..*" Order
-User "1" -- "0..*" Favorite
-Category "1" -- "0..*" Product
-Order "1" -- "0..*" OrderItem
-Product "1" -- "0..*" OrderItem
+
+class OrderItem {
+    + id: Long
+    + orderId: Long
+    + productId: Long
+    + quantity: Integer
+    + price: BigDecimal
+    + discountPrice: BigDecimal
+}
+
+class OrderStatusHistory {
+    + id: Long
+    + orderId: Long
+    + status: OrderStatus
+    + changedAt: DateTime
+}
+
+class Favorite {
+    + id: Long
+    + userId: Long
+    + productId: Long
+    + createdAt: DateTime
+}
+
+class Promotion {
+    + id: Long
+    + name: String
+    + description: String
+    + startDate: DateTime
+    + endDate: DateTime
+    + createdAt: DateTime
+    + updatedAt: DateTime
+}
+
+class ProductPromotion {
+    + id: Long
+    + productId: Long
+    + promotionId: Long
+}
+
+class Discount {
+    + id: Long
+    + productId: Long
+    + discountPrice: BigDecimal
+    + startDate: DateTime
+    + endDate: DateTime
+}
+
+class Payment {
+    + id: Long
+    + orderId: Long
+    + amount: BigDecimal
+    + status: PaymentStatus
+    + createdAt: DateTime
+}
+
+class Review {
+    + id: Long
+    + userId: Long
+    + productId: Long
+    + rating: Integer
+    + comment: String
+    + createdAt: DateTime
+}
+
+
+enum RoleEnum {
+    + USER
+    + ADMIN
+}
+
+enum ProteinType {
+    + WHEY
+    + CASEIN
+    + SOY
+    + COMPLEX
+}
+
+enum Form {
+    + POWDER
+    + CAPSULES
+    + LIQUID
+}
+
+enum OrderStatus {
+    + WAITING_PAYMENT
+    + PAID
+    + PROCESSING
+    + SHIPPED
+    + DELIVERED
+    + CANCELLED
+}
+
+enum DeliveryMethod {
+    + COURIER
+    + PICKUP
+}
+
+enum PaymentStatus {
+    + PENDING
+    + COMPLETED
+    + FAILED
+}
+
+' Define relationships
+
+' User relationships
+User "1" -- "0..*" Order : places >
+User "1" -- "1" Cart : owns >
+User "1" -- "0..*" Favorite : has >
+User "1" -- "0..*" Review : writes >
+
+' Product relationships
+Product "1" -- "1" Category : belongs to >
+Product "1" -- "1" Brand : manufactured by >
+Product "1" -- "0..*" Image : has >
+Product "1" -- "0..*" OrderItem : included in >
+Product "1" -- "0..*" CartItem : added to >
+Product "1" -- "0..*" Favorite : favorited by >
+Product "0..*" -- "0..*" Promotion : participates in >
+Product "1" -- "0..*" Review : has reviews >
+
+' Category relationships
+Category "1" -- "0..*" Product : contains >
+Category "1" -- "0..*" Category : subcategories >
+
+' Cart relationships
+Cart "1" -- "0..*" CartItem : contains >
+
+' CartItem relationships
+CartItem "1" -- "1" Product : refers to >
+CartItem "1" -- "1" Cart : part of >
+
+' Order relationships
+Order "1" -- "0..*" OrderItem : contains >
+Order "1" -- "0..*" OrderStatusHistory : has history >
+Order "1" -- "1" Payment : has >
+Order "1" -- "1" User : placed by >
+
+' OrderItem relationships
+OrderItem "1" -- "1" Product : refers to >
+OrderItem "1" -- "1" Order : part of >
+
+' Favorite relationships
+Favorite "1" -- "1" Product : refers to >
+Favorite "1" -- "1" User : belongs to >
+' Promotion relationships
+Promotion "1" -- "0..*" ProductPromotion : includes >
+ProductPromotion "1" -- "1" Product : links to >
+ProductPromotion "1" -- "1" Promotion : links to >
+
+' Discount relationships
+Discount "1" -- "1" Product : applies to >
+
+' Payment relationships
+Payment "1" -- "1" Order : for >
+
+' Review relationships
+Review "1" -- "1" User : by >
+Review "1" -- "1" Product : for >
+
+' Image relationships
+Image "1" -- "1" Product : of >
+
+' Brand relationships
+Brand "1" -- "0..*" Product : produces >
 @enduml
