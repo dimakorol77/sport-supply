@@ -60,5 +60,9 @@ public class Product {
     @OneToMany(mappedBy = "product")
     private List<Review> reviews;
 
+    // Добавили поле для отображения избранного
+    @Transient  // Не сохраняется в базе данных напрямую
+    private boolean isFavorite;
+
 
 }
