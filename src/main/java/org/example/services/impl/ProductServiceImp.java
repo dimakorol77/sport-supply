@@ -1,4 +1,4 @@
-package org.example.services;
+package org.example.services.impl;
 
 import org.example.models.Discount;
 import org.example.models.Product;
@@ -8,6 +8,7 @@ import org.example.repositories.DiscountRepository;
 import org.example.repositories.ProductRepository;
 import org.example.repositories.ProductPromotionRepository;
 import org.example.repositories.PromotionRepository;
+import org.example.services.interfaces.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +18,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-public class ProductService {
+public class ProductServiceImp implements ProductService {
 
     @Autowired
     private ProductRepository productRepository;

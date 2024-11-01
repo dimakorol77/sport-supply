@@ -1,16 +1,17 @@
-package org.example.services;
+package org.example.services.impl;
 
 import org.example.repositories.OrderRepository;
+import org.example.services.interfaces.OrderService;
 import org.springframework.stereotype.Service;
 import org.example.models.Order;
 
 import java.util.List;
 
 @Service
-public class OrderService {
+public class OrderServiceImp implements OrderService {
     private final OrderRepository orderRepository;
 
-    public OrderService(OrderRepository orderRepository) {
+    public OrderServiceImp(OrderRepository orderRepository) {
         this.orderRepository = orderRepository;
     }
 
