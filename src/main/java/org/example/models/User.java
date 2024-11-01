@@ -30,8 +30,22 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now(); // Устанавливаем текущую дату и время при создании
+        this.updatedAt = LocalDateTime.now(); // Устанавливаем текущую дату и время при создании
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = LocalDateTime.now(); // Устанавливаем текущую дату и время при обновлении
+    }
 
 
     @OneToMany(mappedBy = "user")
