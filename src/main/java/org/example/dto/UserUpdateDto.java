@@ -8,5 +8,5 @@ public class UserUpdateDto {
     private String email;
     private String name;
     private String phoneNumber;
-    private String password; //подумать надо ли
+    private String password;
 }
