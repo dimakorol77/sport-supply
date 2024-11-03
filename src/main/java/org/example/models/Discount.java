@@ -25,4 +25,7 @@ public class Discount {
     private BigDecimal discountPrice;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

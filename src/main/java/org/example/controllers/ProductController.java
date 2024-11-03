@@ -5,10 +5,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.example.models.Discount;
 import org.example.models.Product;
 import org.example.models.Promotion;
-import org.example.services.impl.ProductServiceImp;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.example.services.interfaces.ProductService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -16,8 +16,12 @@ import java.util.Optional;
 @RequestMapping("/api/products")
 public class ProductController {
 
-    @Autowired
-    private ProductServiceImp productServiceImp;
+    private final ProductService productService;
+
+    // Используем конструкторную инъекцию
+    public ProductController(ProductService productService) {
+        this.productService = productService;
+    }
 
     // Получить все продукты
     @GetMapping
@@ -26,11 +30,10 @@ public class ProductController {
             tags = "Продукты",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Продукты найдены")
-            },
-            hidden = false
+            }
     )
     public ResponseEntity<List<Product>> getAllProducts() {
-        List<Product> products = productServiceImp.getAllProducts();
+        List<Product> products = productService.getAllProducts();
         return ResponseEntity.ok(products);
     }
 
@@ -42,11 +45,10 @@ public class ProductController {
             responses = {
                     @ApiResponse(responseCode = "200", description = "Продукт найден"),
                     @ApiResponse(responseCode = "404", description = "Продукт не найден")
-            },
-            hidden = false
+            }
     )
     public ResponseEntity<Product> getProductById(@PathVariable Long id) {
-        Optional<Product> productOpt = productServiceImp.getProductById(id);
+        Optional<Product> productOpt = productService.getProductById(id);
         return productOpt.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -61,8 +63,8 @@ public class ProductController {
             }
     )
     public ResponseEntity<Product> createProduct(@RequestBody Product product) {
-        Product created = productServiceImp.createProduct(product);
-        return ResponseEntity.ok(created);
+        Product created = productService.createProduct(product);
+        return ResponseEntity.status(201).body(created);
     }
 
     // Обновить продукт
@@ -76,7 +78,7 @@ public class ProductController {
                     @ApiResponse(responseCode = "400", description = "Некорректные данные")
             })
     public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product product) {
-        Optional<Product> updatedOpt = productServiceImp.updateProduct(id, product);
+        Optional<Product> updatedOpt = productService.updateProduct(id, product);
         return updatedOpt.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -91,8 +93,8 @@ public class ProductController {
                     @ApiResponse(responseCode = "404", description = "Продукт не найден")
             })
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
-        productServiceImp.deleteProduct(id);
-        return ResponseEntity.ok().build();
+        productService.deleteProduct(id);
+        return ResponseEntity.noContent().build(); // Возвращаем статус 204 No Content
     }
 
     // Получить активные скидки для продукта
@@ -105,7 +107,7 @@ public class ProductController {
                     @ApiResponse(responseCode = "404", description = "Продукт не найден")
             })
     public ResponseEntity<List<Discount>> getActiveDiscounts(@PathVariable Long id) {
-        List<Discount> discounts = productServiceImp.getActiveDiscounts(id);
+        List<Discount> discounts = productService.getActiveDiscounts(id);
         return ResponseEntity.ok(discounts);
     }
 
@@ -119,7 +121,7 @@ public class ProductController {
                     @ApiResponse(responseCode = "404", description = "Продукт не найден")
             })
     public ResponseEntity<List<Promotion>> getPromotionsForProduct(@PathVariable Long id) {
-        List<Promotion> promotions = productServiceImp.getPromotionsForProduct(id);
+        List<Promotion> promotions = productService.getPromotionsForProduct(id);
         return ResponseEntity.ok(promotions);
     }
 }

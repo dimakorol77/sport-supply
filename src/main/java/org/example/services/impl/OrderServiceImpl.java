@@ -1,26 +1,30 @@
 package org.example.services.impl;
 
+import org.example.models.Order;
 import org.example.repositories.OrderRepository;
 import org.example.services.interfaces.OrderService;
 import org.springframework.stereotype.Service;
-import org.example.models.Order;
 
 import java.util.List;
 
 @Service
-public class OrderServiceImp implements OrderService {
+public class OrderServiceImpl implements OrderService {
+
     private final OrderRepository orderRepository;
 
-    public OrderServiceImp(OrderRepository orderRepository) {
+    // Используем конструкторную инъекцию
+    public OrderServiceImpl(OrderRepository orderRepository) {
         this.orderRepository = orderRepository;
     }
 
-    // для получения заказов по ID пользователя
+    // Получение заказов по ID пользователя
+    @Override
     public List<Order> getOrdersByUserId(Long userId) {
         return orderRepository.findByUserId(userId);
     }
 
-    // получение всех заказов
+    // Получение всех заказов
+    @Override
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
     }

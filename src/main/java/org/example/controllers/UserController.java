@@ -4,8 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.example.dto.*;
 import org.example.models.User;
-import org.example.services.impl.UserServiceImp;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.example.services.interfaces.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,27 +15,25 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
-    @Autowired
-    private  UserServiceImp userServiceImp;
 
+    private final UserService userService;
 
-    // для получения всех пользователей
+    // Используем конструкторную инъекцию
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    // Получить всех пользователей
     @GetMapping
     @Operation(summary = "Получение всех пользователей",
             description = "Возвращает список всех пользователей",
             tags = "Пользователи",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Пользователи найдены")
-            },
-            hidden = false
+            }
     )
-//    public List<User> getAllUsers() {
-//        return userServiceImp.getAllUsers();
-//    }
     public List<UserListDto> getAllUsers() {
-        return userServiceImp.getAllUsers().stream()
-                .map(user -> new UserListDto(user.getId(), user.getName(), user.getEmail(), user.getPhoneNumber()))
-                .collect(Collectors.toList());
+        return userService.getAllUsers();
     }
 
     // Получить детализированные данные пользователя по ID
@@ -49,7 +46,7 @@ public class UserController {
                     @ApiResponse(responseCode = "404", description = "Пользователь не найден")
             })
     public ResponseEntity<UserListDto> getUserDetailsById(@PathVariable Long id) {
-        Optional<UserListDto> userOpt = userServiceImp.getUserDetailsById(id);
+        Optional<UserListDto> userOpt = userService.getUserDetailsById(id);
         return userOpt.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
@@ -63,10 +60,9 @@ public class UserController {
                     @ApiResponse(responseCode = "404", description = "Пользователь не найден")
             })
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        Optional<User> userOpt = userServiceImp.getUserById(id);
+        Optional<User> userOpt = userService.getUserById(id);
         return userOpt.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
-
 
     // Создать нового пользователя
     @PostMapping
@@ -77,12 +73,8 @@ public class UserController {
                     @ApiResponse(responseCode = "400", description = "Некорректные данные")
             }
     )
-//    public ResponseEntity<User> createUser(@RequestBody User user) {
-//        User created = userServiceImp.createUser(user);
-//        return ResponseEntity.status(201).body(created);
-//    }
     public ResponseEntity<UserAfterCreationDto> createUser(@RequestBody UserCreateDto userCreateDto) {
-        UserAfterCreationDto createdUser = userServiceImp.createUser(userCreateDto);
+        UserAfterCreationDto createdUser = userService.createUser(userCreateDto);
         return ResponseEntity.status(201).body(createdUser);
     }
 
@@ -96,13 +88,8 @@ public class UserController {
                     @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
                     @ApiResponse(responseCode = "400", description = "Некорректные данные")
             })
-//    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User updatedUser) {
-//        Optional<User> updatedOpt = userServiceImp.updateUser(id, updatedUser);
-//        return updatedOpt.map(ResponseEntity::ok)
-//                .orElse(ResponseEntity.notFound().build());
-//    }
     public ResponseEntity<UserAfterUpdateDto> updateUser(@PathVariable Long id, @RequestBody UserUpdateDto userUpdateDto) {
-        Optional<UserAfterUpdateDto> updatedOpt = userServiceImp.updateUser(id, userUpdateDto);
+        Optional<UserAfterUpdateDto> updatedOpt = userService.updateUser(id, userUpdateDto);
         return updatedOpt.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -116,17 +103,12 @@ public class UserController {
                     @ApiResponse(responseCode = "204", description = "Пользователь успешно удален"),
                     @ApiResponse(responseCode = "404", description = "Пользователь не найден")
             })
-//    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-//        userServiceImp.deleteUser(id);
-//        return ResponseEntity.noContent().build();
-//    }
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        if (userServiceImp.existsById(id)) { // Проверка существования пользователя
-            userServiceImp.deleteUser(id);
-            return ResponseEntity.noContent().build(); // Возвращает 204 если пользователь был удален
+        if (userService.existsById(id)) { // Проверка существования пользователя
+            userService.deleteUser(id);
+            return ResponseEntity.noContent().build(); // Возвращаем статус 204 No Content
         } else {
-            return ResponseEntity.notFound().build(); // Возвращает 404 если пользователь не найден
+            return ResponseEntity.notFound().build(); // Возвращаем статус 404 Not Found
         }
     }
 }
-
