@@ -11,6 +11,4 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     // Поиск заказов по ID пользователя
     List<Order> findByUserId(Long userId);
-
-
 }

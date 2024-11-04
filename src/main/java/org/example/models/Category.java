@@ -39,6 +39,4 @@ public class Category {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-
 }

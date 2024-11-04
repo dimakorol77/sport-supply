@@ -11,6 +11,4 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
 
     // Поиск товаров по ID заказа
     List<OrderItem> findByOrderId(Long orderId);
-
-
 }
