@@ -2,6 +2,7 @@ package org.example.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.validation.Valid;
 import org.example.dto.*;
 import org.example.models.User;
 import org.example.services.interfaces.UserService;
@@ -73,7 +74,7 @@ public class UserController {
                     @ApiResponse(responseCode = "400", description = "Некорректные данные")
             }
     )
-    public ResponseEntity<UserAfterCreationDto> createUser(@RequestBody UserCreateDto userCreateDto) {
+    public ResponseEntity<UserAfterCreationDto> createUser(@Valid @RequestBody UserCreateDto userCreateDto) {
         UserAfterCreationDto createdUser = userService.createUser(userCreateDto);
         return ResponseEntity.status(201).body(createdUser);
     }
@@ -88,7 +89,7 @@ public class UserController {
                     @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
                     @ApiResponse(responseCode = "400", description = "Некорректные данные")
             })
-    public ResponseEntity<UserAfterUpdateDto> updateUser(@PathVariable Long id, @RequestBody UserUpdateDto userUpdateDto) {
+    public ResponseEntity<UserAfterUpdateDto> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateDto userUpdateDto) {
         Optional<UserAfterUpdateDto> updatedOpt = userService.updateUser(id, userUpdateDto);
         return updatedOpt.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

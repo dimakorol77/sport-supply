@@ -2,6 +2,9 @@ package org.example.services.impl;
 
 import org.example.dto.*;
 import org.example.enums.Role;
+import org.example.exception.IdNotFoundException;
+import org.example.exception.UserAlreadyExistsException;
+import org.example.exception.errorMessage.ErrorMessage;
 import org.example.models.User;
 import org.example.repositories.UserRepository;
 import org.example.services.interfaces.UserService;
@@ -33,13 +36,21 @@ public class UserServiceImpl implements UserService {
     // Получить пользователя по ID
     @Override
     public Optional<User> getUserById(Long id) {
-        return userRepository.findById(id);
+        Optional<User> userOpt = userRepository.findById(id);
+        if (userOpt.isEmpty()) {
+            throw new IdNotFoundException(ErrorMessage.ID_NOT_FOUND);
+        }
+        return userOpt;
     }
 
     // Получить детализированные данные пользователя по ID
     @Override
     public Optional<UserListDto> getUserDetailsById(Long id) {
-        return userRepository.findById(id).map(user -> new UserListDto(
+        Optional<User> userOpt = userRepository.findById(id);
+        if (userOpt.isEmpty()) {
+            throw new IdNotFoundException(ErrorMessage.ID_NOT_FOUND);
+        }
+        return userOpt.map(user -> new UserListDto(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
@@ -50,6 +61,9 @@ public class UserServiceImpl implements UserService {
     // Создать нового пользователя
     @Override
     public UserAfterCreationDto createUser(UserCreateDto userCreateDto) {
+        if (userRepository.existsByEmail(userCreateDto.getEmail())) {
+            throw new UserAlreadyExistsException(ErrorMessage.USER_ALREADY_EXISTS);
+        }
         User user = new User();
         user.setEmail(userCreateDto.getEmail());
         user.setPassword(userCreateDto.getPassword());
@@ -105,6 +119,10 @@ public class UserServiceImpl implements UserService {
     // Удалить пользователя
     @Override
     public void deleteUser(Long id) {
+        // Проверка существования пользователя перед удалением
+        if (!existsById(id)) {
+            throw new IdNotFoundException(ErrorMessage.ID_NOT_FOUND);
+        }
         userRepository.deleteById(id);
     }
 }

@@ -45,7 +45,6 @@ public class Order {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Связи
 
     // Пользователь, сделавший заказ
     @ManyToOne(optional = false)
