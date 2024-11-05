@@ -58,12 +58,12 @@ public class User {
     private List<Review> reviews;
 
     // Новый список избранных продуктов
-    @ManyToMany
-    @JoinTable(
-            name = "user_favorites",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "product_id")
-    )
-    private List<Product> favoriteProducts;
+//    @ManyToMany
+//    @JoinTable(
+//            name = "user_favorites",
+//            joinColumns = @JoinColumn(name = "user_id"),
+//            inverseJoinColumns = @JoinColumn(name = "product_id")
+//    )
+//    private List<Product> favoriteProducts;
 }
 

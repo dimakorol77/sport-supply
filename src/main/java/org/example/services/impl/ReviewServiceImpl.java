@@ -43,7 +43,7 @@ public class ReviewServiceImpl implements ReviewService {
     public Optional<Review> updateReview(Long id, Review updatedReview) {
         return reviewRepository.findById(id).map(review -> {
             review.setRating(updatedReview.getRating());
-            review.setComment(updatedReview.getComment());
+            review.setUserComment(updatedReview.getUserComment());
             review.setUpdatedAt(LocalDateTime.now());
             // Обновление других полей при необходимости
             return reviewRepository.save(review);
