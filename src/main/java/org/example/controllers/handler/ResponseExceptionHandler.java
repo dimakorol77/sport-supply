@@ -1,9 +1,6 @@
 package org.example.controllers.handler;
 
-import org.example.exception.IdNotFoundException;
-import org.example.exception.OrderNotFoundException;
-import org.example.exception.UserAlreadyExistsException;
-import org.example.exception.UserNotFoundException;
+import org.example.exception.*;
 import org.example.exception.errorMessage.ErrorMessage;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,6 +35,19 @@ public class ResponseExceptionHandler {
         public ResponseEntity<String> handleOrderNotFoundException(OrderNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         }
+
+    // Обработка ProductNotFoundException
+    @ExceptionHandler(ProductNotFoundException.class)
+    public ResponseEntity<String> handleProductNotFoundException(ProductNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ErrorMessage.PRODUCT_NOT_FOUND);
+    }
+
+    // Обработка OrderItemNotFoundException
+    @ExceptionHandler(OrderItemNotFoundException.class)
+    public ResponseEntity<String> handleOrderItemNotFoundException(OrderItemNotFoundException ex) {
+        return new ResponseEntity<>(ErrorMessage.ORDER_ITEM_NOT_FOUND, HttpStatus.NOT_FOUND);
+    }
+
 
     // Обработка ошибок валидации
     @ExceptionHandler(MethodArgumentNotValidException.class)

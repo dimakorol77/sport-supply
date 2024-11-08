@@ -19,4 +19,6 @@ public class ErrorMessage {
     public static final String ORDER_NOT_FOUND = "Order not found"; // Заказ не найден
     public static final String INVALID_ORDER_DATA = "Invalid order data"; // Неверные данные заказа
     public static final String USER_NOT_FOUND = "User not found"; // Пользователь не найден
+    public static final String PRODUCT_NOT_FOUND = "Product not found.";
+    public static final String ORDER_ITEM_NOT_FOUND = "Order item not found";
 }

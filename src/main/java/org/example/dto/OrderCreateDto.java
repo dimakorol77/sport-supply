@@ -1,12 +1,15 @@
 package org.example.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.example.enums.DeliveryMethod;
 import org.example.exception.errorMessage.ErrorMessage;
 
 import java.math.BigDecimal;
+import java.util.List;
+
 @Data
 public class OrderCreateDto {
     //информация, необходимая для создания нового заказа.
@@ -25,6 +28,6 @@ public class OrderCreateDto {
 
     private Long userId;
 
-    // @NotEmpty(message = ErrorMessage.INVALID_ORDER_DATA)
-    //    private List<OrderItemDto> orderItems; // DTO для товаров в заказе
+     @NotEmpty(message = ErrorMessage.INVALID_ORDER_DATA)
+    private List<OrderItemDto> orderItems; //передаем товары в заказе при его создании
 }
