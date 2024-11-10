@@ -28,4 +28,7 @@ public class CartItem {
     private Integer quantity;
     private BigDecimal price;
     private BigDecimal discountPrice;
+
+    // Новое поле для логического удаления
+    private boolean deleted = false;
 }

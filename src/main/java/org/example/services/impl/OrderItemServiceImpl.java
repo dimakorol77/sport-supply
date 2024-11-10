@@ -57,14 +57,14 @@ public class OrderItemServiceImpl implements OrderItemService {
     public OrderItem updateOrderItem(Long orderItemId, OrderItemDto orderItemDto) {
         OrderItem orderItem = orderItemRepository.findById(orderItemId)
                 .orElseThrow(() -> new OrderItemNotFoundException(ErrorMessage.ORDER_ITEM_NOT_FOUND));
-
+        // Получаем продукт по ID
         Product product = productRepository.findById(orderItemDto.getProductId())
                 .orElseThrow(() -> new ProductNotFoundException(ErrorMessage.PRODUCT_NOT_FOUND));
         // Обновляем данные OrderItem
         orderItem.setProduct(product);
         orderItem.setPrice(orderItemDto.getPrice());
         orderItem.setQuantity(orderItemDto.getQuantity());
-
+// Сохраняем обновленный элемент заказа
         return orderItemRepository.save(orderItem);
     }
 
