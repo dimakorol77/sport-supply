@@ -11,6 +11,7 @@ import org.example.enums.OrderStatus;
 import org.example.exception.OrderNotFoundException;
 import org.example.exception.errorMessage.ErrorMessage;
 import org.example.models.Order;
+import org.example.services.interfaces.CartService;
 import org.example.services.interfaces.OrderService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,10 +25,12 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/orders")
 public class OrderController {
     private final OrderService orderService;
+    private final CartService cartService;
 
     // Используем конструкторную инъекцию
-    public OrderController(OrderService orderService) {
+    public OrderController(OrderService orderService, CartService cartService) {
         this.orderService = orderService;
+        this.cartService = cartService;
     }
 
     // Получение всех заказов
@@ -94,5 +97,22 @@ public class OrderController {
         OrderResponseDto responseDto = new OrderResponseDto(updatedOrder.getId(), updatedOrder.getTotalAmount(), updatedOrder.getStatus());
         return ResponseEntity.ok(responseDto);
     }
+
+
+//    @PostMapping("/convert")
+//    @Operation(
+//            summary = "Конвертация корзины в заказ",
+//            description = "Преобразует корзину в заказ и очищает корзину",
+//            tags = "Заказы",
+//            responses = {
+//                    @ApiResponse(responseCode = "201", description = "Заказ успешно создан"),
+//                    @ApiResponse(responseCode = "400", description = "Ошибка в данных запроса")
+//            }
+//    )
+//    public ResponseEntity<OrderResponseDto> convertCartToOrder(@RequestParam Long cartId, @Valid @RequestBody OrderCreateDto orderCreateDto) {
+//        Order order = cartService.convertCartToOrder(cartId, orderCreateDto);
+//        OrderResponseDto responseDto = new OrderResponseDto(order.getId(), order.getTotalAmount(), order.getStatus());
+//        return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
+//    }
 }
 

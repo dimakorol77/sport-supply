@@ -1,6 +1,5 @@
 package org.example.services.impl;
 
-import lombok.RequiredArgsConstructor;
 import org.example.enums.OrderStatus;
 import org.example.exception.OrderNotFoundException;
 import org.example.exception.ProductNotFoundException;
@@ -38,10 +37,9 @@ public OrderServiceImpl(OrderRepository orderRepository, UserRepository userRepo
 
     // Получение заказов по ID пользователя
     @Override
-    //public List<Order> getOrdersByUserId(Long userId) {
-    //    return orderRepository.findByUserId(userId);
-    //}
+
     public List<Order> getOrdersByUserId(Long userId) {
+        // Получаем все заказы пользователя по ID
         List<Order> orders = orderRepository.findByUserId(userId);
         return orders.isEmpty() ? Collections.emptyList() : orders;
     } //добавила проверку, чтобы возвращать пустой список, если заказов нет
@@ -93,8 +91,8 @@ public OrderServiceImpl(OrderRepository orderRepository, UserRepository userRepo
     public Order updateOrderStatus(Long orderId, OrderStatus status) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException(ErrorMessage.ORDER_NOT_FOUND));
-        order.setStatus(status);
-        order.setUpdatedAt(LocalDateTime.now());
-        return orderRepository.save(order);
+        order.setStatus(status);// Обновляем статус заказа
+        order.setUpdatedAt(LocalDateTime.now());// Обновляем время
+        return orderRepository.save(order);// Сохраняем обновленный заказ
     }
 }

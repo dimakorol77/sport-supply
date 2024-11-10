@@ -21,4 +21,19 @@ public class ErrorMessage {
     public static final String USER_NOT_FOUND = "User not found"; // Пользователь не найден
     public static final String PRODUCT_NOT_FOUND = "Product not found.";
     public static final String ORDER_ITEM_NOT_FOUND = "Order item not found";
+
+
+    //CART
+    public static final String CART_NOT_FOUND = "Cart not found";
+    public static final String CART_ITEM_PRODUCT_REQUIRED = "Product is required to add an item to the cart";
+    public static final String CART_ITEM_QUANTITY_REQUIRED = "Quantity is required for the cart item";
+    public static final String CART_ITEM_QUANTITY_POSITIVE = "Quantity must be positive";
+    public static final String CART_ITEM_NOT_FOUND = "Product not found in cart";
+    public static final String CART_ITEM_USER_REQUIRED = "User for the cart is required.";
+    public static final String CART_ITEM_CREATED_AT_REQUIRED = "Creation date of the cart is required.";
+    public static final String CART_ITEM_TOTAL_PRICE_REQUIRED = "Total price of the cart is required.";
+    public static final String CART_ITEM_TOTAL_PRICE_POSITIVE = "Total price of the cart must be positive.";
+    public static final String INVALID_QUANTITY = "Quantity must be greater than 0";
+
+
 }
