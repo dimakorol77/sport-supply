@@ -1,18 +1,18 @@
 package org.example.services.interfaces;
 
-import org.example.models.Discount;
-import org.example.models.Product;
-import org.example.models.Promotion;
+import org.example.dto.DiscountDto;
+import org.example.dto.ProductDto;
+import org.example.dto.PromotionDto;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface ProductService {
-    List<Product> getAllProducts();
-    Optional<Product> getProductById(Long id);
-    Product createProduct(Product product);
-    Optional<Product> updateProduct(Long id, Product updatedProduct);
+    List<ProductDto> getAllProducts();
+    Optional<ProductDto> getProductById(Long id);
+    ProductDto createProduct(ProductDto productDto);
+    Optional<ProductDto> updateProduct(Long id, ProductDto productDto);
     void deleteProduct(Long id);
-    List<Discount> getActiveDiscounts(Long productId);
-    List<Promotion> getPromotionsForProduct(Long productId);
+    List<DiscountDto> getActiveDiscounts(Long productId);
+    List<PromotionDto> getPromotionsForProduct(Long productId);
 }

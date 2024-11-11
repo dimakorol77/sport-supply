@@ -1,48 +1,59 @@
 package org.example.services.impl;
 
+import org.example.dto.DiscountDto;
+import org.example.mappers.DiscountMapper;
 import org.example.models.Discount;
 import org.example.repositories.DiscountRepository;
 import org.example.services.interfaces.DiscountService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class DiscountServiceImpl implements DiscountService {
 
     private final DiscountRepository discountRepository;
+    private final DiscountMapper discountMapper;
 
-    // Используем конструкторную инъекцию
-    public DiscountServiceImpl(DiscountRepository discountRepository) {
+    @Autowired
+    public DiscountServiceImpl(DiscountRepository discountRepository,
+                               DiscountMapper discountMapper) {
         this.discountRepository = discountRepository;
+        this.discountMapper = discountMapper;
     }
 
     @Override
-    public List<Discount> getAllDiscounts() {
-        return discountRepository.findAll();
+    public List<DiscountDto> getAllDiscounts() {
+        return discountRepository.findAll().stream()
+                .map(discountMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Optional<Discount> getDiscountById(Long id) {
-        return discountRepository.findById(id);
+    public Optional<DiscountDto> getDiscountById(Long id) {
+        return discountRepository.findById(id)
+                .map(discountMapper::toDto);
     }
 
     @Override
-    public Discount createDiscount(Discount discount) {
+    public DiscountDto createDiscount(DiscountDto discountDto) {
+        Discount discount = discountMapper.toEntity(discountDto);
         discount.setCreatedAt(LocalDateTime.now());
-        return discountRepository.save(discount);
+        Discount savedDiscount = discountRepository.save(discount);
+        return discountMapper.toDto(savedDiscount);
     }
 
     @Override
-    public Optional<Discount> updateDiscount(Long id, Discount updatedDiscount) {
+    public Optional<DiscountDto> updateDiscount(Long id, DiscountDto discountDto) {
         return discountRepository.findById(id).map(discount -> {
-            discount.setDiscountPrice(updatedDiscount.getDiscountPrice());
-            discount.setStartDate(updatedDiscount.getStartDate());
-            discount.setEndDate(updatedDiscount.getEndDate());
+            discountMapper.updateEntityFromDto(discountDto, discount);
             discount.setUpdatedAt(LocalDateTime.now());
-            return discountRepository.save(discount);
+            Discount updatedDiscount = discountRepository.save(discount);
+            return discountMapper.toDto(updatedDiscount);
         });
     }
 
@@ -52,8 +63,10 @@ public class DiscountServiceImpl implements DiscountService {
     }
 
     @Override
-    public List<Discount> getActiveDiscountsForProduct(Long productId) {
+    public List<DiscountDto> getActiveDiscountsForProduct(Long productId) {
         LocalDateTime now = LocalDateTime.now();
-        return discountRepository.findByProductIdAndStartDateBeforeAndEndDateAfter(productId, now, now);
+        return discountRepository.findByProductIdAndStartDateBeforeAndEndDateAfter(productId, now, now).stream()
+                .map(discountMapper::toDto)
+                .collect(Collectors.toList());
     }
 }

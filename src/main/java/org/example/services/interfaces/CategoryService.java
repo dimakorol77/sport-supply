@@ -1,14 +1,16 @@
 package org.example.services.interfaces;
 
+import org.example.dto.CategoryDto;
 import org.example.models.Category;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface CategoryService {
-    List<Category> getAllCategories();
-    Optional<Category> getCategoryById(Long id);
-    Category createCategory(Category category);
-    Optional<Category> updateCategory(Long id, Category updatedCategory);
+    List<CategoryDto> getAllCategories();
+    Optional<CategoryDto> getCategoryById(Long id);
+    CategoryDto createCategory(CategoryDto categoryDto);
+    Optional<CategoryDto> updateCategory(Long id, CategoryDto categoryDto);
     void deleteCategory(Long id);
 }
+

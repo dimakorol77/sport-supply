@@ -1,57 +1,62 @@
 package org.example.services.impl;
 
+import org.example.dto.CategoryDto;
+import org.example.mappers.CategoryMapper;
 import org.example.models.Category;
 import org.example.repositories.CategoryRepository;
 import org.example.services.interfaces.CategoryService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final CategoryMapper categoryMapper;
 
-    // Используем конструкторную инъекцию
-    public CategoryServiceImpl(CategoryRepository categoryRepository) {
+    @Autowired
+    public CategoryServiceImpl(CategoryRepository categoryRepository,
+                               CategoryMapper categoryMapper) {
         this.categoryRepository = categoryRepository;
+        this.categoryMapper = categoryMapper;
     }
 
-    // Получить все категории
     @Override
-    public List<Category> getAllCategories() {
-        return categoryRepository.findAll();
+    public List<CategoryDto> getAllCategories() {
+        return categoryRepository.findAll().stream()
+                .map(categoryMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    // Получить категорию по ID
     @Override
-    public Optional<Category> getCategoryById(Long id) {
-        return categoryRepository.findById(id);
+    public Optional<CategoryDto> getCategoryById(Long id) {
+        return categoryRepository.findById(id)
+                .map(categoryMapper::toDto);
     }
 
-    // Создать новую категорию
     @Override
-    public Category createCategory(Category category) {
+    public CategoryDto createCategory(CategoryDto categoryDto) {
+        Category category = categoryMapper.toEntity(categoryDto);
         category.setCreatedAt(LocalDateTime.now());
-        return categoryRepository.save(category);
+        Category savedCategory = categoryRepository.save(category);
+        return categoryMapper.toDto(savedCategory);
     }
 
-    // Обновить категорию
     @Override
-    public Optional<Category> updateCategory(Long id, Category updatedCategory) {
+    public Optional<CategoryDto> updateCategory(Long id, CategoryDto categoryDto) {
         return categoryRepository.findById(id).map(category -> {
-            category.setName(updatedCategory.getName());
-            category.setDescription(updatedCategory.getDescription());
-            category.setParentCategory(updatedCategory.getParentCategory());
+            categoryMapper.updateEntityFromDto(categoryDto, category);
             category.setUpdatedAt(LocalDateTime.now());
-            // Обновление других полей при необходимости
-            return categoryRepository.save(category);
+            Category updatedCategory = categoryRepository.save(category);
+            return categoryMapper.toDto(updatedCategory);
         });
     }
 
-    // Удалить категорию
     @Override
     public void deleteCategory(Long id) {
         categoryRepository.deleteById(id);

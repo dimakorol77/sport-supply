@@ -2,9 +2,9 @@ package org.example.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import org.example.models.Discount;
-import org.example.models.Product;
-import org.example.models.Promotion;
+import org.example.dto.DiscountDto;
+import org.example.dto.ProductDto;
+import org.example.dto.PromotionDto;
 import org.example.services.interfaces.ProductService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +18,7 @@ public class ProductController {
 
     private final ProductService productService;
 
-    // Используем конструкторную инъекцию
+    // Конструкторная инъекция
     public ProductController(ProductService productService) {
         this.productService = productService;
     }
@@ -32,8 +32,8 @@ public class ProductController {
                     @ApiResponse(responseCode = "200", description = "Продукты найдены")
             }
     )
-    public ResponseEntity<List<Product>> getAllProducts() {
-        List<Product> products = productService.getAllProducts();
+    public ResponseEntity<List<ProductDto>> getAllProducts() {
+        List<ProductDto> products = productService.getAllProducts();
         return ResponseEntity.ok(products);
     }
 
@@ -47,8 +47,8 @@ public class ProductController {
                     @ApiResponse(responseCode = "404", description = "Продукт не найден")
             }
     )
-    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
-        Optional<Product> productOpt = productService.getProductById(id);
+    public ResponseEntity<ProductDto> getProductById(@PathVariable Long id) {
+        Optional<ProductDto> productOpt = productService.getProductById(id);
         return productOpt.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -56,14 +56,15 @@ public class ProductController {
     // Создать новый продукт
     @PostMapping
     @Operation(summary = "Создание нового продукта",
+            description = "Создает новый продукт",
             tags = "Продукты",
             responses = {
                     @ApiResponse(responseCode = "201", description = "Продукт успешно создан"),
                     @ApiResponse(responseCode = "400", description = "Некорректные данные")
             }
     )
-    public ResponseEntity<Product> createProduct(@RequestBody Product product) {
-        Product created = productService.createProduct(product);
+    public ResponseEntity<ProductDto> createProduct(@RequestBody ProductDto productDto) {
+        ProductDto created = productService.createProduct(productDto);
         return ResponseEntity.status(201).body(created);
     }
 
@@ -77,8 +78,8 @@ public class ProductController {
                     @ApiResponse(responseCode = "404", description = "Продукт не найден"),
                     @ApiResponse(responseCode = "400", description = "Некорректные данные")
             })
-    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product product) {
-        Optional<Product> updatedOpt = productService.updateProduct(id, product);
+    public ResponseEntity<ProductDto> updateProduct(@PathVariable Long id, @RequestBody ProductDto productDto) {
+        Optional<ProductDto> updatedOpt = productService.updateProduct(id, productDto);
         return updatedOpt.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -105,9 +106,10 @@ public class ProductController {
             responses = {
                     @ApiResponse(responseCode = "200", description = "Скидки найдены"),
                     @ApiResponse(responseCode = "404", description = "Продукт не найден")
-            })
-    public ResponseEntity<List<Discount>> getActiveDiscounts(@PathVariable Long id) {
-        List<Discount> discounts = productService.getActiveDiscounts(id);
+            }
+    )
+    public ResponseEntity<List<DiscountDto>> getActiveDiscounts(@PathVariable Long id) {
+        List<DiscountDto> discounts = productService.getActiveDiscounts(id);
         return ResponseEntity.ok(discounts);
     }
 
@@ -120,8 +122,8 @@ public class ProductController {
                     @ApiResponse(responseCode = "200", description = "Акции найдены"),
                     @ApiResponse(responseCode = "404", description = "Продукт не найден")
             })
-    public ResponseEntity<List<Promotion>> getPromotionsForProduct(@PathVariable Long id) {
-        List<Promotion> promotions = productService.getPromotionsForProduct(id);
+    public ResponseEntity<List<PromotionDto>> getPromotionsForProduct(@PathVariable Long id) {
+        List<PromotionDto> promotions = productService.getPromotionsForProduct(id);
         return ResponseEntity.ok(promotions);
     }
 }

@@ -52,8 +52,9 @@ public class Order {
     private User user;
 
     // Список товаров в заказе
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems;
+
 
     // История изменений статусов заказа
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)

@@ -1,67 +1,72 @@
 package org.example.services.impl;
 
+import org.example.dto.PromotionDto;
+import org.example.mappers.PromotionMapper;
 import org.example.models.Promotion;
 import org.example.repositories.PromotionRepository;
 import org.example.services.interfaces.PromotionService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class PromotionServiceImpl implements PromotionService {
 
     private final PromotionRepository promotionRepository;
+    private final PromotionMapper promotionMapper;
 
-    // Используем конструкторную инъекцию
-    public PromotionServiceImpl(PromotionRepository promotionRepository) {
+    @Autowired
+    public PromotionServiceImpl(PromotionRepository promotionRepository,
+                                PromotionMapper promotionMapper) {
         this.promotionRepository = promotionRepository;
+        this.promotionMapper = promotionMapper;
     }
 
-    // Получить все акции
     @Override
-    public List<Promotion> getAllPromotions() {
-        return promotionRepository.findAll();
+    public List<PromotionDto> getAllPromotions() {
+        return promotionRepository.findAll().stream()
+                .map(promotionMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    // Получить акцию по ID
     @Override
-    public Optional<Promotion> getPromotionById(Long id) {
-        return promotionRepository.findById(id);
+    public Optional<PromotionDto> getPromotionById(Long id) {
+        return promotionRepository.findById(id)
+                .map(promotionMapper::toDto);
     }
 
-    // Создать новую акцию
     @Override
-    public Promotion createPromotion(Promotion promotion) {
+    public PromotionDto createPromotion(PromotionDto promotionDto) {
+        Promotion promotion = promotionMapper.toEntity(promotionDto);
         promotion.setCreatedAt(LocalDateTime.now());
-        return promotionRepository.save(promotion);
+        Promotion savedPromotion = promotionRepository.save(promotion);
+        return promotionMapper.toDto(savedPromotion);
     }
 
-    // Обновить акцию
     @Override
-    public Optional<Promotion> updatePromotion(Long id, Promotion updatedPromotion) {
+    public Optional<PromotionDto> updatePromotion(Long id, PromotionDto promotionDto) {
         return promotionRepository.findById(id).map(promotion -> {
-            promotion.setName(updatedPromotion.getName());
-            promotion.setDescription(updatedPromotion.getDescription());
-            promotion.setStartDate(updatedPromotion.getStartDate());
-            promotion.setEndDate(updatedPromotion.getEndDate());
+            promotionMapper.updateEntityFromDto(promotionDto, promotion);
             promotion.setUpdatedAt(LocalDateTime.now());
-            // Обновление других полей при необходимости
-            return promotionRepository.save(promotion);
+            Promotion updatedPromotion = promotionRepository.save(promotion);
+            return promotionMapper.toDto(updatedPromotion);
         });
     }
 
-    // Удалить акцию
     @Override
     public void deletePromotion(Long id) {
         promotionRepository.deleteById(id);
     }
 
-    // Получить активные акции
     @Override
-    public List<Promotion> getActivePromotions() {
+    public List<PromotionDto> getActivePromotions() {
         LocalDateTime now = LocalDateTime.now();
-        return promotionRepository.findByStartDateBeforeAndEndDateAfter(now, now);
+        return promotionRepository.findByStartDateBeforeAndEndDateAfter(now, now).stream()
+                .map(promotionMapper::toDto)
+                .collect(Collectors.toList());
     }
 }

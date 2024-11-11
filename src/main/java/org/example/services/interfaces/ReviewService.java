@@ -1,16 +1,18 @@
 package org.example.services.interfaces;
 
+import org.example.dto.ReviewDto;
 import org.example.models.Review;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface ReviewService {
-    List<Review> getAllReviews();
-    Optional<Review> getReviewById(Long id);
-    Review createReview(Review review);
-    Optional<Review> updateReview(Long id, Review updatedReview);
+    List<ReviewDto> getAllReviews();
+    Optional<ReviewDto> getReviewById(Long id);
+    ReviewDto createReview(ReviewDto reviewDto);
+    Optional<ReviewDto> updateReview(Long id, ReviewDto reviewDto);
     void deleteReview(Long id);
-    List<Review> getReviewsByProductId(Long productId);
-    List<Review> getReviewsByUserId(Long userId);
+    List<ReviewDto> getReviewsByProductId(Long productId);
+    List<ReviewDto> getReviewsByUserId(Long userId);
 }
+

@@ -1,70 +1,78 @@
 package org.example.services.impl;
 
+import org.example.dto.ReviewDto;
+import org.example.mappers.ReviewMapper;
 import org.example.models.Review;
 import org.example.repositories.ReviewRepository;
 import org.example.services.interfaces.ReviewService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepository reviewRepository;
+    private final ReviewMapper reviewMapper;
 
-    // Используем конструкторную инъекцию
-    public ReviewServiceImpl(ReviewRepository reviewRepository) {
+    @Autowired
+    public ReviewServiceImpl(ReviewRepository reviewRepository,
+                             ReviewMapper reviewMapper) {
         this.reviewRepository = reviewRepository;
+        this.reviewMapper = reviewMapper;
     }
 
-    // Получить все отзывы
     @Override
-    public List<Review> getAllReviews() {
-        return reviewRepository.findAll();
+    public List<ReviewDto> getAllReviews() {
+        return reviewRepository.findAll().stream()
+                .map(reviewMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    // Получить отзыв по ID
     @Override
-    public Optional<Review> getReviewById(Long id) {
-        return reviewRepository.findById(id);
+    public Optional<ReviewDto> getReviewById(Long id) {
+        return reviewRepository.findById(id)
+                .map(reviewMapper::toDto);
     }
 
-    // Создать новый отзыв
     @Override
-    public Review createReview(Review review) {
+    public ReviewDto createReview(ReviewDto reviewDto) {
+        Review review = reviewMapper.toEntity(reviewDto);
         review.setCreatedAt(LocalDateTime.now());
-        return reviewRepository.save(review);
+        Review savedReview = reviewRepository.save(review);
+        return reviewMapper.toDto(savedReview);
     }
 
-    // Обновить отзыв
     @Override
-    public Optional<Review> updateReview(Long id, Review updatedReview) {
+    public Optional<ReviewDto> updateReview(Long id, ReviewDto reviewDto) {
         return reviewRepository.findById(id).map(review -> {
-            review.setRating(updatedReview.getRating());
-            review.setUserComment(updatedReview.getUserComment());
+            reviewMapper.updateEntityFromDto(reviewDto, review);
             review.setUpdatedAt(LocalDateTime.now());
-            // Обновление других полей при необходимости
-            return reviewRepository.save(review);
+            Review updatedReview = reviewRepository.save(review);
+            return reviewMapper.toDto(updatedReview);
         });
     }
 
-    // Удалить отзыв
     @Override
     public void deleteReview(Long id) {
         reviewRepository.deleteById(id);
     }
 
-    // Получить отзывы по ID продукта
     @Override
-    public List<Review> getReviewsByProductId(Long productId) {
-        return reviewRepository.findByProductId(productId);
+    public List<ReviewDto> getReviewsByProductId(Long productId) {
+        return reviewRepository.findByProductId(productId).stream()
+                .map(reviewMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    // Получить отзывы по ID пользователя
     @Override
-    public List<Review> getReviewsByUserId(Long userId) {
-        return reviewRepository.findByUserId(userId);
+    public List<ReviewDto> getReviewsByUserId(Long userId) {
+        return reviewRepository.findByUserId(userId).stream()
+                .map(reviewMapper::toDto)
+                .collect(Collectors.toList());
     }
 }
