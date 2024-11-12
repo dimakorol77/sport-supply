@@ -3,6 +3,9 @@ package org.example.controllers;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
+import org.example.annotation.CalculateTotalPrice;
+import org.example.annotation.ClearCart;
+import org.example.annotation.CreateCart;
 import org.example.dto.CartDto;
 import org.example.dto.UserCreateDto;
 import org.example.models.Cart;
@@ -24,21 +27,18 @@ public class CartController {
         this.cartService = cartService;
     }
 
-    @GetMapping("/{cartId}/total")
-    @Operation(summary = "Подсчет общей стоимости", description = "Возвращает общую стоимость товаров в корзине", tags = "Корзина",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Общая стоимость вычислена"),
-                    @ApiResponse(responseCode = "404", description = "Корзина не найдена")
-            })
+    @CreateCart
+    public ResponseEntity<CartDto> createCart(@PathVariable Long userId) {
+        // Вызов сервиса для создания корзины и получения DTO
+        CartDto cartDto = cartService.createCart(userId);
+        return new ResponseEntity<>(cartDto, HttpStatus.CREATED);
+    }
+
+    @CalculateTotalPrice
     public BigDecimal calculateTotalPrice(@PathVariable Long cartId) {
         return cartService.calculateTotalPrice(cartId);
     }
-    @DeleteMapping("/{cartId}/clear")
-    @Operation(summary = "Очистка корзины", description = "Удаляет все товары из корзины", tags = "Корзина",
-            responses = {
-                    @ApiResponse(responseCode = "204", description = "Корзина успешно очищена"),
-                    @ApiResponse(responseCode = "404", description = "Корзина не найдена")
-            })
+    @ClearCart
     public ResponseEntity<Void> clearCart(@PathVariable Long cartId) {
         cartService.clearCart(cartId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);

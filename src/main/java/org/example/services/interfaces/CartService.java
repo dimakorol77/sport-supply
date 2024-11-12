@@ -10,7 +10,7 @@ import org.example.models.Order;
 import java.math.BigDecimal;
 
 public interface CartService {
-    Cart createCart(Long userId);
+    CartDto createCart(Long userId);
     BigDecimal calculateTotalPrice(Long cartId);
     void clearCart(Long cartId);
    // Order convertCartToOrder(Long cartId, OrderCreateDto orderCreateDto);

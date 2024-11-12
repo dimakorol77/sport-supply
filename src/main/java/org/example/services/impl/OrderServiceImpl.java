@@ -1,10 +1,12 @@
 package org.example.services.impl;
 
+import org.example.dto.OrderDto;
 import org.example.enums.OrderStatus;
 import org.example.exception.OrderNotFoundException;
 import org.example.exception.ProductNotFoundException;
 import org.example.exception.UserNotFoundException;
 import org.example.exception.errorMessage.ErrorMessage;
+import org.example.mappers.OrderMapper;
 import org.example.models.OrderItem;
 import org.example.models.Product;
 import org.example.models.User;
@@ -27,72 +29,65 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final OrderMapper orderMapper;
 
     // Используем конструкторную инъекцию
-public OrderServiceImpl(OrderRepository orderRepository, UserRepository userRepository, ProductRepository productRepository) {
-    this.orderRepository = orderRepository;
-    this.userRepository = userRepository;
-    this.productRepository = productRepository;
-}
+    public OrderServiceImpl(OrderRepository orderRepository, UserRepository userRepository,
+                            ProductRepository productRepository, OrderMapper orderMapper) {
+        this.orderRepository = orderRepository;
+        this.userRepository = userRepository;
+        this.productRepository = productRepository;
+        this.orderMapper = orderMapper;
+    }
 
     // Получение заказов по ID пользователя
     @Override
 
-    public List<Order> getOrdersByUserId(Long userId) {
-        // Получаем все заказы пользователя по ID
+    public List<OrderDto> getOrdersByUserId(Long userId) {
         List<Order> orders = orderRepository.findByUserId(userId);
-        return orders.isEmpty() ? Collections.emptyList() : orders;
-    } //добавила проверку, чтобы возвращать пустой список, если заказов нет
+        // Преобразуем список заказов в DTO
+        return orders.isEmpty() ? Collections.emptyList() : orders.stream()
+                .map(orderMapper::toDto) // Преобразуем каждый заказ в DTO
+                .collect(Collectors.toList());
+    }//добавила проверку, чтобы возвращать пустой список, если заказов нет
 
     // Получение всех заказов
     @Override
-    public List<Order> getAllOrders() {
-        return orderRepository.findAll();
+    public List<OrderDto> getAllOrders() {
+        List<Order> orders = orderRepository.findAll();
+        // Преобразуем все заказы в DTO
+        return orders.stream()
+                .map(orderMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Order createOrder(OrderCreateDto orderCreateDto) {
-        // Создаем объект Order
-        Order order = new Order();
-        order.setTotalAmount(orderCreateDto.getTotalAmount());
-        order.setDeliveryMethod(orderCreateDto.getDeliveryMethod());
-        order.setDeliveryAddress(orderCreateDto.getDeliveryAddress());
-        order.setContactInfo(orderCreateDto.getContactInfo());
-        order.setCreatedAt(LocalDateTime.now());
-        order.setUpdatedAt(LocalDateTime.now());
-        order.setStatus(OrderStatus.CREATED); // Статус устанавливается автоматически
-        // Загрузка пользователя из репозитория
+    public OrderDto createOrder(OrderCreateDto orderCreateDto) {
+        // Получаем пользователя
         User user = userRepository.findById(orderCreateDto.getUserId())
                 .orElseThrow(() -> new UserNotFoundException(ErrorMessage.USER_NOT_FOUND));
-        order.setUser(user);
 
-        // Обработка orderItems
-        List<OrderItem> orderItems = orderCreateDto.getOrderItems().stream()
-                .map(itemDto -> {
-                    // Находим продукт
-                    Product product = productRepository.findById(itemDto.getProductId())
-                            .orElseThrow(() -> new ProductNotFoundException(ErrorMessage.PRODUCT_NOT_FOUND));
+        // Используем маппер для преобразования OrderCreateDto в сущность Order
+        Order order = orderMapper.toEntity(orderCreateDto, user);
 
-                    // Создаем объект OrderItem
-                    OrderItem orderItem = new OrderItem();
-                    orderItem.setOrder(order);
-                    orderItem.setProduct(product);
-                    orderItem.setPrice(itemDto.getPrice());
-                    orderItem.setQuantity(itemDto.getQuantity());
-                    return orderItem;
-                })
-                .collect(Collectors.toList());
+        // Сохраняем заказ в репозитории
+        order = orderRepository.save(order);
 
-        order.setOrderItems(orderItems);
-
-        return orderRepository.save(order);
+        // Возвращаем созданный заказ в виде DTO
+        return orderMapper.toDto(order);
     }
 //для обновления статуса заказа
-    public Order updateOrderStatus(Long orderId, OrderStatus status) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException(ErrorMessage.ORDER_NOT_FOUND));
-        order.setStatus(status);// Обновляем статус заказа
-        order.setUpdatedAt(LocalDateTime.now());// Обновляем время
-        return orderRepository.save(order);// Сохраняем обновленный заказ
-    }
+public OrderDto updateOrderStatus(Long orderId, OrderStatus status) {
+    Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new OrderNotFoundException(ErrorMessage.ORDER_NOT_FOUND));
+
+    order.setStatus(status); // Обновляем статус заказа
+    order.setUpdatedAt(LocalDateTime.now()); // Обновляем время
+
+    // Сохраняем обновленный заказ
+    order = orderRepository.save(order);
+
+    // Возвращаем обновленный заказ в виде DTO
+    return orderMapper.toDto(order);
+}
 }

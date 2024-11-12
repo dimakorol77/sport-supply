@@ -3,13 +3,15 @@ package org.example.controllers;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
-import org.example.dto.OrderCreateDto;
-import org.example.dto.OrderItemDto;
-import org.example.dto.OrderResponseDto;
-import org.example.dto.OrderSummaryDto;
+import org.example.annotation.CreateOrder;
+import org.example.annotation.GetAllOrders;
+import org.example.annotation.GetOrdersByUserId;
+import org.example.annotation.UpdateOrderStatus;
+import org.example.dto.*;
 import org.example.enums.OrderStatus;
 import org.example.exception.OrderNotFoundException;
 import org.example.exception.errorMessage.ErrorMessage;
+import org.example.mappers.OrderMapper;
 import org.example.models.Order;
 import org.example.services.interfaces.CartService;
 import org.example.services.interfaces.OrderService;
@@ -26,93 +28,60 @@ import java.util.stream.Collectors;
 public class OrderController {
     private final OrderService orderService;
     private final CartService cartService;
+    private final OrderMapper orderMapper;
 
     // Используем конструкторную инъекцию
-    public OrderController(OrderService orderService, CartService cartService) {
+    public OrderController(OrderService orderService, CartService cartService, OrderMapper orderMapper) {
         this.orderService = orderService;
         this.cartService = cartService;
+        this.orderMapper = orderMapper;  // Инициализируем маппер
     }
 
     // Получение всех заказов
-    @GetMapping
-    @Operation(summary = "Получение всех заказов", description = "Возвращает список всех заказов", tags = "Заказы",
-            responses = {@ApiResponse(responseCode = "200", description = "Заказы найдены")}
-    )
-    public ResponseEntity<List<OrderSummaryDto>> getAllOrders() {
-        List<Order> orders = orderService.getAllOrders();
-        List<OrderSummaryDto> orderDtos = orders.stream()
-                .map(order -> {
-                    List<OrderItemDto> itemsDto = order.getOrderItems().stream()
-                            .map(item -> new OrderItemDto(item.getProduct().getId(), item.getProduct().getName(), item.getPrice(), item.getQuantity()))
-                            .collect(Collectors.toList());
-                    return new OrderSummaryDto(order.getId(), order.getTotalAmount(), order.getStatus(), order.getCreatedAt(), itemsDto);
-                })
-                .collect(Collectors.toList());
+    @GetAllOrders
+    public ResponseEntity<List<OrderDto>> getAllOrders() {
+        List<OrderDto> orderDtos = orderService.getAllOrders();
         return ResponseEntity.ok(orderDtos);
     }
 
     // Получение заказов по ID пользователя
-    @GetMapping("/user/{userId}")
-    @Operation(summary = "Получение заказов по ID пользователя", description = "Возвращает список заказов для указанного пользователя", tags = "Заказы",
-            responses = {@ApiResponse(responseCode = "200", description = "Заказы найдены"), @ApiResponse(responseCode = "404", description = "Пользователь не найден")}
-    )
-    public ResponseEntity<List<OrderSummaryDto>> getOrdersByUserId(@PathVariable Long userId) {
-        List<Order> orders = orderService.getOrdersByUserId(userId);
-        if (orders.isEmpty()) {
+    @GetOrdersByUserId
+    public ResponseEntity<List<OrderDto>> getOrdersByUserId(@PathVariable Long userId) {
+        List<OrderDto> orderDtos = orderService.getOrdersByUserId(userId);
+        if (orderDtos.isEmpty()) {
             return ResponseEntity.ok(Collections.emptyList());
         }
-        List<OrderSummaryDto> orderDtos = orders.stream()
-                .map(order -> {
-                    List<OrderItemDto> itemsDto = order.getOrderItems().stream()
-                            .map(item -> new OrderItemDto(item.getProduct().getId(), item.getProduct().getName(), item.getPrice(), item.getQuantity()))
-                            .collect(Collectors.toList());
-                    return new OrderSummaryDto(order.getId(), order.getTotalAmount(), order.getStatus(), order.getCreatedAt(), itemsDto);
-                })
-                .collect(Collectors.toList());
         return ResponseEntity.ok(orderDtos);
     }
-    @PostMapping
-    @Operation(summary = "Создание заказа", description = "Создает новый заказ", tags = "Заказы",
-            responses = {@ApiResponse(responseCode = "201", description = "Заказ успешно создан"), @ApiResponse(responseCode = "400", description = "Ошибка в данных запроса")}
-    )
+    @CreateOrder
     public ResponseEntity<OrderResponseDto> createOrder(@Valid @RequestBody OrderCreateDto orderCreateDto) {
-        Order order = orderService.createOrder(orderCreateDto);
-        OrderResponseDto responseDto = new OrderResponseDto(order.getId(), order.getTotalAmount(), order.getStatus());
+        OrderDto orderDto = orderService.createOrder(orderCreateDto);
+        OrderResponseDto responseDto = new OrderResponseDto(orderDto.getId(), orderDto.getTotalAmount(), orderDto.getStatus());
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 
-    @PatchMapping("/{orderId}/status")
-    @Operation(
-            summary = "Обновление статуса заказа",
-            description = "Обновляет статус указанного заказа",
-            tags = "Заказы",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Статус заказа успешно обновлен"),
-                    @ApiResponse(responseCode = "400", description = "Ошибка в данных запроса"),
-                    @ApiResponse(responseCode = "404", description = "Заказ не найден")
-            }
-    )
+    @UpdateOrderStatus
     public ResponseEntity<OrderResponseDto> updateOrderStatus(@PathVariable Long orderId, @RequestParam OrderStatus status) {
-        Order updatedOrder = orderService.updateOrderStatus(orderId, status);
-        OrderResponseDto responseDto = new OrderResponseDto(updatedOrder.getId(), updatedOrder.getTotalAmount(), updatedOrder.getStatus());
+        OrderDto updatedOrderDto = orderService.updateOrderStatus(orderId, status);
+        OrderResponseDto responseDto = new OrderResponseDto(updatedOrderDto.getId(), updatedOrderDto.getTotalAmount(), updatedOrderDto.getStatus());
         return ResponseEntity.ok(responseDto);
     }
 
 
 //    @PostMapping("/convert")
-//    @Operation(
-//            summary = "Конвертация корзины в заказ",
-//            description = "Преобразует корзину в заказ и очищает корзину",
-//            tags = "Заказы",
-//            responses = {
-//                    @ApiResponse(responseCode = "201", description = "Заказ успешно создан"),
-//                    @ApiResponse(responseCode = "400", description = "Ошибка в данных запроса")
-//            }
-//    )
-//    public ResponseEntity<OrderResponseDto> convertCartToOrder(@RequestParam Long cartId, @Valid @RequestBody OrderCreateDto orderCreateDto) {
-//        Order order = cartService.convertCartToOrder(cartId, orderCreateDto);
-//        OrderResponseDto responseDto = new OrderResponseDto(order.getId(), order.getTotalAmount(), order.getStatus());
-//        return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
-//    }
+//@Operation(
+//        summary = "Конвертация корзины в заказ",
+//        description = "Преобразует корзину в заказ и очищает корзину",
+//        tags = "Заказы",
+//        responses = {
+//                @ApiResponse(responseCode = "201", description = "Заказ успешно создан"),
+//                @ApiResponse(responseCode = "400", description = "Ошибка в данных запроса")
+//        }
+//)
+//public ResponseEntity<OrderResponseDto> convertCartToOrder(@RequestParam Long cartId, @Valid @RequestBody OrderCreateDto orderCreateDto) {
+//    OrderDto orderDto = cartService.convertCartToOrder(cartId, orderCreateDto);
+//    OrderResponseDto responseDto = new OrderResponseDto(orderDto.getId(), orderDto.getTotalAmount(), orderDto.getStatus());
+//    return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
+//}
 }
 

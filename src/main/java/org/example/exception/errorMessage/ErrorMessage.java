@@ -34,6 +34,13 @@ public class ErrorMessage {
     public static final String CART_ITEM_TOTAL_PRICE_REQUIRED = "Total price of the cart is required.";
     public static final String CART_ITEM_TOTAL_PRICE_POSITIVE = "Total price of the cart must be positive.";
     public static final String INVALID_QUANTITY = "Quantity must be greater than 0";
+    public static final String CART_ALREADY_EXISTS = "Cart already exists";
+
+
+
+
+
+    public static final String PAYMENT_NOT_FOUND = "Payment not found";
 
 
 }

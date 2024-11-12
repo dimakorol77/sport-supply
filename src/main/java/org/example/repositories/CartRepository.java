@@ -11,5 +11,6 @@ import java.util.Optional;
 public interface CartRepository extends JpaRepository<Cart, Long> {
 
     // Метод для поиска корзины по ID пользователя ---
-    Optional<Cart> findByUser(User user);
+  //  Optional<Cart> findByUser(User user);
+    boolean existsByUserId(Long userId);
 }

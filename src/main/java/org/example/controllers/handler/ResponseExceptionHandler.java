@@ -65,11 +65,24 @@ public class ResponseExceptionHandler {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
+    // Обработка PaymentNotFoundException
+    @ExceptionHandler(PaymentNotFoundException.class)
+    public ResponseEntity<String> handlePaymentNotFoundException(PaymentNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ErrorMessage.PAYMENT_NOT_FOUND);
+    }
+
+    // Обработка исключения CartAlreadyExistsException
+    @ExceptionHandler(CartAlreadyExistsException.class)
+    public ResponseEntity<String> handleCartAlreadyExistsException(CartAlreadyExistsException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage()); // Возвращаем сообщение из исключения
+    }
+
 
     @ExceptionHandler(InvalidQuantityException.class)
     public ResponseEntity<String> handleInvalidQuantityException(InvalidQuantityException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
+
 
 
     // Обработка ошибок валидации

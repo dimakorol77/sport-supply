@@ -4,6 +4,7 @@ import org.example.dto.CartItemDto;
 import org.example.dto.CartItemResponseDto;
 import org.example.exception.*;
 import org.example.exception.errorMessage.ErrorMessage;
+import org.example.mappers.CartItemMapper;
 import org.example.models.Cart;
 import org.example.models.CartItem;
 import org.example.models.Product;
@@ -25,130 +26,101 @@ public class CartItemServiceImpl  implements CartItemService {
     private final CartItemRepository cartItemRepository;
     private final CartRepository cartRepository;
     private final ProductRepository productRepository;
-    private final UserRepository userRepository;
+    private final CartItemMapper cartItemMapper;
 
     @Autowired
     public CartItemServiceImpl(CartItemRepository cartItemRepository, CartRepository cartRepository,
-                               ProductRepository productRepository, UserRepository userRepository) {
+                               ProductRepository productRepository, CartItemMapper cartItemMapper) {
         this.cartItemRepository = cartItemRepository;
         this.cartRepository = cartRepository;
         this.productRepository = productRepository;
-        this.userRepository = userRepository;
+        this.cartItemMapper = cartItemMapper;  // Инициализируем маппер
     }
 
     @Override
     public CartItemResponseDto addItemToCart(Long cartId, CartItemDto cartItemDto) {
-        // Проверка, что количество товара больше нуля
         Optional.ofNullable(cartItemDto.getQuantity())
                 .filter(quantity -> quantity > 0)
                 .orElseThrow(() -> new InvalidQuantityException(ErrorMessage.INVALID_QUANTITY));
 
-        // Поиск корзины по её ID
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new CartNotFoundException(ErrorMessage.CART_NOT_FOUND));
 
-        // Поиск товара по его ID
         Product product = productRepository.findById(cartItemDto.getProductId())
                 .orElseThrow(() -> new ProductNotFoundException(ErrorMessage.PRODUCT_NOT_FOUND));
 
-        // Поиск товара в корзине, включая "удалённые" записи
         CartItem cartItem = cartItemRepository.findByCartAndProduct(cart, product)
-                .orElseGet(() -> new CartItem());
+                .orElseGet(CartItem::new);
 
         if (cartItem.getId() != null && cartItem.isDeleted()) {
-            // Если товар был ранее добавлен, но "удалён", восстановим его
             cartItem.setDeleted(false);
             cartItem.setQuantity(cartItemDto.getQuantity());
         } else if (cartItem.getId() != null) {
-            // Если товар уже в корзине и не удалён, увеличиваем количество
             cartItem.setQuantity(cartItem.getQuantity() + cartItemDto.getQuantity());
         } else {
-            // Если это новый товар, устанавливаем новое количество
             cartItem.setQuantity(cartItemDto.getQuantity());
         }
 
-        // Устанавливаем параметры товара в корзине
         cartItem.setCart(cart);
         cartItem.setProduct(product);
         cartItem.setPrice(calculateFinalPrice(cartItem, cartItemDto.getDiscountPrice()));
         cartItem.setDeleted(false);
 
-        // Сохраняем товар в корзине
         cartItemRepository.save(cartItem);
 
-        // Обновляем общую стоимость корзины
+        // Пересчёт общей стоимости корзины после добавления товара
         updateTotalPrice(cart);
 
-        // Возвращаем DTO с информацией о добавленном товаре
-        return new CartItemResponseDto(
-                cartItem.getProduct().getId(),
-                cartItem.getQuantity(),
-                cartItem.getPrice(),
-                cartItem.getDiscountPrice(),
-                cartItem.getProduct().getName()
-        );
+        return cartItemMapper.toResponseDto(cartItem);
     }
+
     // Метод для вычисления итоговой цены товара с учетом скидки
     private BigDecimal calculateFinalPrice(CartItem cartItem, BigDecimal discountPrice) {
-        BigDecimal itemPrice = cartItem.getProduct().getPrice();// Получаем цену товара
-        BigDecimal finalDiscountPrice = discountPrice != null ? discountPrice : BigDecimal.ZERO;// Если скидка есть, используем её, если нет — 0
-        // Умножаем цену на количество
-        return itemPrice.subtract(finalDiscountPrice).multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+        BigDecimal itemPrice = cartItem.getProduct().getPrice();
+        BigDecimal finalDiscountPrice = discountPrice != null ? discountPrice : BigDecimal.ZERO;
+        BigDecimal finalPrice = itemPrice.subtract(finalDiscountPrice);
+        return finalPrice.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : finalPrice;
     }
 
     // Метод для обновления количества товара в корзине
     @Override
     public CartItemResponseDto updateCartItemQuantity(Long cartItemId, Integer quantity) {
-        // Поиск товара в корзине по ID
         CartItem cartItem = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new CartItemNotFoundException(ErrorMessage.CART_ITEM_NOT_FOUND));
-        // Проверка, что товар не удален
+
         if (cartItem.isDeleted()) {
-            throw new ProductNotFoundException("Product not found in cart."); //переделаь
+            throw new ProductNotFoundException("Product not found in cart.");//
         }
-        // Обновление количества товара
+
         cartItem.setQuantity(quantity);
-        // Пересчитываем цену с учетом нового количества
         cartItem.setPrice(calculateFinalPrice(cartItem, cartItem.getDiscountPrice()));
-        // Сохраняем изменения
         cartItemRepository.save(cartItem);
-        // Обновляем общую стоимость корзины
+
+        // Пересчёт общей стоимости корзины после изменения количества товара
         updateTotalPrice(cartItem.getCart());
-// Возвращаем DTO с обновленными данными
-        return new CartItemResponseDto(
-                cartItem.getProduct().getId(),
-                cartItem.getQuantity(),
-                cartItem.getPrice(),
-                cartItem.getDiscountPrice(),
-                cartItem.getProduct().getName()
-        );
+
+        return cartItemMapper.toResponseDto(cartItem);
     }
     // Метод для удаления товара из корзины
     @Override
     public void removeCartItem(Long cartItemId) {
-        // Поиск товара в корзине по ID
         CartItem cartItem = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new CartItemNotFoundException(ErrorMessage.CART_ITEM_NOT_FOUND));
 
-        // Устанавливаем статус товара как удаленный
         cartItem.setDeleted(true);
-
-        // Сохраняем изменения
         cartItemRepository.save(cartItem);
 
-        // Обновляем общую стоимость корзины
+        // Пересчёт общей стоимости корзины после удаления товара
         updateTotalPrice(cartItem.getCart());
     }
     // Метод для обновления общей стоимости корзины
     private void updateTotalPrice(Cart cart) {
-        // Пересчитываем общую стоимость, исключая удалённые товары
         BigDecimal newTotalPrice = cart.getCartItems().stream()
-                .filter(cartItem -> !cartItem.isDeleted())  // Исключаем удалённые товары
-                .map(cartItem -> cartItem.getPrice())  // Получаем цену товара
-                .reduce(BigDecimal.ZERO, BigDecimal::add);  // Складываем все цены
+                .filter(cartItem -> !cartItem.isDeleted())
+                .map(cartItem -> cartItem.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // Устанавливаем новую общую стоимость корзины
-        cart.setTotalPrice(newTotalPrice);
+        cart.setTotalPrice(newTotalPrice.max(BigDecimal.ZERO));
         cartRepository.save(cart);
     }
 }
