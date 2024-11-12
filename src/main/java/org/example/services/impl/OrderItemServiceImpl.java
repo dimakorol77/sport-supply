@@ -5,6 +5,7 @@ import org.example.exception.OrderItemNotFoundException;
 import org.example.exception.OrderNotFoundException;
 import org.example.exception.ProductNotFoundException;
 import org.example.exception.errorMessage.ErrorMessage;
+import org.example.mappers.OrderItemMapper;
 import org.example.models.Order;
 import org.example.models.OrderItem;
 import org.example.models.Product;
@@ -21,12 +22,17 @@ public class OrderItemServiceImpl implements OrderItemService {
     private final OrderItemRepository orderItemRepository;
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
+    private final OrderItemMapper orderItemMapper;
 
     @Autowired
-    public OrderItemServiceImpl(OrderItemRepository orderItemRepository, OrderRepository orderRepository, ProductRepository productRepository) {
+    public OrderItemServiceImpl(OrderItemRepository orderItemRepository,
+                                OrderRepository orderRepository,
+                                ProductRepository productRepository,
+                                OrderItemMapper orderItemMapper) {  // Внедрение маппера
         this.orderItemRepository = orderItemRepository;
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
+        this.orderItemMapper = orderItemMapper;  // Инициализация
     }
 
     @Override
@@ -34,16 +40,16 @@ public class OrderItemServiceImpl implements OrderItemService {
         // Получаем заказ по ID
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException(ErrorMessage.ORDER_NOT_FOUND));
-        // Получаем продукт по ID
 
+        // Получаем продукт по ID
         Product product = productRepository.findById(orderItemDto.getProductId())
                 .orElseThrow(() -> new ProductNotFoundException(ErrorMessage.PRODUCT_NOT_FOUND));
-        // Создаем новый OrderItem
-        OrderItem orderItem = new OrderItem();
+
+        // Создаем новый OrderItem из DTO
+        OrderItem orderItem = orderItemMapper.toEntity(orderItemDto);  // Используем маппер
         orderItem.setOrder(order);
         orderItem.setProduct(product);
-        orderItem.setPrice(orderItemDto.getPrice());
-        orderItem.setQuantity(orderItemDto.getQuantity());
+
         // Сохраняем новый OrderItem в базе данных
         return orderItemRepository.save(orderItem);
     }
@@ -52,19 +58,21 @@ public class OrderItemServiceImpl implements OrderItemService {
     public List<OrderItem> getOrderItemsByOrderId(Long orderId) {
         return orderItemRepository.findByOrderId(orderId);
     }
-
     @Override
     public OrderItem updateOrderItem(Long orderItemId, OrderItemDto orderItemDto) {
         OrderItem orderItem = orderItemRepository.findById(orderItemId)
                 .orElseThrow(() -> new OrderItemNotFoundException(ErrorMessage.ORDER_ITEM_NOT_FOUND));
+
         // Получаем продукт по ID
         Product product = productRepository.findById(orderItemDto.getProductId())
                 .orElseThrow(() -> new ProductNotFoundException(ErrorMessage.PRODUCT_NOT_FOUND));
+
         // Обновляем данные OrderItem
         orderItem.setProduct(product);
         orderItem.setPrice(orderItemDto.getPrice());
         orderItem.setQuantity(orderItemDto.getQuantity());
-// Сохраняем обновленный элемент заказа
+
+        // Сохраняем обновленный элемент заказа
         return orderItemRepository.save(orderItem);
     }
 

@@ -1,5 +1,6 @@
 package org.example.dto;
 
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -15,6 +16,7 @@ public class OrderCreateDto {
     //информация, необходимая для создания нового заказа.
     // - Добавить сам товар
     @NotNull(message = ErrorMessage.INVALID_ORDER_DATA)
+    @DecimalMin(value = "0.01", message = "Сумма заказа должна быть больше нуля")
     private BigDecimal totalAmount;
 
     @NotNull(message = ErrorMessage.INVALID_ORDER_DATA)

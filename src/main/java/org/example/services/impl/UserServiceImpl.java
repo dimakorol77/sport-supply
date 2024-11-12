@@ -5,6 +5,7 @@ import org.example.enums.Role;
 import org.example.exception.IdNotFoundException;
 import org.example.exception.UserAlreadyExistsException;
 import org.example.exception.errorMessage.ErrorMessage;
+import org.example.mappers.UserMapper;
 import org.example.models.User;
 import org.example.repositories.UserRepository;
 import org.example.services.interfaces.UserService;
@@ -19,17 +20,19 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     // Используем конструкторную инъекцию
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper) {
         this.userRepository = userRepository;
+        this.userMapper = userMapper;
     }
 
     // Получить всех пользователей
     @Override
     public List<UserListDto> getAllUsers() {
         return userRepository.findAll().stream()
-                .map(user -> new UserListDto(user.getId(), user.getName(), user.getEmail(), user.getPhoneNumber()))
+                .map(userMapper::toUserListDto) // Использование правильного метода маппера
                 .collect(Collectors.toList());
     }
 
@@ -50,12 +53,7 @@ public class UserServiceImpl implements UserService {
         if (userOpt.isEmpty()) {
             throw new IdNotFoundException(ErrorMessage.ID_NOT_FOUND);
         }
-        return userOpt.map(user -> new UserListDto(
-                user.getId(),
-                user.getName(),
-                user.getEmail(),
-                user.getPhoneNumber()
-        ));
+        return userOpt.map(userMapper::toUserListDto); // Использование правильного метода маппера
     }
 
     // Создать нового пользователя
@@ -64,49 +62,22 @@ public class UserServiceImpl implements UserService {
         if (userRepository.existsByEmail(userCreateDto.getEmail())) {
             throw new UserAlreadyExistsException(ErrorMessage.USER_ALREADY_EXISTS);
         }
-        User user = new User();
-        user.setEmail(userCreateDto.getEmail());
-        user.setPassword(userCreateDto.getPassword());
-        user.setName(userCreateDto.getName());
-        user.setPhoneNumber(userCreateDto.getPhoneNumber());
-
-        if (user.getRole() == null) {
-            user.setRole(Role.USER); // Роль по умолчанию
-        }
-
+        User user = userMapper.toEntity(userCreateDto); // Использование метода для преобразования из DTO в сущность
+        user.setRole(Role.USER); // Роль по умолчанию
         User createdUser = userRepository.save(user);
 
-        return UserAfterCreationDto.builder()
-                .id(createdUser.getId())
-                .email(createdUser.getEmail())
-                .name(createdUser.getName())
-                .phoneNumber(createdUser.getPhoneNumber())
-                .role(createdUser.getRole())
-                .createdAt(createdUser.getCreatedAt())
-                .build();
+        return userMapper.toUserAfterCreationDto(createdUser); // Преобразование сущности в DTO
     }
 
     // Обновить пользователя
     @Override
     public Optional<UserAfterUpdateDto> updateUser(Long id, UserUpdateDto userUpdateDto) {
         return userRepository.findById(id).map(user -> {
-            user.setEmail(userUpdateDto.getEmail());
-            user.setName(userUpdateDto.getName());
-            user.setPhoneNumber(userUpdateDto.getPhoneNumber());
-
-            if (userUpdateDto.getPassword() != null) {
-                user.setPassword(userUpdateDto.getPassword()); // Обновляем пароль
-            }
+            userMapper.updateEntityFromDto(userUpdateDto, user); // Обновляем сущность с помощью маппера
             user.setUpdatedAt(LocalDateTime.now());
-
             User updatedUser = userRepository.save(user);
 
-            return UserAfterUpdateDto.builder()
-                    .id(updatedUser.getId())
-                    .email(updatedUser.getEmail())
-                    .name(updatedUser.getName())
-                    .updatedAt(updatedUser.getUpdatedAt())
-                    .build();
+            return userMapper.toUserAfterUpdateDto(updatedUser); // Преобразование сущности в DTO
         });
     }
 
@@ -115,11 +86,9 @@ public class UserServiceImpl implements UserService {
     public boolean existsById(Long id) {
         return userRepository.existsById(id);
     }
-
     // Удалить пользователя
     @Override
     public void deleteUser(Long id) {
-        // Проверка существования пользователя перед удалением
         if (!existsById(id)) {
             throw new IdNotFoundException(ErrorMessage.ID_NOT_FOUND);
         }

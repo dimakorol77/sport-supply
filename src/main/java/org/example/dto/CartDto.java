@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 @Data
 public class CartDto {
-    @NotNull(message = ErrorMessage.CART_ITEM_PRODUCT_REQUIRED) // для id корзины
+
     private Long id;
 
     @NotNull(message = ErrorMessage.CART_ITEM_USER_REQUIRED) // для userId
@@ -18,6 +18,9 @@ public class CartDto {
 
     @NotNull(message = ErrorMessage.CART_ITEM_CREATED_AT_REQUIRED) // для createdAt
     private LocalDateTime createdAt;
+
+
+    private BigDecimal totalPrice;
 
 
 }
