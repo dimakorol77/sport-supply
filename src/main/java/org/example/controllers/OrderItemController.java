@@ -1,12 +1,10 @@
 package org.example.controllers;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
-import org.example.annotation.CreateOrderItem;
-import org.example.annotation.DeleteOrderItem;
-import org.example.annotation.GetOrderItemsByOrderId;
-import org.example.annotation.UpdateOrderItem;
+import org.example.annotations.CreateOrderItem;
+import org.example.annotations.DeleteOrderItem;
+import org.example.annotations.GetOrderItemsByOrderId;
+import org.example.annotations.UpdateOrderItem;
 import org.example.dto.OrderItemDto;
 import org.example.models.OrderItem;
 import org.example.services.interfaces.OrderItemService;

@@ -1,9 +1,7 @@
 package org.example.controllers;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
-import org.example.annotation.*;
+import org.example.annotations.*;
 import org.example.dto.*;
 import org.example.models.User;
 import org.example.services.interfaces.UserService;
@@ -12,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")

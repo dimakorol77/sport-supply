@@ -1,9 +1,7 @@
 package org.example.controllers;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import org.example.annotation.CreatePayment;
-import org.example.annotation.GetPaymentStatus;
+import org.example.annotations.CreatePayment;
+import org.example.annotations.GetPaymentStatus;
 import org.example.dto.PaymentDto;
 import org.example.services.interfaces.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,14 +1,9 @@
 package org.example.controllers;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import jakarta.validation.Valid;
-import org.example.annotation.CalculateTotalPrice;
-import org.example.annotation.ClearCart;
-import org.example.annotation.CreateCart;
+import org.example.annotations.CalculateTotalPrice;
+import org.example.annotations.ClearCart;
+import org.example.annotations.CreateCart;
 import org.example.dto.CartDto;
-import org.example.dto.UserCreateDto;
-import org.example.models.Cart;
 import org.example.services.interfaces.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

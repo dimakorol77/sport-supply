@@ -1,18 +1,13 @@
 package org.example.controllers;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
-import org.example.annotation.CreateOrder;
-import org.example.annotation.GetAllOrders;
-import org.example.annotation.GetOrdersByUserId;
-import org.example.annotation.UpdateOrderStatus;
+import org.example.annotations.CreateOrder;
+import org.example.annotations.GetAllOrders;
+import org.example.annotations.GetOrdersByUserId;
+import org.example.annotations.UpdateOrderStatus;
 import org.example.dto.*;
 import org.example.enums.OrderStatus;
-import org.example.exception.OrderNotFoundException;
-import org.example.exception.errorMessage.ErrorMessage;
 import org.example.mappers.OrderMapper;
-import org.example.models.Order;
 import org.example.services.interfaces.CartService;
 import org.example.services.interfaces.OrderService;
 import org.springframework.http.HttpStatus;
@@ -21,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/orders")
