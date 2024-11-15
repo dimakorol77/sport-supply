@@ -1,5 +1,6 @@
 package org.example.repositories;
 
+import org.example.enums.DeliveryMethod;
 import org.example.enums.OrderStatus;
 import org.example.models.Order;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,5 +20,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     List<Order> findByCreatedAtAfter(LocalDateTime date);
 
-    List<Order> findByDeliveryMethod(String deliveryMethod);
+    List<Order> findByDeliveryMethod(DeliveryMethod deliveryMethod);
+    List<Order> findByStatusIn(List<OrderStatus> statuses);
 }

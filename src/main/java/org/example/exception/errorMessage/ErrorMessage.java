@@ -21,6 +21,7 @@ public class ErrorMessage {
     public static final String USER_NOT_FOUND = "User not found"; // Пользователь не найден
     public static final String PRODUCT_NOT_FOUND = "Product not found.";
     public static final String ORDER_ITEM_NOT_FOUND = "Order item not found";
+    public static final String ORDER_CANNOT_BE_CANCELLED = "Order cannot be cancelled in its current status";
 
 
     //CART
@@ -31,16 +32,23 @@ public class ErrorMessage {
     public static final String CART_ITEM_NOT_FOUND = "Product not found in cart";
     public static final String CART_ITEM_USER_REQUIRED = "User for the cart is required.";
     public static final String CART_ITEM_CREATED_AT_REQUIRED = "Creation date of the cart is required.";
-    public static final String CART_ITEM_TOTAL_PRICE_REQUIRED = "Total price of the cart is required.";
-    public static final String CART_ITEM_TOTAL_PRICE_POSITIVE = "Total price of the cart must be positive.";
     public static final String INVALID_QUANTITY = "Quantity must be greater than 0";
     public static final String CART_ALREADY_EXISTS = "Cart already exists";
+    public static final String CART_EMPTY="Cart is empty, cannot create an order";
+    public static final String INVALID_DATE_FORMAT = "Invalid date format. Expected format: YYYY-MM-DDTHH:MM:SS";
 
 
 
 
 
     public static final String PAYMENT_NOT_FOUND = "Payment not found";
+    public static final String PAYMENT_ALREADY_EXISTS = "A payment for this order already exists.";
+
+
+
+
+    public static final String FAVORITE_ALREADY_EXISTS = "Favorite already exists";
+    public static final String FAVORITE_NOT_FOUND = "Favorite not found";
 
 
 }

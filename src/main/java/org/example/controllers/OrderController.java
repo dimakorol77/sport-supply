@@ -1,30 +1,28 @@
 package org.example.controllers;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import jakarta.validation.Valid;
-import org.example.annotation.CreateOrder;
-import org.example.annotation.GetAllOrders;
-import org.example.annotation.GetOrdersByUserId;
-import org.example.annotation.UpdateOrderStatus;
+
+import org.example.annotation.orderController.GetAllOrders;
+import org.example.annotation.orderController.GetOrdersByUserId;
+import org.example.annotation.orderController.UpdateOrderStatus;
+import org.example.annotation.orderController.*;
 import org.example.dto.*;
+import org.example.enums.DeliveryMethod;
 import org.example.enums.OrderStatus;
-import org.example.exception.OrderNotFoundException;
-import org.example.exception.errorMessage.ErrorMessage;
 import org.example.mappers.OrderMapper;
-import org.example.models.Order;
 import org.example.services.interfaces.CartService;
 import org.example.services.interfaces.OrderService;
-import org.springframework.http.HttpStatus;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
+
 
 @RestController
 @RequestMapping("/api/orders")
+@Validated
 public class OrderController {
     private final OrderService orderService;
     private final CartService cartService;
@@ -53,12 +51,6 @@ public class OrderController {
         }
         return ResponseEntity.ok(orderDtos);
     }
-    @CreateOrder
-    public ResponseEntity<OrderResponseDto> createOrder(@Valid @RequestBody OrderCreateDto orderCreateDto) {
-        OrderDto orderDto = orderService.createOrder(orderCreateDto);
-        OrderResponseDto responseDto = new OrderResponseDto(orderDto.getId(), orderDto.getTotalAmount(), orderDto.getStatus());
-        return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
-    }
 
     @UpdateOrderStatus
     public ResponseEntity<OrderResponseDto> updateOrderStatus(@PathVariable Long orderId, @RequestParam OrderStatus status) {
@@ -67,21 +59,38 @@ public class OrderController {
         return ResponseEntity.ok(responseDto);
     }
 
+    @GetOrderById
+    public ResponseEntity<OrderDto> getOrderById(@PathVariable Long orderId) {
+        OrderDto orderDto = orderService.getOrderById(orderId);
+        return ResponseEntity.ok(orderDto);
+    }
 
-//    @PostMapping("/convert")
-//@Operation(
-//        summary = "Конвертация корзины в заказ",
-//        description = "Преобразует корзину в заказ и очищает корзину",
-//        tags = "Заказы",
-//        responses = {
-//                @ApiResponse(responseCode = "201", description = "Заказ успешно создан"),
-//                @ApiResponse(responseCode = "400", description = "Ошибка в данных запроса")
-//        }
-//)
-//public ResponseEntity<OrderResponseDto> convertCartToOrder(@RequestParam Long cartId, @Valid @RequestBody OrderCreateDto orderCreateDto) {
-//    OrderDto orderDto = cartService.convertCartToOrder(cartId, orderCreateDto);
-//    OrderResponseDto responseDto = new OrderResponseDto(orderDto.getId(), orderDto.getTotalAmount(), orderDto.getStatus());
-//    return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
-//}
+    // Отмена заказа
+    @CancelOrder
+    public ResponseEntity<Void> cancelOrder(@PathVariable Long orderId) {
+        orderService.cancelOrder(orderId);
+        return ResponseEntity.ok().build();
+    }
+
+    // Получение заказов по статусу
+    @GetOrdersByStatus
+    public ResponseEntity<List<OrderDto>> getOrdersByStatus(@RequestParam OrderStatus status) {
+        List<OrderDto> orderDtos = orderService.getOrdersByStatus(status);
+        return ResponseEntity.ok(orderDtos);
+    }
+
+    // Получение заказов, созданных после определенной даты
+    @GetOrdersCreatedAfter
+    public ResponseEntity<List<OrderDto>> getOrdersCreatedAfter(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date) {
+        List<OrderDto> orderDtos = orderService.getOrdersCreatedAfter(date);
+        return ResponseEntity.ok(orderDtos);
+    }
+
+    // Получение заказов по методу доставки
+    @GetOrdersByDeliveryMethod
+    public ResponseEntity<List<OrderDto>> getOrdersByDeliveryMethod(@RequestParam DeliveryMethod deliveryMethod) {
+        List<OrderDto> orderDtos = orderService.getOrdersByDeliveryMethod(deliveryMethod);
+        return ResponseEntity.ok(orderDtos);
+    }
 }
 

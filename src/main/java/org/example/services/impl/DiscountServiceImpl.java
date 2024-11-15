@@ -69,4 +69,10 @@ public class DiscountServiceImpl implements DiscountService {
                 .map(discountMapper::toDto)
                 .collect(Collectors.toList());
     }
+    @Override
+    public Optional<DiscountDto> getCurrentDiscountForProduct(Long productId) {
+        LocalDateTime now = LocalDateTime.now();
+        return discountRepository.findFirstByProductIdAndStartDateBeforeAndEndDateAfterOrderByDiscountPriceDesc(productId, now, now)
+                .map(discountMapper::toDto);
+    }
 }

@@ -1,17 +1,17 @@
 package org.example.services.impl;
 
+import jakarta.transaction.Transactional;
 import org.example.dto.CartDto;
 import org.example.dto.OrderCreateDto;
+import org.example.dto.OrderDto;
 import org.example.enums.OrderStatus;
-import org.example.exception.CartAlreadyExistsException;
-import org.example.exception.CartNotFoundException;
-import org.example.exception.ProductNotFoundException;
-import org.example.exception.UserNotFoundException;
+import org.example.exception.*;
 import org.example.exception.errorMessage.ErrorMessage;
 import org.example.mappers.CartMapper;
 import org.example.models.*;
 import org.example.repositories.*;
 import org.example.services.interfaces.CartService;
+import org.example.services.interfaces.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,17 +27,17 @@ public class CartServiceImpl implements CartService {
     private final CartItemRepository cartItemRepository;
     private final CartMapper cartMapper;
     private final OrderRepository orderRepository;
-    private final ProductRepository productRepository;
+    private final OrderService orderService;
 
     @Autowired
     public CartServiceImpl(CartRepository cartRepository, UserRepository userRepository,
                            CartItemRepository cartItemRepository, OrderRepository orderRepository,
-                           ProductRepository productRepository, CartMapper cartMapper) {
+                           OrderService orderService, CartMapper cartMapper) {
         this.cartRepository = cartRepository;
         this.userRepository = userRepository;
         this.cartItemRepository = cartItemRepository;
         this.orderRepository = orderRepository;
-        this.productRepository = productRepository;
+        this.orderService = orderService;
         this.cartMapper = cartMapper;
     }
     // Создание новой корзины для пользователя? - при регистрации пригодится, при входе
@@ -72,9 +72,9 @@ public class CartServiceImpl implements CartService {
                 .orElseThrow(() -> new CartNotFoundException(ErrorMessage.CART_NOT_FOUND));
 
         return cart.getCartItems().stream()
-                .filter(cartItem -> !cartItem.isDeleted())
+                .filter(cartItem -> !cartItem.isDeleted())  // Игнорируем удаленные элементы
                 .map(cartItem -> cartItem.getPrice() != null
-                        ? cartItem.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()))
+                        ? cartItem.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()))  // Учитываем количество
                         : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
@@ -84,52 +84,58 @@ public class CartServiceImpl implements CartService {
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new CartNotFoundException(ErrorMessage.CART_NOT_FOUND));
 
-        // Устанавливаем товары как удалённые
         cart.getCartItems().forEach(cartItem -> {
             if (!cartItem.isDeleted()) {
                 cartItem.setDeleted(true);
-                cartItemRepository.save(cartItem); // Сохраняем изменения по каждому товару
+                cartItemRepository.save(cartItem);  // Сохраняем изменения для каждого товара
             }
         });
 
-        // Используем метод calculateTotalPrice для пересчёта общей стоимости
-        BigDecimal newTotalPrice = calculateTotalPrice(cartId);
+        // Обновляем стоимость корзины после очистки
+        cart.setTotalPrice(BigDecimal.ZERO);  // Обнуляем сумму
+        cartRepository.save(cart);  // Сохраняем корзину
+    }
+    @Transactional
+    @Override
+    public OrderDto convertCartToOrder(Long cartId, OrderCreateDto orderCreateDto) {
+        Cart cart = cartRepository.findById(cartId)
+                .orElseThrow(() -> new CartNotFoundException(ErrorMessage.CART_NOT_FOUND));
 
-        cart.setTotalPrice(newTotalPrice); // Устанавливаем пересчитанную стоимость
-        cartRepository.save(cart); // Сохраняем корзину с обновленной стоимостью
+        // Проверяем, есть ли в корзине активные (не удаленные) товары
+        boolean hasActiveItems = cart.getCartItems().stream()
+                .anyMatch(cartItem -> !cartItem.isDeleted());
+
+        if (!hasActiveItems) {
+            throw new CartEmptyException(ErrorMessage.CART_EMPTY);
+        }
+
+        // Используем метод сервиса заказа для создания нового заказа из корзины и OrderCreateDto
+        OrderDto orderDto = orderService.createOrderFromCart(cart, orderCreateDto);
+
+        // Обновляем корзину после создания заказа
+        updateCartAfterOrderCreation(cart);
+
+        return orderDto;
     }
 
+    // Метод обновления корзины после создания заказа
+    private void updateCartAfterOrderCreation(Cart cart) {
+        cart.getCartItems().forEach(cartItem -> {
+            if (!cartItem.isDeleted()) {
+                cartItem.setDeleted(true);
+                cartItemRepository.save(cartItem);  // Сохраняем изменения для каждого товара
+            }
+        });
 
-//    public Order convertCartToOrder(Long cartId, OrderCreateDto orderCreateDto) {
-//        Cart cart = cartRepository.findById(cartId)
-//                .orElseThrow(() -> new CartNotFoundException(ErrorMessage.CART_NOT_FOUND));
-//
-//        // Преобразуем корзину в заказ
-//        Order order = new Order();
-//        order.setUser(cart.getUser());
-//        order.setTotalAmount(cart.getTotalAmount());
-//        order.setDeliveryMethod(orderCreateDto.getDeliveryMethod());
-//        order.setDeliveryAddress(orderCreateDto.getDeliveryAddress());
-//        order.setContactInfo(orderCreateDto.getContactInfo());
-//
-//        // Преобразуем товары из корзины в заказ
-//        List<OrderItem> orderItems = cart.getCartItems().stream()
-//                .map(cartItem -> new OrderItem(cartItem.getProduct(), cartItem.getQuantity(), cartItem.getPrice()))
-//                .collect(Collectors.toList());
-//
-//        order.setOrderItems(orderItems);
-//        order.setStatus(OrderStatus.CREATED); // Устанавливаем статус как 'Создан'
-//        order.setCreatedAt(LocalDateTime.now());
-//        order.setUpdatedAt(LocalDateTime.now());
-//
-//        // Сохраняем заказ
-//        order = orderRepository.save(order);
-//
-//        // Очистить корзину после конвертации
-//        cart.getCartItems().clear();
-//        cartRepository.save(cart);
-//
-//        return order;
-//    }
+        // Обновляем сумму корзины
+        cart.setTotalPrice(BigDecimal.ZERO);  // Обнуляем сумму
+        cartRepository.save(cart);  // Сохраняем корзину
+    }
+
+    @Override
+    public Cart getCartByUserId(Long userId) {
+        return cartRepository.findByUserId(userId)
+                .orElseThrow(() -> new CartNotFoundException(ErrorMessage.CART_NOT_FOUND));
+    }
 }
 

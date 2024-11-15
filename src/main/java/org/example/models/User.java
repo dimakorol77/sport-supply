@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.example.enums.Role;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -36,6 +37,10 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    // Связь с избранными товарами
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Favorite> favorites = new ArrayList<>();
+
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now(); // Устанавливаем текущую дату и время при создании
@@ -57,13 +62,6 @@ public class User {
     @OneToMany(mappedBy = "user")
     private List<Review> reviews;
 
-    // Новый список избранных продуктов
-//    @ManyToMany
-//    @JoinTable(
-//            name = "user_favorites",
-//            joinColumns = @JoinColumn(name = "user_id"),
-//            inverseJoinColumns = @JoinColumn(name = "product_id")
-//    )
-//    private List<Product> favoriteProducts;
+
 }
 

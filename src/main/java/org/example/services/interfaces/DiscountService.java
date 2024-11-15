@@ -13,5 +13,6 @@ public interface DiscountService {
     Optional<DiscountDto> updateDiscount(Long id, DiscountDto discountDto);
     void deleteDiscount(Long id);
     List<DiscountDto> getActiveDiscountsForProduct(Long productId);
+    Optional<DiscountDto> getCurrentDiscountForProduct(Long productId);
 }
 
