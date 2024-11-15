@@ -19,5 +19,5 @@ public class CartItemDto {
     private Integer quantity;
 
 
-    private BigDecimal discountPrice;
+    //private BigDecimal discountPrice;
 }

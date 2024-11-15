@@ -1,7 +1,9 @@
 package org.example.services.impl;
 
-import org.example.dto.PaymentDto;
+import org.example.dto.PaymentRequestDto;
+import org.example.dto.PaymentResponseDto;
 import org.example.exception.OrderNotFoundException;
+import org.example.exception.PaymentAlreadyExistsException;
 import org.example.exception.PaymentNotFoundException;
 import org.example.exception.errorMessage.ErrorMessage;
 import org.example.mappers.PaymentMapper;
@@ -12,6 +14,9 @@ import org.example.repositories.PaymentRepository;
 import org.example.services.interfaces.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 public class PaymentServiceImpl implements PaymentService {
@@ -29,29 +34,35 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public PaymentDto createPayment(PaymentDto paymentDto) {
+    public PaymentResponseDto createPayment(PaymentRequestDto paymentRequestDto) {
         // Находим заказ по ID
-        Order order = orderRepository.findById(paymentDto.getOrderId())
+        Order order = orderRepository.findById(paymentRequestDto.getOrderId())
                 .orElseThrow(() -> new OrderNotFoundException(ErrorMessage.ORDER_NOT_FOUND));
 
-        // Создаем сущность Payment из DTO
-        Payment payment = paymentMapper.toEntity(paymentDto, order);
+        // Проверяем, существует ли платеж для этого заказа
+        Optional<Payment> existingPayment = paymentRepository.findByOrderId(order.getId());
+        if (existingPayment.isPresent()) {
+            throw new PaymentAlreadyExistsException(ErrorMessage.PAYMENT_ALREADY_EXISTS);
+        }
 
-        // Сохраняем оплату в базе данных
+        // Создаем сущность Payment из PaymentRequestDto
+        Payment payment = paymentMapper.toEntity(paymentRequestDto, order);
+
+        // Сохраняем платеж в базе данных
         Payment savedPayment = paymentRepository.save(payment);
 
-        // Возвращаем DTO с сохраненной оплатой
-        return paymentMapper.toDto(savedPayment);
+        // Возвращаем PaymentResponseDto с сохраненной информацией
+        return paymentMapper.toResponseDto(savedPayment);
     }
 
     // Получение статуса платежа по ID
     @Override
-    public PaymentDto getPaymentStatus(Long paymentId) {
+    public PaymentResponseDto getPaymentStatus(Long paymentId) {
         // Находим платеж по ID
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new PaymentNotFoundException(ErrorMessage.PAYMENT_NOT_FOUND));
 
         // Возвращаем DTO с информацией о платеже
-        return paymentMapper.toDto(payment);
+        return paymentMapper.toResponseDto(payment);
     }
 }

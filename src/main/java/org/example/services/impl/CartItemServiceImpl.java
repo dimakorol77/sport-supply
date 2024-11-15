@@ -2,6 +2,7 @@ package org.example.services.impl;
 
 import org.example.dto.CartItemDto;
 import org.example.dto.CartItemResponseDto;
+import org.example.dto.DiscountDto;
 import org.example.exception.*;
 import org.example.exception.errorMessage.ErrorMessage;
 import org.example.mappers.CartItemMapper;
@@ -14,6 +15,7 @@ import org.example.repositories.CartRepository;
 import org.example.repositories.ProductRepository;
 import org.example.repositories.UserRepository;
 import org.example.services.interfaces.CartItemService;
+import org.example.services.interfaces.DiscountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,14 +29,17 @@ public class CartItemServiceImpl  implements CartItemService {
     private final CartRepository cartRepository;
     private final ProductRepository productRepository;
     private final CartItemMapper cartItemMapper;
+    private final DiscountService discountService;
 
     @Autowired
     public CartItemServiceImpl(CartItemRepository cartItemRepository, CartRepository cartRepository,
-                               ProductRepository productRepository, CartItemMapper cartItemMapper) {
+                               ProductRepository productRepository, CartItemMapper cartItemMapper,
+                               DiscountService discountService) {
         this.cartItemRepository = cartItemRepository;
         this.cartRepository = cartRepository;
         this.productRepository = productRepository;
-        this.cartItemMapper = cartItemMapper;  // Инициализируем маппер
+        this.cartItemMapper = cartItemMapper;
+        this.discountService = discountService;
     }
 
     @Override
@@ -49,8 +54,22 @@ public class CartItemServiceImpl  implements CartItemService {
         Product product = productRepository.findById(cartItemDto.getProductId())
                 .orElseThrow(() -> new ProductNotFoundException(ErrorMessage.PRODUCT_NOT_FOUND));
 
+        // Получаем текущую скидку для продукта
+        Optional<DiscountDto> optionalDiscount = discountService.getCurrentDiscountForProduct(product.getId());
+        BigDecimal discountPrice = optionalDiscount.map(DiscountDto::getDiscountPrice).orElse(BigDecimal.ZERO);
+
+        // Рассчитываем итоговую цену с учетом скидки
+        BigDecimal finalPrice = calculateFinalPrice(product.getPrice(), discountPrice);
+
+        // Находим существующий CartItem или создаем новый
         CartItem cartItem = cartItemRepository.findByCartAndProduct(cart, product)
-                .orElseGet(CartItem::new);
+                .orElseGet(() -> {
+                    CartItem newItem = new CartItem();
+                    newItem.setCart(cart);
+                    newItem.setProduct(product);
+                    newItem.setDeleted(false);
+                    return newItem;
+                });
 
         if (cartItem.getId() != null && cartItem.isDeleted()) {
             cartItem.setDeleted(false);
@@ -61,26 +80,23 @@ public class CartItemServiceImpl  implements CartItemService {
             cartItem.setQuantity(cartItemDto.getQuantity());
         }
 
-        cartItem.setCart(cart);
-        cartItem.setProduct(product);
-        cartItem.setPrice(calculateFinalPrice(cartItem, cartItemDto.getDiscountPrice()));
-        cartItem.setDeleted(false);
+        cartItem.setPrice(finalPrice);
+        cartItem.setDiscountPrice(discountPrice);
 
         cartItemRepository.save(cartItem);
 
-        // Пересчёт общей стоимости корзины после добавления товара
+        // Пересчитываем общую стоимость корзины после добавления товара
         updateTotalPrice(cart);
 
         return cartItemMapper.toResponseDto(cartItem);
     }
 
     // Метод для вычисления итоговой цены товара с учетом скидки
-    private BigDecimal calculateFinalPrice(CartItem cartItem, BigDecimal discountPrice) {
-        BigDecimal itemPrice = cartItem.getProduct().getPrice();
-        BigDecimal finalDiscountPrice = discountPrice != null ? discountPrice : BigDecimal.ZERO;
-        BigDecimal finalPrice = itemPrice.subtract(finalDiscountPrice);
+    private BigDecimal calculateFinalPrice(BigDecimal itemPrice, BigDecimal discountPrice) {
+        BigDecimal finalPrice = itemPrice.subtract(discountPrice);
         return finalPrice.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : finalPrice;
     }
+
 
     // Метод для обновления количества товара в корзине
     @Override
@@ -89,14 +105,23 @@ public class CartItemServiceImpl  implements CartItemService {
                 .orElseThrow(() -> new CartItemNotFoundException(ErrorMessage.CART_ITEM_NOT_FOUND));
 
         if (cartItem.isDeleted()) {
-            throw new ProductNotFoundException("Product not found in cart.");//
+            throw new CartItemNotFoundException(ErrorMessage.CART_ITEM_NOT_FOUND);
         }
 
         cartItem.setQuantity(quantity);
-        cartItem.setPrice(calculateFinalPrice(cartItem, cartItem.getDiscountPrice()));
+
+        // Обновляем скидку и цену на случай, если они изменились
+        Product product = cartItem.getProduct();
+        Optional<DiscountDto> optionalDiscount = discountService.getCurrentDiscountForProduct(product.getId());
+        BigDecimal discountPrice = optionalDiscount.map(DiscountDto::getDiscountPrice).orElse(BigDecimal.ZERO);
+        BigDecimal finalPrice = calculateFinalPrice(product.getPrice(), discountPrice);
+
+        cartItem.setPrice(finalPrice);
+        cartItem.setDiscountPrice(discountPrice);
+
         cartItemRepository.save(cartItem);
 
-        // Пересчёт общей стоимости корзины после изменения количества товара
+        // Пересчитываем общую стоимость корзины после изменения количества товара
         updateTotalPrice(cartItem.getCart());
 
         return cartItemMapper.toResponseDto(cartItem);
@@ -110,7 +135,7 @@ public class CartItemServiceImpl  implements CartItemService {
         cartItem.setDeleted(true);
         cartItemRepository.save(cartItem);
 
-        // Пересчёт общей стоимости корзины после удаления товара
+        // Пересчитываем общую стоимость корзины после удаления товара
         updateTotalPrice(cartItem.getCart());
     }
     // Метод для обновления общей стоимости корзины

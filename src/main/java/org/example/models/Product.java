@@ -7,6 +7,7 @@ import org.example.enums.ProteinType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -60,9 +61,8 @@ public class Product {
     @OneToMany(mappedBy = "product")
     private List<Review> reviews;
 
-    // Добавили поле для отображения избранного
-    @Transient  // Не сохраняется в базе данных напрямую
-    private boolean isFavorite;
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Favorite> favorites = new ArrayList<>();
 
 
 }

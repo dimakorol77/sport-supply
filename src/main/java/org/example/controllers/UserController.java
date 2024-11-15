@@ -1,11 +1,14 @@
 package org.example.controllers;
 
 import jakarta.validation.Valid;
-import org.example.annotations.*;
+
+import org.example.annotation.user.*;
+
 import org.example.dto.*;
 import org.example.models.User;
 import org.example.services.interfaces.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,6 +16,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
+@Validated
 public class UserController {
 
     private final UserService userService;
