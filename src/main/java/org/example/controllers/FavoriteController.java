@@ -1,10 +1,9 @@
 package org.example.controllers;
 
-import org.example.annotation.favorite.AddProductToFavorites;
-import org.example.annotation.favorite.GetUserFavorites;
-import org.example.annotation.favorite.RemoveProductFromFavorites;
+import org.example.annotations.FavoriteAnnotations.AddProductToFavorites;
+import org.example.annotations.FavoriteAnnotations.GetUserFavorites;
+import org.example.annotations.FavoriteAnnotations.RemoveProductFromFavorites;
 import org.example.dto.ProductDto;
-import org.example.services.impl.FavoriteServiceImpl;
 import org.example.services.interfaces.FavoriteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

@@ -1,8 +1,5 @@
-<<<<<<<< HEAD:src/main/java/org/example/annotation/user/DeleteUser.java
-package org.example.annotation.user;
-========
-package org.example.annotations;
->>>>>>>> development:src/main/java/org/example/annotations/DeleteUser.java
+package org.example.annotations.UserAnnotations;
+
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

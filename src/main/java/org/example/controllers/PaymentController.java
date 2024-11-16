@@ -2,8 +2,8 @@ package org.example.controllers;
 
 
 import jakarta.validation.Valid;
-import org.example.annotation.payment.CreatePayment;
-import org.example.annotation.payment.GetPaymentStatus;
+import org.example.annotations.PaymentAnnotations.CreatePayment;
+import org.example.annotations.PaymentAnnotations.GetPaymentStatus;
 import org.example.dto.PaymentRequestDto;
 import org.example.dto.PaymentResponseDto;
 

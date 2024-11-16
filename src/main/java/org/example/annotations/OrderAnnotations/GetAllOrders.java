@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:src/main/java/org/example/annotation/orderController/GetAllOrders.java
-package org.example.annotation.orderController;
-========
-package org.example.annotations;
->>>>>>>> development:src/main/java/org/example/annotations/GetAllOrders.java
+package org.example.annotations.OrderAnnotations;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

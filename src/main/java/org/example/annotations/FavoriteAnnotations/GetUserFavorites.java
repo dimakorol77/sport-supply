@@ -1,4 +1,4 @@
-package org.example.annotation.favorite;
+package org.example.annotations.FavoriteAnnotations;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

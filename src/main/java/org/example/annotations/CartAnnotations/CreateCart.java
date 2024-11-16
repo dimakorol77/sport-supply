@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:src/main/java/org/example/annotation/cartController/CreateCart.java
-package org.example.annotation.cartController;
-========
-package org.example.annotations;
->>>>>>>> development:src/main/java/org/example/annotations/CreateCart.java
+package org.example.annotations.CartAnnotations;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
