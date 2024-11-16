@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:src/main/java/org/example/annotation/cartController/CalculateTotalPrice.java
-package org.example.annotation.cartController;
-========
-package org.example.annotations;
->>>>>>>> development:src/main/java/org/example/annotations/CalculateTotalPrice.java
+package org.example.annotations.CartAnnotations;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

@@ -1,4 +1,4 @@
-package org.example.annotation.orderController;
+package org.example.annotations.OrderAnnotations;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

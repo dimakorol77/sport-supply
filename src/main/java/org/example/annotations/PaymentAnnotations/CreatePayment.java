@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:src/main/java/org/example/annotation/payment/CreatePayment.java
-package org.example.annotation.payment;
-========
-package org.example.annotations;
->>>>>>>> development:src/main/java/org/example/annotations/CreatePayment.java
+package org.example.annotations.PaymentAnnotations;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

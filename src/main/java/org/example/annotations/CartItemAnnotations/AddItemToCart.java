@@ -1,4 +1,4 @@
-package org.example.annotation.cartItemController;
+package org.example.annotations.CartItemAnnotations;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

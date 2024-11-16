@@ -2,10 +2,10 @@ package org.example.controllers;
 
 
 
-import org.example.annotation.orderController.GetAllOrders;
-import org.example.annotation.orderController.GetOrdersByUserId;
-import org.example.annotation.orderController.UpdateOrderStatus;
-import org.example.annotation.orderController.*;
+import org.example.annotations.OrderAnnotations.GetAllOrders;
+import org.example.annotations.OrderAnnotations.GetOrdersByUserId;
+import org.example.annotations.OrderAnnotations.UpdateOrderStatus;
+import org.example.annotations.OrderAnnotations.*;
 
 import org.example.dto.*;
 import org.example.enums.DeliveryMethod;

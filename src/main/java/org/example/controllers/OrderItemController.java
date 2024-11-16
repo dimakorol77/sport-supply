@@ -2,10 +2,10 @@ package org.example.controllers;
 
 import jakarta.validation.Valid;
 
-import org.example.annotation.orderItem.CreateOrderItem;
-import org.example.annotation.orderItem.DeleteOrderItem;
-import org.example.annotation.orderItem.GetOrderItemsByOrderId;
-import org.example.annotation.orderItem.UpdateOrderItem;
+import org.example.annotations.OrderItemAnnotations.CreateOrderItem;
+import org.example.annotations.OrderItemAnnotations.DeleteOrderItem;
+import org.example.annotations.OrderItemAnnotations.GetOrderItemsByOrderId;
+import org.example.annotations.OrderItemAnnotations.UpdateOrderItem;
 
 import org.example.dto.OrderItemDto;
 import org.example.models.OrderItem;

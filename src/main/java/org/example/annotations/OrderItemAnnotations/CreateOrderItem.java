@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:src/main/java/org/example/annotation/orderItem/CreateOrderItem.java
-package org.example.annotation.orderItem;
-========
-package org.example.annotations;
->>>>>>>> development:src/main/java/org/example/annotations/CreateOrderItem.java
+package org.example.annotations.OrderItemAnnotations;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

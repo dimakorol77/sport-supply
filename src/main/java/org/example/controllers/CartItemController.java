@@ -1,14 +1,10 @@
 package org.example.controllers;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import jakarta.validation.Valid;
-import org.example.annotation.cartItemController.AddItemToCart;
-import org.example.annotation.cartItemController.RemoveCartItem;
-import org.example.annotation.cartItemController.UpdateCartItemQuantity;
+import org.example.annotations.CartItemAnnotations.AddItemToCart;
+import org.example.annotations.CartItemAnnotations.RemoveCartItem;
+import org.example.annotations.CartItemAnnotations.UpdateCartItemQuantity;
 import org.example.dto.CartItemDto;
 import org.example.dto.CartItemResponseDto;
-import org.example.models.CartItem;
 import org.example.services.interfaces.CartItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
