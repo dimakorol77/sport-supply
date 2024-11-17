@@ -12,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/discounts")
@@ -35,9 +34,8 @@ public class DiscountController {
     // Получить скидку по ID
     @GetDiscountById
     public ResponseEntity<DiscountDto> getDiscountById(@PathVariable Long id) {
-        Optional<DiscountDto> discountOpt = discountService.getDiscountById(id);
-        return discountOpt.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        DiscountDto discount = discountService.getDiscountById(id);
+        return ResponseEntity.ok(discount);
     }
 
     // Создать новую скидку
@@ -50,9 +48,8 @@ public class DiscountController {
     // Обновить скидку
     @UpdateDiscount
     public ResponseEntity<DiscountDto> updateDiscount(@PathVariable Long id, @Valid @RequestBody DiscountDto discountDto) {
-        Optional<DiscountDto> updatedOpt = discountService.updateDiscount(id, discountDto);
-        return updatedOpt.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        DiscountDto updated = discountService.updateDiscount(id, discountDto);
+        return ResponseEntity.ok(updated);
     }
 
     // Удалить скидку

@@ -10,7 +10,6 @@ import org.example.annotations.CategoryAnnotations.DeleteCategory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/categories")
@@ -33,9 +32,8 @@ public class CategoryController {
     // Получить категорию по ID
     @GetCategoryById
     public ResponseEntity<CategoryDto> getCategoryById(@PathVariable Long id) {
-        Optional<CategoryDto> categoryOpt = categoryService.getCategoryById(id);
-        return categoryOpt.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        CategoryDto category = categoryService.getCategoryById(id);
+        return ResponseEntity.ok(category);
     }
 
     // Создать новую категорию
@@ -48,9 +46,8 @@ public class CategoryController {
     // Обновить категорию
     @UpdateCategory
     public ResponseEntity<CategoryDto> updateCategory(@PathVariable Long id, @RequestBody CategoryDto categoryDto) {
-        Optional<CategoryDto> updatedOpt = categoryService.updateCategory(id, categoryDto);
-        return updatedOpt.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        CategoryDto updated = categoryService.updateCategory(id, categoryDto);
+        return ResponseEntity.ok(updated);
     }
 
     // Удалить категорию

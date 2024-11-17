@@ -2,17 +2,10 @@ package org.example.controllers;
 
 import org.example.dto.PromotionDto;
 import org.example.services.interfaces.PromotionService;
-import org.example.annotations.PromotionAnnotations.GetAllPromotions;
-import org.example.annotations.PromotionAnnotations.GetPromotionById;
-import org.example.annotations.PromotionAnnotations.CreatePromotion;
-import org.example.annotations.PromotionAnnotations.UpdatePromotion;
-import org.example.annotations.PromotionAnnotations.DeletePromotion;
-import org.example.annotations.PromotionAnnotations.GetActivePromotions;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/promotions")
@@ -20,52 +13,64 @@ public class PromotionController {
 
     private final PromotionService promotionService;
 
-    // Конструкторная инъекция
+    @Autowired
     public PromotionController(PromotionService promotionService) {
         this.promotionService = promotionService;
     }
 
     // Получить все акции
-    @GetAllPromotions
+    @GetMapping
     public ResponseEntity<List<PromotionDto>> getAllPromotions() {
         List<PromotionDto> promotions = promotionService.getAllPromotions();
         return ResponseEntity.ok(promotions);
     }
 
     // Получить акцию по ID
-    @GetPromotionById
+    @GetMapping("/{id}")
     public ResponseEntity<PromotionDto> getPromotionById(@PathVariable Long id) {
-        Optional<PromotionDto> promotionOpt = promotionService.getPromotionById(id);
-        return promotionOpt.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        PromotionDto promotion = promotionService.getPromotionById(id);
+        return ResponseEntity.ok(promotion);
     }
 
     // Создать новую акцию
-    @CreatePromotion
-    public ResponseEntity<PromotionDto> createPromotion(@Valid @RequestBody PromotionDto promotionDto) {
-        PromotionDto created = promotionService.createPromotion(promotionDto);
-        return ResponseEntity.status(201).body(created);
+    @PostMapping
+    public ResponseEntity<PromotionDto> createPromotion(@RequestBody PromotionDto promotionDto) {
+        PromotionDto createdPromotion = promotionService.createPromotion(promotionDto);
+        return ResponseEntity.status(201).body(createdPromotion);
     }
 
     // Обновить акцию
-    @UpdatePromotion
-    public ResponseEntity<PromotionDto> updatePromotion(@PathVariable Long id, @Valid @RequestBody PromotionDto promotionDto) {
-        Optional<PromotionDto> updatedOpt = promotionService.updatePromotion(id, promotionDto);
-        return updatedOpt.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    @PutMapping("/{id}")
+    public ResponseEntity<PromotionDto> updatePromotion(@PathVariable Long id, @RequestBody PromotionDto promotionDto) {
+        PromotionDto updatedPromotion = promotionService.updatePromotion(id, promotionDto);
+        return ResponseEntity.ok(updatedPromotion);
     }
 
     // Удалить акцию
-    @DeletePromotion
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePromotion(@PathVariable Long id) {
         promotionService.deletePromotion(id);
         return ResponseEntity.noContent().build();
     }
 
-    // Получить активные акции
-    @GetActivePromotions
-    public ResponseEntity<List<PromotionDto>> getActivePromotions() {
-        List<PromotionDto> promotions = promotionService.getActivePromotions();
+    // Добавить продукт в акцию
+    @PostMapping("/{promotionId}/products/{productId}")
+    public ResponseEntity<Void> addProductToPromotion(@PathVariable Long promotionId, @PathVariable Long productId) {
+        promotionService.addProductToPromotion(promotionId, productId);
+        return ResponseEntity.status(201).build();
+    }
+
+    // Удалить продукт из акции
+    @DeleteMapping("/{promotionId}/products/{productId}")
+    public ResponseEntity<Void> removeProductFromPromotion(@PathVariable Long promotionId, @PathVariable Long productId) {
+        promotionService.removeProductFromPromotion(promotionId, productId);
+        return ResponseEntity.noContent().build();
+    }
+
+    // Получить акции для продукта
+    @GetMapping("/product/{productId}")
+    public ResponseEntity<List<PromotionDto>> getPromotionsForProduct(@PathVariable Long productId) {
+        List<PromotionDto> promotions = promotionService.getPromotionsForProduct(productId);
         return ResponseEntity.ok(promotions);
     }
 }

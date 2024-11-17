@@ -1,6 +1,8 @@
 package org.example.services.impl;
 
 import org.example.dto.DiscountDto;
+import org.example.exception.DiscountNotFoundException;
+import org.example.exception.errorMessage.ErrorMessage;
 import org.example.mappers.DiscountMapper;
 import org.example.models.Discount;
 import org.example.repositories.DiscountRepository;
@@ -34,9 +36,10 @@ public class DiscountServiceImpl implements DiscountService {
     }
 
     @Override
-    public Optional<DiscountDto> getDiscountById(Long id) {
+    public DiscountDto getDiscountById(Long id) {
         return discountRepository.findById(id)
-                .map(discountMapper::toDto);
+                .map(discountMapper::toDto)
+                .orElseThrow(() -> new DiscountNotFoundException(ErrorMessage.DISCOUNT_NOT_FOUND));
     }
 
     @Override
@@ -48,27 +51,33 @@ public class DiscountServiceImpl implements DiscountService {
     }
 
     @Override
-    public Optional<DiscountDto> updateDiscount(Long id, DiscountDto discountDto) {
-        return discountRepository.findById(id).map(discount -> {
-            discountMapper.updateEntityFromDto(discountDto, discount);
-            discount.setUpdatedAt(LocalDateTime.now());
-            Discount updatedDiscount = discountRepository.save(discount);
-            return discountMapper.toDto(updatedDiscount);
-        });
+    public DiscountDto updateDiscount(Long id, DiscountDto discountDto) {
+        Discount discount = discountRepository.findById(id)
+                .orElseThrow(() -> new DiscountNotFoundException(ErrorMessage.DISCOUNT_NOT_FOUND));
+
+        discountMapper.updateEntityFromDto(discountDto, discount);
+        discount.setUpdatedAt(LocalDateTime.now());
+        Discount updatedDiscount = discountRepository.save(discount);
+        return discountMapper.toDto(updatedDiscount);
     }
 
     @Override
     public void deleteDiscount(Long id) {
+        if (!discountRepository.existsById(id)) {
+            throw new DiscountNotFoundException(ErrorMessage.DISCOUNT_NOT_FOUND);
+        }
         discountRepository.deleteById(id);
     }
 
     @Override
     public List<DiscountDto> getActiveDiscountsForProduct(Long productId) {
         LocalDateTime now = LocalDateTime.now();
-        return discountRepository.findByProductIdAndStartDateBeforeAndEndDateAfter(productId, now, now).stream()
+        List<Discount> discounts = discountRepository.findByProductIdAndStartDateBeforeAndEndDateAfter(productId, now, now);
+        return discounts.stream()
                 .map(discountMapper::toDto)
                 .collect(Collectors.toList());
     }
+
     @Override
     public Optional<DiscountDto> getCurrentDiscountForProduct(Long productId) {
         LocalDateTime now = LocalDateTime.now();

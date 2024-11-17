@@ -1,6 +1,9 @@
 package org.example.services.impl;
 
 import org.example.dto.BrandDto;
+import org.example.exception.BrandAlreadyExistsException;
+import org.example.exception.BrandNotFoundException;
+import org.example.exception.errorMessage.ErrorMessage;
 import org.example.mappers.BrandMapper;
 import org.example.models.Brand;
 import org.example.repositories.BrandRepository;
@@ -10,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,13 +35,19 @@ public class BrandServiceImpl implements BrandService {
     }
 
     @Override
-    public Optional<BrandDto> getBrandById(Long id) {
+    public BrandDto getBrandById(Long id) {
         return brandRepository.findById(id)
-                .map(brandMapper::toDto);
+                .map(brandMapper::toDto)
+                .orElseThrow(() -> new BrandNotFoundException(ErrorMessage.BRAND_NOT_FOUND));
     }
 
     @Override
     public BrandDto createBrand(BrandDto brandDto) {
+        // Предполагаем, что бренд уникален по названию
+        brandRepository.findByName(brandDto.getName()).ifPresent(brand -> {
+            throw new BrandAlreadyExistsException(ErrorMessage.BRAND_ALREADY_EXISTS);
+        });
+
         Brand brand = brandMapper.toEntity(brandDto);
         brand.setCreatedAt(LocalDateTime.now());
         Brand savedBrand = brandRepository.save(brand);
@@ -47,17 +55,21 @@ public class BrandServiceImpl implements BrandService {
     }
 
     @Override
-    public Optional<BrandDto> updateBrand(Long id, BrandDto brandDto) {
-        return brandRepository.findById(id).map(brand -> {
-            brandMapper.updateEntityFromDto(brandDto, brand);
-            brand.setUpdatedAt(LocalDateTime.now());
-            Brand updatedBrand = brandRepository.save(brand);
-            return brandMapper.toDto(updatedBrand);
-        });
+    public BrandDto updateBrand(Long id, BrandDto brandDto) {
+        Brand brand = brandRepository.findById(id)
+                .orElseThrow(() -> new BrandNotFoundException(ErrorMessage.BRAND_NOT_FOUND));
+
+        brandMapper.updateEntityFromDto(brandDto, brand);
+        brand.setUpdatedAt(LocalDateTime.now());
+        Brand updatedBrand = brandRepository.save(brand);
+        return brandMapper.toDto(updatedBrand);
     }
 
     @Override
     public void deleteBrand(Long id) {
+        if (!brandRepository.existsById(id)) {
+            throw new BrandNotFoundException(ErrorMessage.BRAND_NOT_FOUND);
+        }
         brandRepository.deleteById(id);
     }
 }

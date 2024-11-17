@@ -14,8 +14,8 @@ import org.example.annotations.ProductAnnotations.GetPromotionsForProduct;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/products")
@@ -38,9 +38,8 @@ public class ProductController {
     // Получить продукт по ID
     @GetProductById
     public ResponseEntity<ProductDto> getProductById(@PathVariable Long id) {
-        Optional<ProductDto> productOpt = productService.getProductById(id);
-        return productOpt.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        ProductDto product = productService.getProductById(id);
+        return ResponseEntity.ok(product);
     }
 
     // Создать новый продукт
@@ -53,9 +52,8 @@ public class ProductController {
     // Обновить продукт
     @UpdateProduct
     public ResponseEntity<ProductDto> updateProduct(@PathVariable Long id, @RequestBody ProductDto productDto) {
-        Optional<ProductDto> updatedOpt = productService.updateProduct(id, productDto);
-        return updatedOpt.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        ProductDto updated = productService.updateProduct(id, productDto);
+        return ResponseEntity.ok(updated);
     }
 
     // Удалить продукт
@@ -77,5 +75,19 @@ public class ProductController {
     public ResponseEntity<List<PromotionDto>> getPromotionsForProduct(@PathVariable Long id) {
         List<PromotionDto> promotions = productService.getPromotionsForProduct(id);
         return ResponseEntity.ok(promotions);
+    }
+
+    // Фильтрация и сортировка продуктов
+    @GetMapping("/filter")
+    public ResponseEntity<List<ProductDto>> filterAndSortProducts(
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Boolean hasDiscount,
+            @RequestParam(required = false, defaultValue = "name") String sortBy,
+            @RequestParam(required = false, defaultValue = "true") Boolean asc) {
+
+        List<ProductDto> products = productService.filterAndSortProducts(minPrice, maxPrice, categoryId, hasDiscount, sortBy, asc);
+        return ResponseEntity.ok(products);
     }
 }

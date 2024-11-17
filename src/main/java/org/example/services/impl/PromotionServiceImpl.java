@@ -1,71 +1,117 @@
 package org.example.services.impl;
 
 import org.example.dto.PromotionDto;
+import org.example.exception.ProductAlreadyInPromotionException;
+import org.example.exception.ProductNotFoundException;
+import org.example.exception.PromotionNotFoundException;
+import org.example.exception.ProductPromotionNotFoundException;
+import org.example.exception.errorMessage.ErrorMessage;
 import org.example.mappers.PromotionMapper;
+import org.example.models.Product;
+import org.example.models.ProductPromotion;
 import org.example.models.Promotion;
+import org.example.repositories.ProductPromotionRepository;
+import org.example.repositories.ProductRepository;
 import org.example.repositories.PromotionRepository;
 import org.example.services.interfaces.PromotionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 public class PromotionServiceImpl implements PromotionService {
 
     private final PromotionRepository promotionRepository;
+    private final ProductRepository productRepository;
+    private final ProductPromotionRepository productPromotionRepository;
     private final PromotionMapper promotionMapper;
 
     @Autowired
     public PromotionServiceImpl(PromotionRepository promotionRepository,
+                                ProductRepository productRepository,
+                                ProductPromotionRepository productPromotionRepository,
                                 PromotionMapper promotionMapper) {
         this.promotionRepository = promotionRepository;
+        this.productRepository = productRepository;
+        this.productPromotionRepository = productPromotionRepository;
         this.promotionMapper = promotionMapper;
     }
 
     @Override
     public List<PromotionDto> getAllPromotions() {
-        return promotionRepository.findAll().stream()
+        List<Promotion> promotions = promotionRepository.findAll();
+        return promotions.stream()
                 .map(promotionMapper::toDto)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public Optional<PromotionDto> getPromotionById(Long id) {
+    public PromotionDto getPromotionById(Long id) {
         return promotionRepository.findById(id)
-                .map(promotionMapper::toDto);
+                .map(promotionMapper::toDto)
+                .orElseThrow(() -> new PromotionNotFoundException(ErrorMessage.PROMOTION_NOT_FOUND));
     }
 
     @Override
     public PromotionDto createPromotion(PromotionDto promotionDto) {
         Promotion promotion = promotionMapper.toEntity(promotionDto);
-        promotion.setCreatedAt(LocalDateTime.now());
         Promotion savedPromotion = promotionRepository.save(promotion);
         return promotionMapper.toDto(savedPromotion);
     }
 
     @Override
-    public Optional<PromotionDto> updatePromotion(Long id, PromotionDto promotionDto) {
-        return promotionRepository.findById(id).map(promotion -> {
-            promotionMapper.updateEntityFromDto(promotionDto, promotion);
-            promotion.setUpdatedAt(LocalDateTime.now());
-            Promotion updatedPromotion = promotionRepository.save(promotion);
-            return promotionMapper.toDto(updatedPromotion);
-        });
+    public PromotionDto updatePromotion(Long id, PromotionDto promotionDto) {
+        Promotion promotion = promotionRepository.findById(id)
+                .orElseThrow(() -> new PromotionNotFoundException(ErrorMessage.PROMOTION_NOT_FOUND));
+
+        promotionMapper.updateEntityFromDto(promotionDto, promotion);
+        Promotion updatedPromotion = promotionRepository.save(promotion);
+        return promotionMapper.toDto(updatedPromotion);
     }
 
     @Override
     public void deletePromotion(Long id) {
+        if (!promotionRepository.existsById(id)) {
+            throw new PromotionNotFoundException(ErrorMessage.PROMOTION_NOT_FOUND);
+        }
         promotionRepository.deleteById(id);
     }
 
     @Override
-    public List<PromotionDto> getActivePromotions() {
-        LocalDateTime now = LocalDateTime.now();
-        return promotionRepository.findByStartDateBeforeAndEndDateAfter(now, now).stream()
+    public void addProductToPromotion(Long promotionId, Long productId) {
+        Promotion promotion = promotionRepository.findById(promotionId)
+                .orElseThrow(() -> new PromotionNotFoundException(ErrorMessage.PROMOTION_NOT_FOUND));
+
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(ErrorMessage.PRODUCT_NOT_FOUND));
+
+        // Проверяем, существует ли уже связь
+        productPromotionRepository.findByProductIdAndPromotionId(productId, promotionId).ifPresent(pp -> {
+            throw new ProductAlreadyInPromotionException(ErrorMessage.PRODUCT_ALREADY_IN_PROMOTION);
+        });
+
+        ProductPromotion productPromotion = new ProductPromotion();
+        productPromotion.setProduct(product);
+        productPromotion.setPromotion(promotion);
+
+        productPromotionRepository.save(productPromotion);
+    }
+
+    @Override
+    public void removeProductFromPromotion(Long promotionId, Long productId) {
+        ProductPromotion productPromotion = productPromotionRepository.findByProductIdAndPromotionId(productId, promotionId)
+                .orElseThrow(() -> new ProductPromotionNotFoundException(ErrorMessage.PRODUCT_PROMOTION_NOT_FOUND));
+
+        productPromotionRepository.delete(productPromotion);
+    }
+
+    @Override
+    public List<PromotionDto> getPromotionsForProduct(Long productId) {
+        List<ProductPromotion> productPromotions = productPromotionRepository.findByProductId(productId);
+        return productPromotions.stream()
+                .map(ProductPromotion::getPromotion)
                 .map(promotionMapper::toDto)
                 .collect(Collectors.toList());
     }

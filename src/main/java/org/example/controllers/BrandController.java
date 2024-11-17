@@ -10,7 +10,6 @@ import org.example.annotations.BrandAnnotations.DeleteBrand;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/brands")
@@ -33,9 +32,8 @@ public class BrandController {
     // Получить бренд по ID
     @GetBrandById
     public ResponseEntity<BrandDto> getBrandById(@PathVariable Long id) {
-        Optional<BrandDto> brandOpt = brandService.getBrandById(id);
-        return brandOpt.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        BrandDto brand = brandService.getBrandById(id);
+        return ResponseEntity.ok(brand);
     }
 
     // Создать новый бренд
@@ -48,9 +46,8 @@ public class BrandController {
     // Обновить бренд
     @UpdateBrand
     public ResponseEntity<BrandDto> updateBrand(@PathVariable Long id, @RequestBody BrandDto brandDto) {
-        Optional<BrandDto> updatedOpt = brandService.updateBrand(id, brandDto);
-        return updatedOpt.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        BrandDto updated = brandService.updateBrand(id, brandDto);
+        return ResponseEntity.ok(updated);
     }
 
     // Удалить бренд

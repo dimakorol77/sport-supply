@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface DiscountRepository extends JpaRepository<Discount, Long> {
-
     List<Discount> findByProductIdAndStartDateBeforeAndEndDateAfter(Long productId, LocalDateTime startDate, LocalDateTime endDate);
-
-    Optional<Discount> findFirstByProductIdAndStartDateBeforeAndEndDateAfterOrderByDiscountPriceDesc(Long productId, LocalDateTime now1, LocalDateTime now2);
+    Optional<Discount> findFirstByProductIdAndStartDateBeforeAndEndDateAfterOrderByDiscountPriceDesc(Long productId, LocalDateTime startDate, LocalDateTime endDate);
 }

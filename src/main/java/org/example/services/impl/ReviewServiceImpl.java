@@ -1,6 +1,8 @@
 package org.example.services.impl;
 
 import org.example.dto.ReviewDto;
+import org.example.exception.ReviewNotFoundException;
+import org.example.exception.errorMessage.ErrorMessage;
 import org.example.mappers.ReviewMapper;
 import org.example.models.Review;
 import org.example.repositories.ReviewRepository;
@@ -10,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,9 +35,10 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public Optional<ReviewDto> getReviewById(Long id) {
+    public ReviewDto getReviewById(Long id) {
         return reviewRepository.findById(id)
-                .map(reviewMapper::toDto);
+                .map(reviewMapper::toDto)
+                .orElseThrow(() -> new ReviewNotFoundException(ErrorMessage.REVIEW_NOT_FOUND));
     }
 
     @Override
@@ -48,17 +50,21 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public Optional<ReviewDto> updateReview(Long id, ReviewDto reviewDto) {
-        return reviewRepository.findById(id).map(review -> {
-            reviewMapper.updateEntityFromDto(reviewDto, review);
-            review.setUpdatedAt(LocalDateTime.now());
-            Review updatedReview = reviewRepository.save(review);
-            return reviewMapper.toDto(updatedReview);
-        });
+    public ReviewDto updateReview(Long id, ReviewDto reviewDto) {
+        Review review = reviewRepository.findById(id)
+                .orElseThrow(() -> new ReviewNotFoundException(ErrorMessage.REVIEW_NOT_FOUND));
+
+        reviewMapper.updateEntityFromDto(reviewDto, review);
+        review.setUpdatedAt(LocalDateTime.now());
+        Review updatedReview = reviewRepository.save(review);
+        return reviewMapper.toDto(updatedReview);
     }
 
     @Override
     public void deleteReview(Long id) {
+        if (!reviewRepository.existsById(id)) {
+            throw new ReviewNotFoundException(ErrorMessage.REVIEW_NOT_FOUND);
+        }
         reviewRepository.deleteById(id);
     }
 

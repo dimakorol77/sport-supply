@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/reviews")
@@ -36,9 +35,8 @@ public class ReviewController {
     // Получить отзыв по ID
     @GetReviewById
     public ResponseEntity<ReviewDto> getReviewById(@PathVariable Long id) {
-        Optional<ReviewDto> reviewOpt = reviewService.getReviewById(id);
-        return reviewOpt.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        ReviewDto review = reviewService.getReviewById(id);
+        return ResponseEntity.ok(review);
     }
 
     // Создать новый отзыв
@@ -51,9 +49,8 @@ public class ReviewController {
     // Обновить отзыв
     @UpdateReview
     public ResponseEntity<ReviewDto> updateReview(@PathVariable Long id, @Valid @RequestBody ReviewDto reviewDto) {
-        Optional<ReviewDto> updatedOpt = reviewService.updateReview(id, reviewDto);
-        return updatedOpt.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        ReviewDto updated = reviewService.updateReview(id, reviewDto);
+        return ResponseEntity.ok(updated);
     }
 
     // Удалить отзыв
