@@ -14,9 +14,10 @@ public interface OrderService {
     List<OrderDto> getAllOrders();
     OrderDto createOrderFromCart(Cart cart, OrderCreateDto orderCreateDto);
     OrderDto updateOrderStatus(Long orderId, OrderStatus status);
-    OrderDto getOrderById(Long orderId);
-    void cancelOrder(Long orderId);
     List<OrderDto> getOrdersByStatus(OrderStatus status);
     List<OrderDto> getOrdersCreatedAfter(LocalDateTime date);
     List<OrderDto> getOrdersByDeliveryMethod(DeliveryMethod deliveryMethod);
+    boolean isOrderOwner(Long orderId, Long userId);
+    OrderDto getOrderByIdAndCheckOwnership(Long orderId, Long userId);
+    void cancelOrderAndCheckOwnership(Long orderId, Long userId);
 }

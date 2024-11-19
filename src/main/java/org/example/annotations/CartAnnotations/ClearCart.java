@@ -20,7 +20,8 @@ import java.lang.annotation.Target;
         tags = "Корзина", // Теги для группировки методов в документации.
         responses = { // Описание возможных ответов от сервера.
                 @ApiResponse(responseCode = "204", description = "Корзина успешно очищена"), // Ответ при успешном выполнении (статус 204).
-                @ApiResponse(responseCode = "404", description = "Корзина не найдена") // Ответ при ошибке (статус 404, если корзина не найдена).
+                @ApiResponse(responseCode = "404", description = "Корзина не найдена"), // Ответ при ошибке (статус 404, если корзина не найдена).
+                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
         }
 )
 public @interface ClearCart {// Объявление кастомной аннотации ClearCart.

@@ -1,11 +1,13 @@
 package org.example.config;
 
 
+import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.servers.Server;
+import io.swagger.v3.oas.models.security.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 
@@ -15,9 +17,16 @@ public class SwaggerConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Sport Supply API") // Заголовок API
-                        .version("1.0") // Версия API
-                        .description("This is the API documentation for sports nutrition store.")) // Описание API
-                .servers(List.of(new Server().url("http://localhost:8080"))); // URL сервера, на котором работает API
+                        .title("Sport Supply API")
+                        .version("1.0")
+                        .description("This is the API documentation for sports nutrition store."))
+                .servers(List.of(new Server().url("http://localhost:8080")))
+                .components(new Components()
+                        .addSecuritySchemes("BearerAuth",
+                                new SecurityScheme()
+                                        .type(SecurityScheme.Type.HTTP)
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")))
+                .addSecurityItem(new SecurityRequirement().addList("BearerAuth"));
     }
 }

@@ -19,7 +19,6 @@ public class OrderItem {
     private Long productId;
     private String productName;
     private String productDescription;
-    private String productImageUrl;
     private String productCategoryName;
 
     @Column(nullable = false)

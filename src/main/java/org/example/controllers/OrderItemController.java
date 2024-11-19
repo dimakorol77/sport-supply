@@ -7,12 +7,14 @@ import org.example.annotations.OrderItemAnnotations.DeleteOrderItem;
 import org.example.annotations.OrderItemAnnotations.GetOrderItemsByOrderId;
 import org.example.annotations.OrderItemAnnotations.UpdateOrderItem;
 
+import org.example.dto.OrderItemCreateDto;
 import org.example.dto.OrderItemDto;
 import org.example.models.OrderItem;
 import org.example.services.interfaces.OrderItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,28 +33,35 @@ public class OrderItemController {
     }
 
     @CreateOrderItem
-    public ResponseEntity<OrderItemDto> createOrderItem(@PathVariable Long orderId, @Valid @RequestBody OrderItemDto orderItemDto) {
-        OrderItem orderItem = orderItemService.createOrderItem(orderItemDto, orderId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new OrderItemDto(orderItem));
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<OrderItemDto> createOrderItem(
+            @PathVariable Long orderId,
+            @Valid @RequestBody OrderItemCreateDto orderItemCreateDto) {
+        OrderItemDto createdItem = orderItemService.createOrderItem(orderItemCreateDto, orderId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdItem);
     }
 
     @GetOrderItemsByOrderId
-    public ResponseEntity<List<OrderItemDto>> getOrderItemsByOrderId(@PathVariable Long orderId) {
-        List<OrderItem> orderItems = orderItemService.getOrderItemsByOrderId(orderId);
-        List<OrderItemDto> orderItemDtos = orderItems.stream()
-                .map(OrderItemDto::new)  // Преобразуем сущности в DTO
-                .collect(Collectors.toList());
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<OrderItemDto>> getOrderItemsByOrderId(
+            @PathVariable Long orderId) {
+        List<OrderItemDto> orderItemDtos = orderItemService.getOrderItemsByOrderId(orderId);
         return ResponseEntity.ok(orderItemDtos);
     }
 
     @UpdateOrderItem
-    public ResponseEntity<OrderItemDto> updateOrderItem(@PathVariable Long orderItemId, @Valid @RequestBody OrderItemDto orderItemDto) {
-        OrderItem updatedOrderItem = orderItemService.updateOrderItem(orderItemId, orderItemDto);
-        return ResponseEntity.ok(new OrderItemDto(updatedOrderItem));
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<OrderItemDto> updateOrderItem(
+            @PathVariable Long orderItemId,
+            @Valid @RequestBody OrderItemCreateDto orderItemCreateDto) {
+        OrderItemDto updatedItem = orderItemService.updateOrderItem(orderItemId, orderItemCreateDto);
+        return ResponseEntity.ok(updatedItem);
     }
 
     @DeleteOrderItem
-    public ResponseEntity<Void> deleteOrderItem(@PathVariable Long orderItemId) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteOrderItem(
+            @PathVariable Long orderItemId) {
         orderItemService.deleteOrderItem(orderItemId);
         return ResponseEntity.noContent().build();
     }

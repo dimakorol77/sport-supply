@@ -5,9 +5,12 @@ import jakarta.validation.Valid;
 
 import org.example.annotations.UserAnnotations.*;
 import org.example.dto.*;
+import org.example.enums.Role;
 import org.example.models.User;
+import org.example.security.SecurityUtils;
 import org.example.services.interfaces.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,55 +24,52 @@ public class UserController {
 
     private final UserService userService;
 
-    // Используем конструкторную инъекцию
     public UserController(UserService userService) {
         this.userService = userService;
     }
 
-    // Получить всех пользователей
     @GetAllUsers
+    @PreAuthorize("hasRole('ADMIN')")
     public List<UserListDto> getAllUsers() {
-        return userService.getAllUsers(); // Вызов метода с правильным маппингом
+        return userService.getAllUsers();
     }
 
-    // Получить детализированные данные пользователя по ID
     @GetUserDetailsById
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserListDto> getUserDetailsById(@PathVariable Long id) {
         Optional<UserListDto> userOpt = userService.getUserDetailsById(id);
         return userOpt.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
-    // Получить пользователя по ID
-    @GetUserById
-    public ResponseEntity<UserListDto> getUserById(@PathVariable Long id) {
-        Optional<User> userOpt = userService.getUserById(id); // Получаем сущность
-        return userOpt.map(user -> ResponseEntity.ok(userService.getUserDetailsById(id).orElse(null))) // Преобразуем в DTO
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    // Создать нового пользователя
     @CreateUser
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserAfterCreationDto> createUser(@Valid @RequestBody UserCreateDto userCreateDto) {
         UserAfterCreationDto createdUser = userService.createUser(userCreateDto);
-        return ResponseEntity.status(201).body(createdUser); // Возвращаем созданного пользователя
+        return ResponseEntity.status(201).body(createdUser);
     }
 
-    // Обновить пользователя
     @UpdateUser
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UserAfterUpdateDto> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateDto userUpdateDto) {
-        Optional<UserAfterUpdateDto> updatedOpt = userService.updateUser(id, userUpdateDto);
+        String email = SecurityUtils.getCurrentUserEmail();
+        User currentUser = userService.getUserByEmail(email);
+
+        Optional<UserAfterUpdateDto> updatedOpt = userService.updateUser(id, userUpdateDto, currentUser);
         return updatedOpt.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // Удалить пользователя
     @DeleteUser
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        if (userService.existsById(id)) { // Проверка существования пользователя
-            userService.deleteUser(id);
-            return ResponseEntity.noContent().build(); // Возвращаем статус 204 No Content
+        String email = SecurityUtils.getCurrentUserEmail();
+        User currentUser = userService.getUserByEmail(email);
+
+        if (userService.existsById(id)) {
+            userService.deleteUser(id, currentUser);
+            return ResponseEntity.noContent().build();
         } else {
-            return ResponseEntity.notFound().build(); // Возвращаем статус 404 Not Found
+            return ResponseEntity.notFound().build();
         }
     }
 }

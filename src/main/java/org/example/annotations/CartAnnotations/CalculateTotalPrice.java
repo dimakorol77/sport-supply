@@ -20,7 +20,8 @@ import java.lang.annotation.Target;
         tags = "Корзина",
         responses = {
                 @ApiResponse(responseCode = "200", description = "Общая стоимость вычислена"),
-                @ApiResponse(responseCode = "404", description = "Корзина не найдена")
+                @ApiResponse(responseCode = "404", description = "Корзина не найдена"),
+                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
         }
 )
 public @interface CalculateTotalPrice {

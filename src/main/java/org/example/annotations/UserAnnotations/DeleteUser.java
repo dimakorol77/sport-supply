@@ -21,7 +21,8 @@ import java.lang.annotation.Target;
         tags = {"Пользователи"},
         responses = {
                 @ApiResponse(responseCode = "204", description = "Пользователь успешно удален"),
-                @ApiResponse(responseCode = "404", description = "Пользователь не найден")
+                @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
+                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
         }
 )
 public @interface DeleteUser {

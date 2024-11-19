@@ -23,7 +23,8 @@ import java.lang.annotation.Target;
         responses = {
                 @ApiResponse(responseCode = "200", description = "Пользователь успешно обновлен"),
                 @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
-                @ApiResponse(responseCode = "400", description = "Некорректные данные")
+                @ApiResponse(responseCode = "400", description = "Некорректные данные"),
+                @ApiResponse(responseCode = "403", description = "Вы не админ, у вас нет доступа")
         }
 )
 public @interface UpdateUser {

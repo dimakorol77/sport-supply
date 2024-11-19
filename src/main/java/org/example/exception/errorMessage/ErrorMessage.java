@@ -3,6 +3,7 @@ package org.example.exception.errorMessage;
 public class ErrorMessage {
     public static final String ID_NOT_FOUND = "This id was not found";
     public static final String USER_ALREADY_EXISTS = "User with this email already exists";
+    public static final String ACCESS_DENIED ="Access denied";
 
     public static final String EMAIL_FORMAT_INVALID = "Invalid email format";
     public static final String NAME_NOT_EMPTY = "Name cannot be empty";

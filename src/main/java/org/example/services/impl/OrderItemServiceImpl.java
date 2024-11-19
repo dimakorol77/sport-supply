@@ -1,6 +1,7 @@
 package org.example.services.impl;
 
 import jakarta.transaction.Transactional;
+import org.example.dto.OrderItemCreateDto;
 import org.example.dto.OrderItemDto;
 import org.example.exception.OrderItemNotFoundException;
 import org.example.exception.OrderNotFoundException;
@@ -19,6 +20,8 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class OrderItemServiceImpl implements OrderItemService {
     private final OrderItemRepository orderItemRepository;
@@ -39,17 +42,17 @@ public class OrderItemServiceImpl implements OrderItemService {
 
     @Transactional
     @Override
-    public OrderItem createOrderItem(OrderItemDto orderItemDto, Long orderId) {
+    public OrderItemDto createOrderItem(OrderItemCreateDto orderItemCreateDto, Long orderId) {
         // Получаем заказ по ID
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException(ErrorMessage.ORDER_NOT_FOUND));
 
         // Получаем продукт по ID
-        Product product = productRepository.findById(orderItemDto.getProductId())
+        Product product = productRepository.findById(orderItemCreateDto.getProductId())
                 .orElseThrow(() -> new ProductNotFoundException(ErrorMessage.PRODUCT_NOT_FOUND));
 
         // Создаем новый OrderItem из DTO и Product
-        OrderItem orderItem = orderItemMapper.toEntity(orderItemDto, product);
+        OrderItem orderItem = orderItemMapper.toEntity(orderItemCreateDto, product);
         orderItem.setOrder(order);
 
         // Сохраняем новый OrderItem
@@ -58,25 +61,27 @@ public class OrderItemServiceImpl implements OrderItemService {
         // Обновляем общую сумму заказа
         updateOrderTotalAmount(order);
 
-        return orderItem;
+        return orderItemMapper.toDto(orderItem);
     }
 
     @Override
-    public List<OrderItem> getOrderItemsByOrderId(Long orderId) {
-        return orderItemRepository.findByOrderId(orderId);
+    public List<OrderItemDto> getOrderItemsByOrderId(Long orderId) {
+        return orderItemRepository.findByOrderId(orderId).stream()
+                .map(orderItemMapper::toDto)
+                .collect(Collectors.toList());
     }
     @Transactional
     @Override
-    public OrderItem updateOrderItem(Long orderItemId, OrderItemDto orderItemDto) {
+    public OrderItemDto updateOrderItem(Long orderItemId, OrderItemCreateDto orderItemCreateDto) {
         OrderItem orderItem = orderItemRepository.findById(orderItemId)
                 .orElseThrow(() -> new OrderItemNotFoundException(ErrorMessage.ORDER_ITEM_NOT_FOUND));
 
         // Получаем продукт по ID
-        Product product = productRepository.findById(orderItemDto.getProductId())
+        Product product = productRepository.findById(orderItemCreateDto.getProductId())
                 .orElseThrow(() -> new ProductNotFoundException(ErrorMessage.PRODUCT_NOT_FOUND));
 
         // Обновляем данные OrderItem
-        orderItemMapper.updateEntityFromDto(orderItemDto, orderItem, product);
+        orderItemMapper.updateEntityFromCreateDto(orderItemCreateDto, orderItem, product);
 
         // Сохраняем обновленный OrderItem
         orderItem = orderItemRepository.save(orderItem);
@@ -84,7 +89,7 @@ public class OrderItemServiceImpl implements OrderItemService {
         // Обновляем общую сумму заказа
         updateOrderTotalAmount(orderItem.getOrder());
 
-        return orderItem;
+        return orderItemMapper.toDto(orderItem);
     }
     private void updateOrderTotalAmount(Order order) {
         BigDecimal totalAmount = order.getOrderItems().stream()
@@ -102,6 +107,11 @@ public class OrderItemServiceImpl implements OrderItemService {
                 .orElseThrow(() -> new OrderItemNotFoundException(ErrorMessage.ORDER_ITEM_NOT_FOUND));
 
         Order order = orderItem.getOrder();
+
+        // Удаляем OrderItem из коллекции Order
+        order.getOrderItems().remove(orderItem);
+
+        // Удаляем OrderItem из базы данных
         orderItemRepository.delete(orderItem);
 
         // Обновляем общую сумму заказа

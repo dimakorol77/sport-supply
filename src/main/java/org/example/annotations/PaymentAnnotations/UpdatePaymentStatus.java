@@ -1,4 +1,4 @@
-package org.example.annotations.FavoriteAnnotations;
+package org.example.annotations.PaymentAnnotations;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -13,18 +13,18 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@RequestMapping(method = RequestMethod.DELETE)
+@RequestMapping(method = RequestMethod.PATCH)
 @Operation(
-        summary = "Удаление товара из избранного",
-        description = "Удаляет товар из избранного пользователя",
-        tags = {"Избранное"},
+        summary = "Обновление статуса платежа",
+        description = "Обновляет статус существующего платежа по его идентификатору",
+        tags = {"Платежи"},
         responses = {
-                @ApiResponse(responseCode = "204", description = "Товар удален из избранного"),
-                @ApiResponse(responseCode = "404", description = "Товар не найден в избранном"),
+                @ApiResponse(responseCode = "200", description = "Статус платежа успешно обновлен"),
+                @ApiResponse(responseCode = "404", description = "Платеж не найден"),
                 @ApiResponse(responseCode = "403", description = "У вас нет доступа")
         }
 )
-public @interface RemoveProductFromFavorites {
+public @interface UpdatePaymentStatus {
     @AliasFor(annotation = RequestMapping.class, attribute = "path")
-    String[] path() default {"/{userId}/remove/{productId}"};
+    String[] path() default {"/{paymentId}/status"};
 }

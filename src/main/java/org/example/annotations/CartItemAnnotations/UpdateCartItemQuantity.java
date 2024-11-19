@@ -16,7 +16,8 @@ import java.lang.annotation.*;
         tags = "Корзина",
         responses = {
                 @ApiResponse(responseCode = "200", description = "Количество товара обновлено"),
-                @ApiResponse(responseCode = "404", description = "Товар в корзине не найден")
+                @ApiResponse(responseCode = "404", description = "Товар в корзине не найден"),
+                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
         }
 )
 public @interface UpdateCartItemQuantity {

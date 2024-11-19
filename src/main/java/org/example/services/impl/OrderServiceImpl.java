@@ -4,6 +4,8 @@ import jakarta.transaction.Transactional;
 import org.example.dto.OrderDto;
 import org.example.enums.DeliveryMethod;
 import org.example.enums.OrderStatus;
+import org.example.enums.PaymentStatus;
+import org.example.enums.Role;
 import org.example.exception.*;
 import org.example.exception.errorMessage.ErrorMessage;
 import org.example.exception.OrderCancellationException;
@@ -11,6 +13,7 @@ import org.example.mappers.OrderMapper;
 import org.example.models.*;
 import org.example.repositories.*;
 import org.example.services.interfaces.OrderService;
+import org.example.services.interfaces.PaymentService;
 import org.springframework.stereotype.Service;
 import org.example.dto.OrderCreateDto;
 
@@ -29,42 +32,39 @@ public class OrderServiceImpl implements OrderService {
     private final OrderMapper orderMapper;
     private final CartRepository cartRepository;
     private final OrderStatusHistoryRepository orderStatusHistoryRepository;
+    private final PaymentService paymentService;
 
     // Используем конструкторную инъекцию
     public OrderServiceImpl(OrderRepository orderRepository, UserRepository userRepository,
-                            ProductRepository productRepository, OrderMapper orderMapper, OrderStatusHistoryRepository orderStatusHistoryRepository,
-                            CartRepository cartRepository) {  // Добавляем CartRepository в конструктор
+                            ProductRepository productRepository, OrderMapper orderMapper,
+                            OrderStatusHistoryRepository orderStatusHistoryRepository,
+                            CartRepository cartRepository, PaymentService paymentService) {
         this.orderRepository = orderRepository;
-        this.orderStatusHistoryRepository = orderStatusHistoryRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.orderMapper = orderMapper;
+        this.orderStatusHistoryRepository = orderStatusHistoryRepository;
         this.cartRepository = cartRepository;
+        this.paymentService = paymentService; // Добавляем PaymentService
     }
 
     // Получение заказов по ID пользователя
     @Override
-
     public List<OrderDto> getOrdersByUserId(Long userId) {
         List<Order> orders = orderRepository.findByUserId(userId);
-        // Преобразуем список заказов в DTO
         return orders.isEmpty() ? Collections.emptyList() : orders.stream()
-                .map(orderMapper::toDto) // Преобразуем каждый заказ в DTO
+                .map(orderMapper::toDto)
                 .collect(Collectors.toList());
-    }//добавила проверку, чтобы возвращать пустой список, если заказов нет
+    }
 
-    // Получение всех заказов
     @Override
     public List<OrderDto> getAllOrders() {
         List<Order> orders = orderRepository.findAll();
-        // Преобразуем все заказы в DTO
         return orders.stream()
                 .map(orderMapper::toDto)
                 .collect(Collectors.toList());
     }
 
-
-    // Обновление статуса заказа
     @Transactional
     @Override
     public OrderDto updateOrderStatus(Long orderId, OrderStatus status) {
@@ -74,26 +74,23 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(status);
         order.setUpdatedAt(LocalDateTime.now());
 
-        // Создаем новую запись в истории статусов
         OrderStatusHistory statusHistory = new OrderStatusHistory();
         statusHistory.setOrder(order);
         statusHistory.setStatus(status);
         statusHistory.setChangedAt(LocalDateTime.now());
 
-        // Добавляем запись в историю статусов заказа
         if (order.getStatusHistory() == null) {
             order.setStatusHistory(new ArrayList<>());
         }
         order.getStatusHistory().add(statusHistory);
 
-        // Сохраняем изменения
         order = orderRepository.save(order);
 
         return orderMapper.toDto(order);
     }
+
     @Override
     public OrderDto createOrderFromCart(Cart cart, OrderCreateDto orderCreateDto) {
-        // Проверяем, есть ли в корзине активные (не удаленные) товары
         boolean hasActiveItems = cart.getCartItems().stream()
                 .anyMatch(cartItem -> !cartItem.isDeleted());
 
@@ -108,7 +105,6 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderItems(orderItems);
         order = orderRepository.save(order);
 
-        // Инициализируем историю статусов заказа
         OrderStatusHistory statusHistory = new OrderStatusHistory();
         statusHistory.setOrder(order);
         statusHistory.setStatus(order.getStatus());
@@ -125,7 +121,7 @@ public class OrderServiceImpl implements OrderService {
         order.setDeliveryMethod(orderCreateDto.getDeliveryMethod());
         order.setDeliveryAddress(orderCreateDto.getDeliveryAddress());
         order.setContactInfo(orderCreateDto.getContactInfo());
-        order.setStatus(OrderStatus.WAITING_PAYMENT); // Устанавливаем статус "Ожидает оплаты"
+        order.setStatus(OrderStatus.CREATED);
         order.setCreatedAt(LocalDateTime.now());
         order.setUpdatedAt(LocalDateTime.now());
         return order;
@@ -133,7 +129,7 @@ public class OrderServiceImpl implements OrderService {
 
     private List<OrderItem> createOrderItems(Cart cart, Order order) {
         return cart.getCartItems().stream()
-                .filter(cartItem -> !cartItem.isDeleted()) // Учитываем только активные товары
+                .filter(cartItem -> !cartItem.isDeleted())
                 .map(cartItem -> createOrderItem(cartItem, order))
                 .collect(Collectors.toList());
     }
@@ -146,7 +142,6 @@ public class OrderServiceImpl implements OrderService {
         orderItem.setProductId(product.getId());
         orderItem.setProductName(product.getName());
         orderItem.setProductDescription(product.getDescription());
-        // orderItem.setProductImageUrl(getProductImageUrl(product)); // Закомментировано
         orderItem.setProductCategoryName(
                 product.getCategory() != null ? product.getCategory().getName() : null
         );
@@ -154,24 +149,6 @@ public class OrderServiceImpl implements OrderService {
         orderItem.setQuantity(cartItem.getQuantity());
 
         return orderItem;
-    }
-    @Override
-    public OrderDto getOrderById(Long orderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException(ErrorMessage.ORDER_NOT_FOUND));
-        return orderMapper.toDto(order);
-    }
-
-    @Override
-    public void cancelOrder(Long orderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException(ErrorMessage.ORDER_NOT_FOUND));
-
-        if (order.getStatus() == OrderStatus.WAITING_PAYMENT || order.getStatus() == OrderStatus.CREATED) {
-            updateOrderStatus(orderId, OrderStatus.CANCELLED);
-        } else {
-            throw new OrderCancellationException(ErrorMessage.ORDER_CANNOT_BE_CANCELLED);
-        }
     }
 
     @Override
@@ -197,4 +174,64 @@ public class OrderServiceImpl implements OrderService {
                 .map(orderMapper::toDto)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public boolean isOrderOwner(Long orderId, Long userId) {
+        Order order = orderRepository.findById(orderId).orElse(null);
+        if (order == null || order.getUser() == null) {
+            return false;
+        }
+        return order.getUser().getId().equals(userId);
+    }
+
+    @Override
+    public OrderDto getOrderByIdAndCheckOwnership(Long orderId, Long userId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException(ErrorMessage.ORDER_NOT_FOUND));
+
+        if (!order.getUser().getId().equals(userId) && !hasAdminRole(userId)) {
+            throw new org.springframework.security.access.AccessDeniedException(ErrorMessage.ACCESS_DENIED);
+
+        }
+
+        return orderMapper.toDto(order);
+    }
+
+    @Transactional
+    @Override
+    public void cancelOrderAndCheckOwnership(Long orderId, Long userId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException(ErrorMessage.ORDER_NOT_FOUND));
+
+        if (!order.getUser().getId().equals(userId) && !hasAdminRole(userId)) {
+            throw new org.springframework.security.access.AccessDeniedException(ErrorMessage.ACCESS_DENIED);
+        }
+
+        if (order.getStatus() == OrderStatus.WAITING_PAYMENT || order.getStatus() == OrderStatus.CREATED) {
+            order.setStatus(OrderStatus.CANCELLED);
+            order.setUpdatedAt(LocalDateTime.now());
+
+            OrderStatusHistory statusHistory = new OrderStatusHistory();
+            statusHistory.setOrder(order);
+            statusHistory.setStatus(OrderStatus.CANCELLED);
+            statusHistory.setChangedAt(LocalDateTime.now());
+
+            if (order.getStatusHistory() == null) {
+                order.setStatusHistory(new ArrayList<>());
+            }
+            order.getStatusHistory().add(statusHistory);
+
+            orderRepository.save(order);
+
+        } else {
+            throw new OrderCancellationException(ErrorMessage.ORDER_CANNOT_BE_CANCELLED);
+        }
+    }
+
+    private boolean hasAdminRole(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(ErrorMessage.USER_NOT_FOUND));
+        return user.getRole() == Role.ADMIN;
+    }
 }
+
