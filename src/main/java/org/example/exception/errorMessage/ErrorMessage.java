@@ -42,7 +42,7 @@ public class ErrorMessage {
 
     public static final String PROMOTION_NOT_FOUND = "Promotion not found";
 
-    // Новые сообщения об ошибках
+
     // Для Brand
     public static final String BRAND_NOT_FOUND = "Brand not found";
     public static final String BRAND_ALREADY_EXISTS = "Brand already exists";

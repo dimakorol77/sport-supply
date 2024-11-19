@@ -24,7 +24,4 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     List<Order> findByDeliveryMethod(DeliveryMethod deliveryMethod);
     List<Order> findByStatusIn(List<OrderStatus> statuses);
-
-
-
 }
