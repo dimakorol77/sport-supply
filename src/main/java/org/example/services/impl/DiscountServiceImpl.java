@@ -1,8 +1,8 @@
 package org.example.services.impl;
 
 import org.example.dto.DiscountDto;
-import org.example.exception.DiscountNotFoundException;
-import org.example.exception.errorMessage.ErrorMessage;
+import org.example.exceptions.DiscountNotFoundException;
+import org.example.exceptions.errorMessage.ErrorMessage;
 import org.example.mappers.DiscountMapper;
 import org.example.models.Discount;
 import org.example.repositories.DiscountRepository;

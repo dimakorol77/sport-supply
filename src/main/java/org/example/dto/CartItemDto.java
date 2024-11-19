@@ -4,8 +4,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
 
-import java.math.BigDecimal;
-import org.example.exception.errorMessage.ErrorMessage;
+import org.example.exceptions.errorMessage.ErrorMessage;
 
 @Data
 public class CartItemDto {

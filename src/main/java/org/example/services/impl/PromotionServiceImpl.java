@@ -1,11 +1,11 @@
 package org.example.services.impl;
 
 import org.example.dto.PromotionDto;
-import org.example.exception.ProductAlreadyInPromotionException;
-import org.example.exception.ProductNotFoundException;
-import org.example.exception.PromotionNotFoundException;
-import org.example.exception.ProductPromotionNotFoundException;
-import org.example.exception.errorMessage.ErrorMessage;
+import org.example.exceptions.ProductAlreadyInPromotionException;
+import org.example.exceptions.ProductNotFoundException;
+import org.example.exceptions.PromotionNotFoundException;
+import org.example.exceptions.ProductPromotionNotFoundException;
+import org.example.exceptions.errorMessage.ErrorMessage;
 import org.example.mappers.PromotionMapper;
 import org.example.models.Product;
 import org.example.models.ProductPromotion;
@@ -115,4 +115,6 @@ public class PromotionServiceImpl implements PromotionService {
                 .map(promotionMapper::toDto)
                 .collect(Collectors.toList());
     }
+
+    
 }

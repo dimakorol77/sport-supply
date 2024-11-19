@@ -3,10 +3,6 @@ package org.example.dto;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import org.example.enums.DeliveryMethod;
-import org.example.exception.errorMessage.ErrorMessage;
-
-import java.math.BigDecimal;
-import java.util.List;
 
 @Data
 public class OrderCreateDto {

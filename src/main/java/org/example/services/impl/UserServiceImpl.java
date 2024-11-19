@@ -2,9 +2,9 @@ package org.example.services.impl;
 
 import org.example.dto.*;
 import org.example.enums.Role;
-import org.example.exception.IdNotFoundException;
-import org.example.exception.UserAlreadyExistsException;
-import org.example.exception.errorMessage.ErrorMessage;
+import org.example.exceptions.IdNotFoundException;
+import org.example.exceptions.UserAlreadyExistsException;
+import org.example.exceptions.errorMessage.ErrorMessage;
 import org.example.mappers.UserMapper;
 import org.example.models.User;
 import org.example.repositories.UserRepository;

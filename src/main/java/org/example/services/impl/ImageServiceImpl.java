@@ -1,10 +1,10 @@
 package org.example.services.impl;
 
 import org.example.dto.ImageDto;
-import org.example.exception.ImageNotFoundException;
-import org.example.exception.ImageUploadException;
-import org.example.exception.ProductNotFoundException;
-import org.example.exception.errorMessage.ErrorMessage;
+import org.example.exceptions.ImageNotFoundException;
+import org.example.exceptions.ImageUploadException;
+import org.example.exceptions.ProductNotFoundException;
+import org.example.exceptions.errorMessage.ErrorMessage;
 import org.example.mappers.ImageMapper;
 import org.example.models.Image;
 import org.example.models.Product;

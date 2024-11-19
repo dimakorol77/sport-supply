@@ -1,9 +1,9 @@
 package org.example.services.impl;
 
 import org.example.dto.BrandDto;
-import org.example.exception.BrandAlreadyExistsException;
-import org.example.exception.BrandNotFoundException;
-import org.example.exception.errorMessage.ErrorMessage;
+import org.example.exceptions.BrandAlreadyExistsException;
+import org.example.exceptions.BrandNotFoundException;
+import org.example.exceptions.errorMessage.ErrorMessage;
 import org.example.mappers.BrandMapper;
 import org.example.models.Brand;
 import org.example.repositories.BrandRepository;

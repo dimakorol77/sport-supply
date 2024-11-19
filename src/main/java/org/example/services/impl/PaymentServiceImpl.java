@@ -2,10 +2,10 @@ package org.example.services.impl;
 
 import org.example.dto.PaymentRequestDto;
 import org.example.dto.PaymentResponseDto;
-import org.example.exception.OrderNotFoundException;
-import org.example.exception.PaymentAlreadyExistsException;
-import org.example.exception.PaymentNotFoundException;
-import org.example.exception.errorMessage.ErrorMessage;
+import org.example.exceptions.OrderNotFoundException;
+import org.example.exceptions.PaymentAlreadyExistsException;
+import org.example.exceptions.PaymentNotFoundException;
+import org.example.exceptions.errorMessage.ErrorMessage;
 import org.example.mappers.PaymentMapper;
 import org.example.models.Order;
 import org.example.models.Payment;
@@ -15,7 +15,6 @@ import org.example.services.interfaces.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service

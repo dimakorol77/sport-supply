@@ -2,10 +2,10 @@ package org.example.services.impl;
 
 import jakarta.transaction.Transactional;
 import org.example.dto.OrderItemDto;
-import org.example.exception.OrderItemNotFoundException;
-import org.example.exception.OrderNotFoundException;
-import org.example.exception.ProductNotFoundException;
-import org.example.exception.errorMessage.ErrorMessage;
+import org.example.exceptions.OrderItemNotFoundException;
+import org.example.exceptions.OrderNotFoundException;
+import org.example.exceptions.ProductNotFoundException;
+import org.example.exceptions.errorMessage.ErrorMessage;
 import org.example.mappers.OrderItemMapper;
 import org.example.models.Order;
 import org.example.models.OrderItem;

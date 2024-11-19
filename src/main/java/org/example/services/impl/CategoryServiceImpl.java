@@ -1,9 +1,9 @@
 package org.example.services.impl;
 
 import org.example.dto.CategoryDto;
-import org.example.exception.CategoryAlreadyExistsException;
-import org.example.exception.CategoryNotFoundException;
-import org.example.exception.errorMessage.ErrorMessage;
+import org.example.exceptions.CategoryAlreadyExistsException;
+import org.example.exceptions.CategoryNotFoundException;
+import org.example.exceptions.errorMessage.ErrorMessage;
 import org.example.mappers.CategoryMapper;
 import org.example.models.Category;
 import org.example.repositories.CategoryRepository;

@@ -1,8 +1,8 @@
 package org.example.services.impl;
 
 import org.example.dto.ReviewDto;
-import org.example.exception.ReviewNotFoundException;
-import org.example.exception.errorMessage.ErrorMessage;
+import org.example.exceptions.ReviewNotFoundException;
+import org.example.exceptions.errorMessage.ErrorMessage;
 import org.example.mappers.ReviewMapper;
 import org.example.models.Review;
 import org.example.repositories.ReviewRepository;

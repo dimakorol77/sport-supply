@@ -4,9 +4,8 @@ import jakarta.transaction.Transactional;
 import org.example.dto.CartDto;
 import org.example.dto.OrderCreateDto;
 import org.example.dto.OrderDto;
-import org.example.enums.OrderStatus;
-import org.example.exception.*;
-import org.example.exception.errorMessage.ErrorMessage;
+import org.example.exceptions.*;
+import org.example.exceptions.errorMessage.ErrorMessage;
 import org.example.mappers.CartMapper;
 import org.example.models.*;
 import org.example.repositories.*;
@@ -17,8 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class CartServiceImpl implements CartService {

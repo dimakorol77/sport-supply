@@ -3,7 +3,7 @@ package org.example.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
-import org.example.exception.errorMessage.ErrorMessage;
+import org.example.exceptions.errorMessage.ErrorMessage;
 
 @Data
 public class UserCreateDto {

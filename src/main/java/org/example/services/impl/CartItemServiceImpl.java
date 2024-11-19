@@ -3,24 +3,21 @@ package org.example.services.impl;
 import org.example.dto.CartItemDto;
 import org.example.dto.CartItemResponseDto;
 import org.example.dto.DiscountDto;
-import org.example.exception.*;
-import org.example.exception.errorMessage.ErrorMessage;
+import org.example.exceptions.*;
+import org.example.exceptions.errorMessage.ErrorMessage;
 import org.example.mappers.CartItemMapper;
 import org.example.models.Cart;
 import org.example.models.CartItem;
 import org.example.models.Product;
-import org.example.models.User;
 import org.example.repositories.CartItemRepository;
 import org.example.repositories.CartRepository;
 import org.example.repositories.ProductRepository;
-import org.example.repositories.UserRepository;
 import org.example.services.interfaces.CartItemService;
 import org.example.services.interfaces.DiscountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service

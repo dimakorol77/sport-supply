@@ -1,9 +1,8 @@
 package org.example.dto;
 
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import lombok.Data;
-import org.example.exception.errorMessage.ErrorMessage;
+import org.example.exceptions.errorMessage.ErrorMessage;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

@@ -7,7 +7,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.exception.errorMessage.ErrorMessage;
 import org.example.models.OrderItem;
 
 import java.math.BigDecimal;

@@ -1,7 +1,7 @@
 package org.example.controllers.handler;
 
-import org.example.exception.*;
-import org.example.exception.errorMessage.ErrorMessage;
+import org.example.exceptions.*;
+import org.example.exceptions.errorMessage.ErrorMessage;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;

@@ -1,11 +1,11 @@
 package org.example.services.impl;
 
 import org.example.dto.ProductDto;
-import org.example.exception.FavoriteAlreadyExistsException;
-import org.example.exception.FavoriteNotFoundException;
-import org.example.exception.ProductNotFoundException;
-import org.example.exception.UserNotFoundException;
-import org.example.exception.errorMessage.ErrorMessage;
+import org.example.exceptions.FavoriteAlreadyExistsException;
+import org.example.exceptions.FavoriteNotFoundException;
+import org.example.exceptions.ProductNotFoundException;
+import org.example.exceptions.UserNotFoundException;
+import org.example.exceptions.errorMessage.ErrorMessage;
 import org.example.mappers.ProductMapper;
 import org.example.models.Favorite;
 import org.example.models.Product;
