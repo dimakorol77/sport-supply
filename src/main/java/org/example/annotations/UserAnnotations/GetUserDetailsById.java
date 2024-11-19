@@ -22,7 +22,8 @@ import java.lang.annotation.Target;
         tags = {"Пользователи"},
         responses = {
                 @ApiResponse(responseCode = "200", description = "Пользователь найден"),
-                @ApiResponse(responseCode = "404", description = "Пользователь не найден")
+                @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
+                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
         }
 )
 public @interface GetUserDetailsById {

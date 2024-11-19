@@ -21,7 +21,8 @@ import java.lang.annotation.Target;
         responses = {
                 @ApiResponse(responseCode = "201", description = "Элемент заказа успешно создан"),
                 @ApiResponse(responseCode = "400", description = "Ошибка в данных запроса"),
-                @ApiResponse(responseCode = "404", description = "Заказ не найден")
+                @ApiResponse(responseCode = "404", description = "Заказ не найден"),
+                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
         }
 )
 public @interface CreateOrderItem {

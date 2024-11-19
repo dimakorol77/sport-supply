@@ -20,7 +20,8 @@ import java.lang.annotation.Target;
         tags = "Заказы",
         responses = {
                 @ApiResponse(responseCode = "200", description = "Список заказов получен"),
-                @ApiResponse(responseCode = "400", description = "Некорректный статус")
+                @ApiResponse(responseCode = "400", description = "Некорректный статус"),
+                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
         }
 )
 public @interface GetOrdersByStatus {

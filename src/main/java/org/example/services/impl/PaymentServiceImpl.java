@@ -2,6 +2,8 @@ package org.example.services.impl;
 
 import org.example.dto.PaymentRequestDto;
 import org.example.dto.PaymentResponseDto;
+import org.example.enums.OrderStatus;
+import org.example.enums.PaymentStatus;
 import org.example.exceptions.OrderNotFoundException;
 import org.example.exceptions.PaymentAlreadyExistsException;
 import org.example.exceptions.PaymentNotFoundException;
@@ -15,6 +17,7 @@ import org.example.services.interfaces.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -23,7 +26,6 @@ public class PaymentServiceImpl implements PaymentService {
     private final OrderRepository orderRepository;
     private final PaymentMapper paymentMapper;
 
-    @Autowired
     public PaymentServiceImpl(PaymentRepository paymentRepository,
                               OrderRepository orderRepository,
                               PaymentMapper paymentMapper) {
@@ -33,35 +35,72 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public PaymentResponseDto createPayment(PaymentRequestDto paymentRequestDto) {
-        // Находим заказ по ID
+    public PaymentResponseDto createPayment(PaymentRequestDto paymentRequestDto, Long userId) {
         Order order = orderRepository.findById(paymentRequestDto.getOrderId())
                 .orElseThrow(() -> new OrderNotFoundException(ErrorMessage.ORDER_NOT_FOUND));
 
-        // Проверяем, существует ли платеж для этого заказа
+        if (!order.getUser().getId().equals(userId)) {
+            throw new org.springframework.security.access.AccessDeniedException(ErrorMessage.ACCESS_DENIED);
+        }
+
         Optional<Payment> existingPayment = paymentRepository.findByOrderId(order.getId());
         if (existingPayment.isPresent()) {
             throw new PaymentAlreadyExistsException(ErrorMessage.PAYMENT_ALREADY_EXISTS);
         }
 
-        // Создаем сущность Payment из PaymentRequestDto
         Payment payment = paymentMapper.toEntity(paymentRequestDto, order);
 
-        // Сохраняем платеж в базе данных
         Payment savedPayment = paymentRepository.save(payment);
 
-        // Возвращаем PaymentResponseDto с сохраненной информацией
         return paymentMapper.toResponseDto(savedPayment);
     }
 
-    // Получение статуса платежа по ID
     @Override
-    public PaymentResponseDto getPaymentStatus(Long paymentId) {
-        // Находим платеж по ID
+    public PaymentResponseDto getPaymentStatus(Long paymentId, Long userId) {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new PaymentNotFoundException(ErrorMessage.PAYMENT_NOT_FOUND));
 
-        // Возвращаем DTO с информацией о платеже
+        if (!payment.getOrder().getUser().getId().equals(userId)) {
+            throw new org.springframework.security.access.AccessDeniedException(ErrorMessage.ACCESS_DENIED);
+        }
+
         return paymentMapper.toResponseDto(payment);
+    }
+
+    @Override
+    public void updatePaymentStatus(Long paymentId, PaymentStatus status) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new PaymentNotFoundException(ErrorMessage.PAYMENT_NOT_FOUND));
+
+        payment.setStatus(status);
+        payment.setUpdatedAt(LocalDateTime.now());
+        paymentRepository.save(payment);
+
+        updateOrderStatusBasedOnPayment(payment);
+    }
+
+    @Override
+    public void updatePaymentStatusByOrder(Long orderId, PaymentStatus status) {
+        Payment payment = paymentRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new PaymentNotFoundException(ErrorMessage.PAYMENT_NOT_FOUND));
+
+        payment.setStatus(status);
+        payment.setUpdatedAt(LocalDateTime.now());
+        paymentRepository.save(payment);
+
+        updateOrderStatusBasedOnPayment(payment);
+    }
+
+    private void updateOrderStatusBasedOnPayment(Payment payment) {
+        Order order = payment.getOrder();
+
+        if (payment.getStatus() == PaymentStatus.COMPLETED) {
+            order.setStatus(OrderStatus.PAID);
+        } else if (payment.getStatus() == PaymentStatus.FAILED) {
+            order.setStatus(OrderStatus.CANCELLED);
+        }
+
+        order.setUpdatedAt(LocalDateTime.now());
+        orderRepository.save(order);
     }
 }

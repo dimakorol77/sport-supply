@@ -9,6 +9,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // Метод для поиска пользователя по ID
     Optional<User> findById(Long id);
+    Optional<User> findByEmail(String email);
 
     // Метод для проверки существования пользователя с указанным email
     boolean existsByEmail(String email);

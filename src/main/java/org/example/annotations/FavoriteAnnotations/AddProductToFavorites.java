@@ -21,7 +21,8 @@ import java.lang.annotation.Target;
         responses = {
                 @ApiResponse(responseCode = "201", description = "Товар добавлен в избранное"),
                 @ApiResponse(responseCode = "404", description = "Пользователь или товар не найдены"),
-                @ApiResponse(responseCode = "409", description = "Товар уже в избранном")
+                @ApiResponse(responseCode = "409", description = "Товар уже в избранном"),
+                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
         }
 )
 public @interface AddProductToFavorites {

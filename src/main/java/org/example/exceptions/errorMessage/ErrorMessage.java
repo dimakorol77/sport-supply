@@ -3,6 +3,7 @@ package org.example.exceptions.errorMessage;
 public class ErrorMessage {
     public static final String ID_NOT_FOUND = "This id was not found";
     public static final String USER_ALREADY_EXISTS = "User with this email already exists";
+    public static final String ACCESS_DENIED ="Access denied";
 
     public static final String EMAIL_FORMAT_INVALID = "Invalid email format";
     public static final String NAME_NOT_EMPTY = "Name cannot be empty";
@@ -41,7 +42,7 @@ public class ErrorMessage {
 
     public static final String PROMOTION_NOT_FOUND = "Promotion not found";
 
-    // Новые сообщения об ошибках
+
     // Для Brand
     public static final String BRAND_NOT_FOUND = "Brand not found";
     public static final String BRAND_ALREADY_EXISTS = "Brand already exists";

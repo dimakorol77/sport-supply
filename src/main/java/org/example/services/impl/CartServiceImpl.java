@@ -37,7 +37,7 @@ public class CartServiceImpl implements CartService {
         this.orderService = orderService;
         this.cartMapper = cartMapper;
     }
-    // Создание новой корзины для пользователя? - при регистрации пригодится, при входе
+
     @Override
     public CartDto createCart(Long userId) {
         if (cartRepository.existsByUserId(userId)) {
@@ -55,8 +55,9 @@ public class CartServiceImpl implements CartService {
         Cart cart = cartMapper.toEntity(cartDto, user);
         Cart savedCart = cartRepository.save(cart);
 
-        BigDecimal totalPrice = calculateTotalPrice(savedCart.getId());
+        BigDecimal totalPrice = calculateTotalPrice(savedCart.getId(), userId);
         savedCart.setTotalPrice(totalPrice);
+        savedCart.setUpdatedAt(LocalDateTime.now());
 
         cartRepository.save(savedCart);
 
@@ -64,9 +65,14 @@ public class CartServiceImpl implements CartService {
     }
     // Метод для подсчёта общей стоимости корзины
     @Override
-    public BigDecimal calculateTotalPrice(Long cartId) {
+    public BigDecimal calculateTotalPrice(Long cartId, Long userId) {
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new CartNotFoundException(ErrorMessage.CART_NOT_FOUND));
+
+        // Проверка, что корзина принадлежит пользователю
+        if (!cart.getUser().getId().equals(userId)) {
+            throw new org.springframework.security.access.AccessDeniedException(ErrorMessage.ACCESS_DENIED);
+        }
 
         return cart.getCartItems().stream()
                 .filter(cartItem -> !cartItem.isDeleted())  // Игнорируем удаленные элементы
@@ -77,9 +83,14 @@ public class CartServiceImpl implements CartService {
     }
     // Очистка корзины (удаление всех товаров)
     @Override
-    public void clearCart(Long cartId) {
+    public void clearCart(Long cartId, Long userId) {
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new CartNotFoundException(ErrorMessage.CART_NOT_FOUND));
+
+        // Проверка, что корзина принадлежит пользователю
+        if (!cart.getUser().getId().equals(userId)) {
+            throw new org.springframework.security.access.AccessDeniedException(ErrorMessage.ACCESS_DENIED);
+        }
 
         cart.getCartItems().forEach(cartItem -> {
             if (!cartItem.isDeleted()) {
@@ -90,13 +101,19 @@ public class CartServiceImpl implements CartService {
 
         // Обновляем стоимость корзины после очистки
         cart.setTotalPrice(BigDecimal.ZERO);  // Обнуляем сумму
+        cart.setUpdatedAt(LocalDateTime.now());
         cartRepository.save(cart);  // Сохраняем корзину
     }
     @Transactional
     @Override
-    public OrderDto convertCartToOrder(Long cartId, OrderCreateDto orderCreateDto) {
+    public OrderDto convertCartToOrder(Long cartId, Long userId, OrderCreateDto orderCreateDto) {
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new CartNotFoundException(ErrorMessage.CART_NOT_FOUND));
+
+        // Проверка, что корзина принадлежит пользователю
+        if (!cart.getUser().getId().equals(userId)) {
+            throw new org.springframework.security.access.AccessDeniedException(ErrorMessage.ACCESS_DENIED);
+        }
 
         // Проверяем, есть ли в корзине активные (не удаленные) товары
         boolean hasActiveItems = cart.getCartItems().stream()
@@ -126,13 +143,13 @@ public class CartServiceImpl implements CartService {
 
         // Обновляем сумму корзины
         cart.setTotalPrice(BigDecimal.ZERO);  // Обнуляем сумму
+        cart.setUpdatedAt(LocalDateTime.now());
         cartRepository.save(cart);  // Сохраняем корзину
     }
-
-    @Override
-    public Cart getCartByUserId(Long userId) {
-        return cartRepository.findByUserId(userId)
-                .orElseThrow(() -> new CartNotFoundException(ErrorMessage.CART_NOT_FOUND));
-    }
+//    @Override
+//    public Cart getCartByUserId(Long userId) {
+//        return cartRepository.findByUserId(userId)
+//                .orElseThrow(() -> new CartNotFoundException(ErrorMessage.CART_NOT_FOUND));
+//    }
 }
 

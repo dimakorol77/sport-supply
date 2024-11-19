@@ -20,7 +20,8 @@ import java.lang.annotation.Target;
         tags = {"Избранное"},
         responses = {
                 @ApiResponse(responseCode = "200", description = "Список избранных товаров получен"),
-                @ApiResponse(responseCode = "404", description = "Пользователь не найден")
+                @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
+                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
         }
 )
 public @interface GetUserFavorites {

@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -15,7 +16,7 @@ import java.util.List;
 public class Cart {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+   // @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // Используем ID пользователя как ID корзины
 
 
@@ -36,7 +37,8 @@ public class Cart {
 
     // Товары в корзине
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL)
-    private List<CartItem> cartItems;
+    //private List<CartItem> cartItems;
+    private List<CartItem> cartItems = new ArrayList<>();
 
     @Column(name = "total_price", nullable = false)
     private BigDecimal totalPrice = BigDecimal.ZERO; // Добавляем поле общей стоимости

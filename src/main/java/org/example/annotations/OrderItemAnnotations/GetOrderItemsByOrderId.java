@@ -20,7 +20,8 @@ import java.lang.annotation.Target;
         tags = {"Элементы заказа"},
         responses = {
                 @ApiResponse(responseCode = "200", description = "Список элементов заказа успешно возвращен"),
-                @ApiResponse(responseCode = "404", description = "Заказ не найден")
+                @ApiResponse(responseCode = "404", description = "Заказ не найден"),
+                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
         }
 )
 public @interface GetOrderItemsByOrderId {

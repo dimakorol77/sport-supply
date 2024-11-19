@@ -45,12 +45,15 @@ public class FavoriteServiceImpl implements FavoriteService {
             throw new FavoriteAlreadyExistsException(ErrorMessage.FAVORITE_ALREADY_EXISTS);
         }
 
+        // Получаем пользователя по userId
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(ErrorMessage.USER_NOT_FOUND));
 
+        // Получаем продукт по productId
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(ErrorMessage.PRODUCT_NOT_FOUND));
 
+        // Создаем новый объект Favorite и устанавливаем пользователя и продукт
         Favorite favorite = new Favorite();
         favorite.setUser(user);
         favorite.setProduct(product);
@@ -72,6 +75,12 @@ public class FavoriteServiceImpl implements FavoriteService {
     public void removeProductFromFavorites(Long userId, Long productId) {
         Favorite favorite = favoriteRepository.findByUserIdAndProductId(userId, productId)
                 .orElseThrow(() -> new FavoriteNotFoundException(ErrorMessage.FAVORITE_NOT_FOUND));
+
+        // Проверка прав доступа
+        if (!favorite.getUser().getId().equals(userId)) {
+            throw new org.springframework.security.access.AccessDeniedException(ErrorMessage.ACCESS_DENIED);
+        }
+
         favoriteRepository.delete(favorite);
     }
 }

@@ -16,8 +16,8 @@ import java.lang.annotation.*;
         tags = "Корзина",
         responses = {
                 @ApiResponse(responseCode = "204", description = "Товар удален из корзины"),
-                @ApiResponse(responseCode = "404", description = "Товар в корзине не найден")
-        }
+                @ApiResponse(responseCode = "404", description = "Товар в корзине не найден"),
+                @ApiResponse(responseCode = "403", description = "У вас нет доступа")}
 )
 public @interface RemoveCartItem {
     @AliasFor(annotation = RequestMapping.class, attribute = "path")

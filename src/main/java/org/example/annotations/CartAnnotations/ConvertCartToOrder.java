@@ -17,7 +17,8 @@ import java.lang.annotation.*;
         responses = {
                 @ApiResponse(responseCode = "201", description = "Заказ успешно создан"),
                 @ApiResponse(responseCode = "400", description = "Корзина пуста или неверные данные запроса"),
-                @ApiResponse(responseCode = "404", description = "Корзина не найдена")
+                @ApiResponse(responseCode = "404", description = "Корзина не найдена"),
+                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
         }
 )
 public @interface ConvertCartToOrder {

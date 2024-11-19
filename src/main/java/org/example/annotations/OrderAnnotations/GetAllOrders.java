@@ -21,7 +21,8 @@ import java.lang.annotation.Target;
         description = "Возвращает список всех заказов", // Подробное описание операции
         tags = {"Заказы"}, // Теги для группировки в Swagger UI
         responses = { // Описание возможных ответов
-                @ApiResponse(responseCode = "200", description = "Заказы найдены") // Ответ 200 с описанием
+                @ApiResponse(responseCode = "200", description = "Заказы найдены"),// Ответ 200 с описанием
+                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
         }
 )
 public @interface GetAllOrders { // Объявление кастомной аннотации `@GetAllOrders`
