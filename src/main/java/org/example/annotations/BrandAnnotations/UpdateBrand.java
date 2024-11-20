@@ -25,3 +25,4 @@ public @interface UpdateBrand {
     @AliasFor(annotation = RequestMapping.class, attribute = "path")
     String[] path() default {"/{id}"};
 }
+

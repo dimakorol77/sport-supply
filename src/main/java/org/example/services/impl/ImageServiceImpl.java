@@ -84,7 +84,7 @@ public class ImageServiceImpl implements ImageService {
     }
 
     // Метод для сохранения файла на диск
-    private String saveFile(MultipartFile file) {
+    String saveFile(MultipartFile file) {
         String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
         try {
             Path filePath = Paths.get(uploadDir + fileName);
