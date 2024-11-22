@@ -26,5 +26,5 @@ import java.lang.annotation.Target;
 )
 public @interface RemoveProductFromFavorites {
     @AliasFor(annotation = RequestMapping.class, attribute = "path")
-    String[] path() default {"/{userId}/remove/{productId}"};
+    String[] path() default {"/remove/{productId}"};
 }

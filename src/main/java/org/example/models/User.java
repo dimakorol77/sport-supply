@@ -40,16 +40,16 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Favorite> favorites = new ArrayList<>();
 
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now(); // Устанавливаем текущую дату и время при создании
-        this.updatedAt = LocalDateTime.now(); // Устанавливаем текущую дату и время при создании
-    }
-
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now(); // Устанавливаем текущую дату и время при обновлении
-    }
+//    @PrePersist
+//    public void prePersist() {
+//        this.createdAt = LocalDateTime.now(); // Устанавливаем текущую дату и время при создании
+//        this.updatedAt = LocalDateTime.now(); // Устанавливаем текущую дату и время при создании
+//    }
+//
+//    @PreUpdate
+//    public void preUpdate() {
+//        this.updatedAt = LocalDateTime.now(); // Устанавливаем текущую дату и время при обновлении
+//    }
 
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)

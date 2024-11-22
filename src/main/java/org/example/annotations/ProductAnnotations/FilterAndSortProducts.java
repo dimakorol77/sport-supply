@@ -1,4 +1,4 @@
-package org.example.annotations.OrderAnnotations;
+package org.example.annotations.ProductAnnotations;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -15,16 +15,16 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.GET)
 @Operation(
-        summary = "Получение заказов по ID пользователя",
-        description = "Возвращает список заказов для указанного пользователя",
-        tags = {"Заказы"},
+        summary = "Фильтрация и сортировка продуктов",
+        description = "Позволяет фильтровать и сортировать продукты по различным критериям",
+        tags = {"Продукты"},
         responses = {
-                @ApiResponse(responseCode = "200", description = "Заказы найдены"),
-                @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
+                @ApiResponse(responseCode = "200", description = "Продукты получены"),
+                @ApiResponse(responseCode = "400", description = "Неверные параметры запроса"),
                 @ApiResponse(responseCode = "403", description = "У вас нет доступа")
         }
 )
-public @interface GetOrdersByUserId {
+public @interface FilterAndSortProducts {
     @AliasFor(annotation = RequestMapping.class, attribute = "path")
-    String[] path() default {"/user"};
+    String[] path() default {"/filter"};
 }

@@ -13,10 +13,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -50,13 +53,21 @@ class CategoryControllerTest {
         categoryDto.setId(1L);
         categoryDto.setName("Test Category");
         categoryDto.setDescription("Test Description");
+
+        // Устанавливаем SecurityContext с аутентифицированным пользователем с ролью ADMIN
+        org.springframework.security.core.userdetails.User userPrincipal =
+                new org.springframework.security.core.userdetails.User("admin@example.com", "",
+                        Collections.singletonList(() -> "ROLE_ADMIN"));
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
     @Test
     void testGetAllCategories() throws Exception {
         when(categoryService.getAllCategories()).thenReturn(Arrays.asList(categoryDto));
 
-        mockMvc.perform(get("/api/categories"))
+        mockMvc.perform(get("/api/categories/"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id", is(categoryDto.getId().intValue())))
                 .andExpect(jsonPath("$[0].name", is(categoryDto.getName())))
@@ -89,7 +100,7 @@ class CategoryControllerTest {
 
         String categoryJson = objectMapper.writeValueAsString(categoryDto);
 
-        mockMvc.perform(post("/api/categories")
+        mockMvc.perform(post("/api/categories/")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(categoryJson))
                 .andExpect(status().isCreated())
@@ -98,13 +109,14 @@ class CategoryControllerTest {
                 .andExpect(jsonPath("$.description", is(categoryDto.getDescription())));
     }
 
+
     @Test
     void testCreateCategory_AlreadyExists() throws Exception {
         when(categoryService.createCategory(any(CategoryDto.class))).thenThrow(new CategoryAlreadyExistsException(ErrorMessage.CATEGORY_ALREADY_EXISTS));
 
         String categoryJson = objectMapper.writeValueAsString(categoryDto);
 
-        mockMvc.perform(post("/api/categories")
+        mockMvc.perform(post("/api/categories/")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(categoryJson))
                 .andExpect(status().isConflict())

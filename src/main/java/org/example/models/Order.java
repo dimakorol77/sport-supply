@@ -44,21 +44,21 @@ public class Order {
     private LocalDateTime updatedAt;
 
 
-    // Пользователь, сделавший заказ
+
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // Список товаров в заказе
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems;
 
 
-    // История изменений статусов заказа
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderStatusHistory> statusHistory;
 
-    // Платеж, связанный с заказом
+
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
     private Payment payment;
 }

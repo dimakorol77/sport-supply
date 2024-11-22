@@ -1,17 +1,12 @@
 package org.example.controllers;
 
+import org.example.annotations.ProductAnnotations.*;
 import org.example.dto.DiscountDto;
 import org.example.dto.ProductDto;
 import org.example.dto.PromotionDto;
 import org.example.services.interfaces.ProductService;
-import org.example.annotations.ProductAnnotations.GetAllProducts;
-import org.example.annotations.ProductAnnotations.GetProductById;
-import org.example.annotations.ProductAnnotations.CreateProduct;
-import org.example.annotations.ProductAnnotations.UpdateProduct;
-import org.example.annotations.ProductAnnotations.DeleteProduct;
-import org.example.annotations.ProductAnnotations.GetActiveDiscounts;
-import org.example.annotations.ProductAnnotations.GetPromotionsForProduct;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -19,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/products")
+@PreAuthorize("hasRole('ADMIN')")
 public class ProductController {
 
     private final ProductService productService;
@@ -78,7 +74,7 @@ public class ProductController {
     }
 
     // Фильтрация и сортировка продуктов
-    @GetMapping("/filter")
+    @FilterAndSortProducts
     public ResponseEntity<List<ProductDto>> filterAndSortProducts(
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,

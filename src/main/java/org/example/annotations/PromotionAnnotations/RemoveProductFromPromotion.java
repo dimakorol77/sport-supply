@@ -1,4 +1,4 @@
-package org.example.annotations.OrderAnnotations;
+package org.example.annotations.PromotionAnnotations;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -13,18 +13,18 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@RequestMapping(method = RequestMethod.GET)
+@RequestMapping(method = RequestMethod.DELETE)
 @Operation(
-        summary = "Получение заказов по ID пользователя",
-        description = "Возвращает список заказов для указанного пользователя",
-        tags = {"Заказы"},
+        summary = "Удалить продукт из акции",
+        description = "Удаляет продукт из акции",
+        tags = {"Акции"},
         responses = {
-                @ApiResponse(responseCode = "200", description = "Заказы найдены"),
-                @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
+                @ApiResponse(responseCode = "204", description = "Продукт удален из акции"),
+                @ApiResponse(responseCode = "404", description = "Акция или продукт не найдены"),
                 @ApiResponse(responseCode = "403", description = "У вас нет доступа")
         }
 )
-public @interface GetOrdersByUserId {
+public @interface RemoveProductFromPromotion {
     @AliasFor(annotation = RequestMapping.class, attribute = "path")
-    String[] path() default {"/user"};
+    String[] path() default {"/{promotionId}/products/{productId}"};
 }

@@ -1,26 +1,34 @@
 package org.example.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.controllers.handler.ResponseExceptionHandler;
 import org.example.dto.OrderDto;
 import org.example.dto.OrderResponseDto;
 import org.example.enums.DeliveryMethod;
 import org.example.enums.OrderStatus;
 import org.example.enums.Role;
+import org.example.mappers.OrderMapper;
 import org.example.models.User;
+import org.example.security.SecurityUtils;
 import org.example.services.interfaces.CartService;
 import org.example.services.interfaces.OrderService;
 import org.example.services.interfaces.UserService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.mockito.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser; // Импорт найден
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -31,23 +39,29 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 class OrderControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @Mock
     private OrderService orderService;
 
-    @MockBean
+    @Mock
     private CartService cartService;
 
-    @MockBean
+    @Mock
     private UserService userService;
+
+    @Mock
+    private OrderMapper orderMapper;
+
+    @InjectMocks
+    private OrderController orderController;
 
     private ObjectMapper objectMapper;
 
@@ -55,8 +69,16 @@ class OrderControllerTest {
     private OrderResponseDto orderResponseDto;
     private User user;
 
+    private MockedStatic<SecurityUtils> securityUtilsMock;
+
     @BeforeEach
     void setUp() {
+        MockitoAnnotations.openMocks(this);
+
+        mockMvc = MockMvcBuilders.standaloneSetup(orderController)
+                .setControllerAdvice(new ResponseExceptionHandler())
+                .build();
+
         objectMapper = new ObjectMapper();
 
         orderDto = new OrderDto();
@@ -75,11 +97,29 @@ class OrderControllerTest {
         user.setRole(Role.USER);
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
+
+        // Мокируем статический метод SecurityUtils.getCurrentUserEmail()
+        securityUtilsMock = mockStatic(SecurityUtils.class);
+    }
+
+    @AfterEach
+    void tearDown() {
+        // Закрываем мок статического метода после каждого теста
+        securityUtilsMock.close();
     }
 
     @Test
-    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})
     void testGetAllOrders() throws Exception {
+        setAuthentication("admin@example.com", "ADMIN");
+
+        when(SecurityUtils.getCurrentUserEmail()).thenReturn("admin@example.com");
+
+        User adminUser = new User();
+        adminUser.setId(2L);
+        adminUser.setEmail("admin@example.com");
+        adminUser.setRole(Role.ADMIN);
+        when(userService.getUserByEmail("admin@example.com")).thenReturn(adminUser);
+
         when(orderService.getAllOrders()).thenReturn(Collections.singletonList(orderDto));
 
         mockMvc.perform(get("/api/orders"))
@@ -90,8 +130,10 @@ class OrderControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "test@example.com")
     void testGetOrdersByUserId_AsUser() throws Exception {
+        setAuthentication("test@example.com", "USER");
+
+        when(SecurityUtils.getCurrentUserEmail()).thenReturn("test@example.com");
         when(userService.getUserByEmail("test@example.com")).thenReturn(user);
         when(orderService.getOrdersByUserId(1L)).thenReturn(Collections.singletonList(orderDto));
 
@@ -103,14 +145,17 @@ class OrderControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})
     void testGetOrdersByUserId_AsAdmin_WithUserId() throws Exception {
+        setAuthentication("admin@example.com", "ADMIN");
+
+        when(SecurityUtils.getCurrentUserEmail()).thenReturn("admin@example.com");
+
         User adminUser = new User();
         adminUser.setId(2L);
         adminUser.setEmail("admin@example.com");
         adminUser.setRole(Role.ADMIN);
-
         when(userService.getUserByEmail("admin@example.com")).thenReturn(adminUser);
+
         when(orderService.getOrdersByUserId(1L)).thenReturn(Collections.singletonList(orderDto));
 
         mockMvc.perform(get("/api/orders/user")
@@ -120,8 +165,10 @@ class OrderControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "test@example.com")
     void testGetOrderById_Success() throws Exception {
+        setAuthentication("test@example.com", "USER");
+
+        when(SecurityUtils.getCurrentUserEmail()).thenReturn("test@example.com");
         when(userService.getUserByEmail("test@example.com")).thenReturn(user);
         when(orderService.getOrderByIdAndCheckOwnership(1L, 1L)).thenReturn(orderDto);
 
@@ -133,8 +180,10 @@ class OrderControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "test@example.com")
     void testCancelOrder_Success() throws Exception {
+        setAuthentication("test@example.com", "USER");
+
+        when(SecurityUtils.getCurrentUserEmail()).thenReturn("test@example.com");
         when(userService.getUserByEmail("test@example.com")).thenReturn(user);
         doNothing().when(orderService).cancelOrderAndCheckOwnership(1L, 1L);
 
@@ -143,21 +192,45 @@ class OrderControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})
     void testUpdateOrderStatus_Success() throws Exception {
-        when(orderService.updateOrderStatus(eq(1L), eq(OrderStatus.SHIPPED))).thenReturn(orderDto);
+        setAuthentication("admin@example.com", "ADMIN");
+
+        when(SecurityUtils.getCurrentUserEmail()).thenReturn("admin@example.com");
+
+        User adminUser = new User();
+        adminUser.setId(2L);
+        adminUser.setEmail("admin@example.com");
+        adminUser.setRole(Role.ADMIN);
+        when(userService.getUserByEmail("admin@example.com")).thenReturn(adminUser);
+
+        OrderDto updatedOrderDto = new OrderDto();
+        updatedOrderDto.setId(1L);
+        updatedOrderDto.setUserId(1L);
+        updatedOrderDto.setStatus(OrderStatus.SHIPPED);
+        updatedOrderDto.setTotalAmount(BigDecimal.valueOf(100));
+
+        when(orderService.updateOrderStatus(eq(1L), eq(OrderStatus.SHIPPED))).thenReturn(updatedOrderDto);
 
         mockMvc.perform(put("/api/orders/{orderId}/status", 1)
                         .param("status", "SHIPPED"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(orderResponseDto.getId().intValue())))
-                .andExpect(jsonPath("$.totalAmount", is(orderResponseDto.getTotalAmount().intValue())))
-                .andExpect(jsonPath("$.status", is(orderResponseDto.getStatus().name())));
+                .andExpect(jsonPath("$.id", is(updatedOrderDto.getId().intValue())))
+                .andExpect(jsonPath("$.totalAmount", is(updatedOrderDto.getTotalAmount().intValue())))
+                .andExpect(jsonPath("$.status", is(updatedOrderDto.getStatus().name())));
     }
 
     @Test
-    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})
     void testGetOrdersByStatus_Success() throws Exception {
+        setAuthentication("admin@example.com", "ADMIN");
+
+        when(SecurityUtils.getCurrentUserEmail()).thenReturn("admin@example.com");
+
+        User adminUser = new User();
+        adminUser.setId(2L);
+        adminUser.setEmail("admin@example.com");
+        adminUser.setRole(Role.ADMIN);
+        when(userService.getUserByEmail("admin@example.com")).thenReturn(adminUser);
+
         when(orderService.getOrdersByStatus(OrderStatus.CREATED)).thenReturn(Collections.singletonList(orderDto));
 
         mockMvc.perform(get("/api/orders/status")
@@ -167,8 +240,17 @@ class OrderControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})
     void testGetOrdersCreatedAfter_Success() throws Exception {
+        setAuthentication("admin@example.com", "ADMIN");
+
+        when(SecurityUtils.getCurrentUserEmail()).thenReturn("admin@example.com");
+
+        User adminUser = new User();
+        adminUser.setId(2L);
+        adminUser.setEmail("admin@example.com");
+        adminUser.setRole(Role.ADMIN);
+        when(userService.getUserByEmail("admin@example.com")).thenReturn(adminUser);
+
         LocalDateTime date = LocalDateTime.now().minusDays(1);
         when(orderService.getOrdersCreatedAfter(any(LocalDateTime.class))).thenReturn(Collections.singletonList(orderDto));
 
@@ -179,13 +261,30 @@ class OrderControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})
     void testGetOrdersByDeliveryMethod_Success() throws Exception {
+        setAuthentication("admin@example.com", "ADMIN");
+
+        when(SecurityUtils.getCurrentUserEmail()).thenReturn("admin@example.com");
+
+        User adminUser = new User();
+        adminUser.setId(2L);
+        adminUser.setEmail("admin@example.com");
+        adminUser.setRole(Role.ADMIN);
+        when(userService.getUserByEmail("admin@example.com")).thenReturn(adminUser);
+
         when(orderService.getOrdersByDeliveryMethod(DeliveryMethod.PICKUP)).thenReturn(Collections.singletonList(orderDto));
 
         mockMvc.perform(get("/api/orders/delivery-method")
-                        .param("deliveryMethod", "STANDARD"))
+                        .param("deliveryMethod", "PICKUP"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id", is(orderDto.getId().intValue())));
+    }
+
+    private void setAuthentication(String email, String role) {
+        org.springframework.security.core.userdetails.User userPrincipal =
+                new org.springframework.security.core.userdetails.User(email, "", Collections.singleton(() -> "ROLE_" + role));
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }

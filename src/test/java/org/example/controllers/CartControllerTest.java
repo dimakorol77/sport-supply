@@ -7,20 +7,24 @@ import org.example.dto.OrderCreateDto;
 import org.example.dto.OrderDto;
 import org.example.enums.DeliveryMethod;
 import org.example.enums.OrderStatus;
-import org.example.exceptions.CartAlreadyExistsException;
 import org.example.exceptions.CartEmptyException;
 import org.example.exceptions.CartNotFoundException;
 import org.example.exceptions.errorMessage.ErrorMessage;
+import org.example.models.User;
 import org.example.services.interfaces.CartService;
+import org.example.services.interfaces.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collections;
 
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.*;
@@ -34,6 +38,9 @@ class CartControllerTest {
 
     @Mock
     private CartService cartService;
+
+    @Mock
+    private UserService userService;
 
     @InjectMocks
     private CartController cartController;
@@ -66,26 +73,19 @@ class CartControllerTest {
         orderDto.setId(1L);
         orderDto.setUserId(1L);
         orderDto.setStatus(OrderStatus.CREATED);
-    }
 
-    @Test
-    void testCreateCart_Success() throws Exception {
-        when(cartService.createCart(1L)).thenReturn(cartDto);
+        // Устанавливаем SecurityContext с аутентифицированным пользователем
+        org.springframework.security.core.userdetails.User userPrincipal =
+                new org.springframework.security.core.userdetails.User("user@example.com", "", Collections.emptyList());
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(userPrincipal, null, Collections.emptyList());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        mockMvc.perform(post("/api/users/1/cart"))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id", is(cartDto.getId().intValue())))
-                .andExpect(jsonPath("$.userId", is(cartDto.getUserId().intValue())))
-                .andExpect(jsonPath("$.totalPrice", is(0)));
-    }
-
-    @Test
-    void testCreateCart_AlreadyExists() throws Exception {
-        when(cartService.createCart(1L)).thenThrow(new CartAlreadyExistsException(ErrorMessage.CART_ALREADY_EXISTS));
-
-        mockMvc.perform(post("/api/users/1/cart"))
-                .andExpect(status().isConflict())
-                .andExpect(content().string(ErrorMessage.CART_ALREADY_EXISTS));
+        // Мокаем метод userService.getUserByEmail()
+        User user = new User();
+        user.setId(1L);
+        user.setEmail("user@example.com");
+        when(userService.getUserByEmail("user@example.com")).thenReturn(user);
     }
 
     @Test
@@ -94,12 +94,11 @@ class CartControllerTest {
 
         String orderJson = objectMapper.writeValueAsString(orderCreateDto);
 
-        mockMvc.perform(post("/api/users/1/cart/convert")
+        mockMvc.perform(post("/api/cart/convert/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(orderJson))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id", is(orderDto.getId().intValue())))
-                .andExpect(jsonPath("$.userId", is(orderDto.getUserId().intValue())))
                 .andExpect(jsonPath("$.status", is(orderDto.getStatus().name())));
     }
 
@@ -110,7 +109,7 @@ class CartControllerTest {
 
         String orderJson = objectMapper.writeValueAsString(orderCreateDto);
 
-        mockMvc.perform(post("/api/users/1/cart/convert")
+        mockMvc.perform(post("/api/cart/convert/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(orderJson))
                 .andExpect(status().isNotFound())
@@ -124,11 +123,29 @@ class CartControllerTest {
 
         String orderJson = objectMapper.writeValueAsString(orderCreateDto);
 
-        mockMvc.perform(post("/api/users/1/cart/convert")
+        mockMvc.perform(post("/api/cart/convert/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(orderJson))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(ErrorMessage.CART_EMPTY));
     }
+
+    @Test
+    void testCalculateTotalPrice_Success() throws Exception {
+        when(cartService.calculateTotalPrice(eq(1L), eq(1L))).thenReturn(new BigDecimal("100.00"));
+
+        mockMvc.perform(get("/api/cart/1/total"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("100.00"));
+    }
+
+    @Test
+    void testClearCart_Success() throws Exception {
+        doNothing().when(cartService).clearCart(eq(1L), eq(1L));
+
+        mockMvc.perform(delete("/api/cart/1/clear"))
+                .andExpect(status().isNoContent());
+    }
+
 
 }

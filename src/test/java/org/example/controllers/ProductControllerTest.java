@@ -13,11 +13,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -52,13 +55,21 @@ class ProductControllerTest {
         productDto.setName("Test Product");
         productDto.setDescription("Test Description");
         productDto.setPrice(new BigDecimal("99.99"));
+
+        // Устанавливаем SecurityContext с аутентифицированным пользователем с ролью ADMIN
+        org.springframework.security.core.userdetails.User userPrincipal =
+                new org.springframework.security.core.userdetails.User("admin@example.com", "",
+                        Collections.singletonList(() -> "ROLE_ADMIN"));
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
     @Test
     void testGetAllProducts() throws Exception {
         when(productService.getAllProducts()).thenReturn(Arrays.asList(productDto));
 
-        mockMvc.perform(get("/api/products"))
+        mockMvc.perform(get("/api/products/"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id", is(productDto.getId().intValue())))
                 .andExpect(jsonPath("$[0].name", is(productDto.getName())))
@@ -93,7 +104,7 @@ class ProductControllerTest {
 
         String productJson = objectMapper.writeValueAsString(productDto);
 
-        mockMvc.perform(post("/api/products")
+        mockMvc.perform(post("/api/products/")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(productJson))
                 .andExpect(status().isCreated())
@@ -109,7 +120,7 @@ class ProductControllerTest {
 
         String productJson = objectMapper.writeValueAsString(productDto);
 
-        mockMvc.perform(post("/api/products")
+        mockMvc.perform(post("/api/products/")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(productJson))
                 .andExpect(status().isConflict())

@@ -15,10 +15,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
@@ -54,13 +57,21 @@ class PromotionControllerTest {
         promotionDto.setId(1L);
         promotionDto.setName("Summer Sale");
         promotionDto.setDescription("Discount for summer");
+
+        // Устанавливаем SecurityContext с аутентифицированным пользователем с ролью ADMIN
+        org.springframework.security.core.userdetails.User userPrincipal =
+                new org.springframework.security.core.userdetails.User("admin@example.com", "",
+                        Collections.singletonList(() -> "ROLE_ADMIN"));
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
     @Test
     void testGetAllPromotions() throws Exception {
         when(promotionService.getAllPromotions()).thenReturn(Arrays.asList(promotionDto));
 
-        mockMvc.perform(get("/api/promotions"))
+        mockMvc.perform(get("/api/promotions/"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id", is(promotionDto.getId().intValue())))
                 .andExpect(jsonPath("$[0].name", is(promotionDto.getName())))
@@ -93,7 +104,7 @@ class PromotionControllerTest {
 
         String promotionJson = objectMapper.writeValueAsString(promotionDto);
 
-        mockMvc.perform(post("/api/promotions")
+        mockMvc.perform(post("/api/promotions/")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(promotionJson))
                 .andExpect(status().isCreated())

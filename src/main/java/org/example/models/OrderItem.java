@@ -14,8 +14,6 @@ public class OrderItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    // Информация о продукте на момент покупки
     private Long productId;
     private String productName;
     private String productDescription;
@@ -27,7 +25,7 @@ public class OrderItem {
     @Column(nullable = false)
     private BigDecimal price;
 
-    // Связь с заказом
+
     @ManyToOne(optional = false)
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;

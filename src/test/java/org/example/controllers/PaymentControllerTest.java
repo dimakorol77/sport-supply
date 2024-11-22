@@ -15,11 +15,15 @@ import org.example.services.interfaces.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.*;
@@ -53,13 +57,13 @@ class PaymentControllerTest {
         MockitoAnnotations.openMocks(this);
         mockMvc = MockMvcBuilders.standaloneSetup(paymentController)
                 .setControllerAdvice(new ResponseExceptionHandler())
+                .setMessageConverters(new MappingJackson2HttpMessageConverter())
                 .build();
         objectMapper = new ObjectMapper();
 
         paymentRequestDto = new PaymentRequestDto();
         paymentRequestDto.setOrderId(1L);
         paymentRequestDto.setAmount(new BigDecimal("100.00"));
-
 
         paymentResponseDto = new PaymentResponseDto();
         paymentResponseDto.setId(1L);
@@ -74,60 +78,73 @@ class PaymentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "test@example.com")
     void testCreatePayment_Success() throws Exception {
-        when(userService.getUserByEmail(anyString())).thenReturn(user);
+        // Устанавливаем аутентификацию
+        setAuthentication("test@example.com", "USER");
+
+        when(userService.getUserByEmail("test@example.com")).thenReturn(user);
         when(paymentService.createPayment(any(PaymentRequestDto.class), eq(user.getId()))).thenReturn(paymentResponseDto);
-        doReturn("test@example.com").when(SecurityUtils.class);
-        SecurityUtils.getCurrentUserEmail();
 
         String paymentJson = objectMapper.writeValueAsString(paymentRequestDto);
 
-        mockMvc.perform(post("/api/payment")
+        mockMvc.perform(post("/api/payment/create")
                         .contentType(APPLICATION_JSON)
                         .content(paymentJson))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id", is(paymentResponseDto.getId().intValue())))
                 .andExpect(jsonPath("$.orderId", is(paymentResponseDto.getOrderId().intValue())))
-                .andExpect(jsonPath("$.amount", is(paymentResponseDto.getAmount().intValue())))
+                .andExpect(jsonPath("$.amount", is(100.0)))
                 .andExpect(jsonPath("$.status", is(paymentResponseDto.getStatus().name())));
     }
 
     @Test
-    @WithMockUser(username = "test@example.com")
     void testGetPaymentStatus_Success() throws Exception {
-        when(userService.getUserByEmail(anyString())).thenReturn(user);
-        when(paymentService.getPaymentStatus(1L, user.getId())).thenReturn(paymentResponseDto);
-        doReturn("test@example.com").when(SecurityUtils.class);
-        SecurityUtils.getCurrentUserEmail();
+        // Устанавливаем аутентификацию
+        setAuthentication("test@example.com", "USER");
 
-        mockMvc.perform(get("/api/payment/{paymentId}", 1))
+        when(userService.getUserByEmail("test@example.com")).thenReturn(user);
+        when(paymentService.getPaymentStatus(1L, user.getId())).thenReturn(paymentResponseDto);
+
+        mockMvc.perform(get("/api/payment/{paymentId}/status", 1))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(paymentResponseDto.getId().intValue())))
                 .andExpect(jsonPath("$.orderId", is(paymentResponseDto.getOrderId().intValue())))
-                .andExpect(jsonPath("$.amount", is(paymentResponseDto.getAmount().intValue())))
+                .andExpect(jsonPath("$.amount", is(100.0)))
                 .andExpect(jsonPath("$.status", is(paymentResponseDto.getStatus().name())));
     }
 
     @Test
-    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})
     void testUpdatePaymentStatus_Success() throws Exception {
+        // Устанавливаем аутентификацию
+        setAuthentication("admin@example.com", "ADMIN");
+
         doNothing().when(paymentService).updatePaymentStatus(1L, PaymentStatus.COMPLETED);
 
-        mockMvc.perform(put("/api/payment/{paymentId}", 1)
+        mockMvc.perform(patch("/api/payment/{paymentId}/status", 1)
                         .param("status", "COMPLETED"))
                 .andExpect(status().isOk());
     }
 
     @Test
-    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})
     void testUpdatePaymentStatus_NotFound() throws Exception {
+        // Устанавливаем аутентификацию
+        setAuthentication("admin@example.com", "ADMIN");
+
         doThrow(new PaymentNotFoundException(ErrorMessage.PAYMENT_NOT_FOUND))
                 .when(paymentService).updatePaymentStatus(1L, PaymentStatus.COMPLETED);
 
-        mockMvc.perform(put("/api/payment/{paymentId}", 1)
+        mockMvc.perform(patch("/api/payment/{paymentId}/status", 1)
                         .param("status", "COMPLETED"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string(ErrorMessage.PAYMENT_NOT_FOUND));
+                .andExpect(content().string("\"" + ErrorMessage.PAYMENT_NOT_FOUND + "\""));
+    }
+
+    // Метод для установки аутентификации
+    private void setAuthentication(String email, String role) {
+        org.springframework.security.core.userdetails.User userPrincipal =
+                new org.springframework.security.core.userdetails.User(email, "", Collections.singleton(() -> "ROLE_" + role));
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }

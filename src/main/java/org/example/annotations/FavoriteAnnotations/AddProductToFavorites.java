@@ -27,5 +27,5 @@ import java.lang.annotation.Target;
 )
 public @interface AddProductToFavorites {
     @AliasFor(annotation = RequestMapping.class, attribute = "path")
-    String[] path() default {"/{userId}/add/{productId}"};
+    String[] path() default {"/add/{productId}"};
 }

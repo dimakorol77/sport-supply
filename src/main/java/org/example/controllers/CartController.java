@@ -50,6 +50,7 @@ public class CartController {
         return cartService.calculateTotalPrice(cartId, user.getId());
     }
     @ClearCart
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> clearCart(@PathVariable Long cartId) {
         String email = SecurityUtils.getCurrentUserEmail();
         User user = userService.getUserByEmail(email);

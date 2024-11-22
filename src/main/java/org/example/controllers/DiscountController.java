@@ -9,12 +9,14 @@ import org.example.annotations.DiscountAnnotations.UpdateDiscount;
 import org.example.annotations.DiscountAnnotations.DeleteDiscount;
 import org.example.annotations.DiscountAnnotations.GetActiveDiscountsForProduct;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/discounts")
+@PreAuthorize("hasRole('ADMIN')")
 public class DiscountController {
 
     private final DiscountService discountService;

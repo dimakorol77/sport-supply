@@ -12,12 +12,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.*;
@@ -58,6 +61,14 @@ public class DiscountControllerTest {
         discountDto.setDiscountPrice(new BigDecimal("100.00"));
         discountDto.setStartDate(LocalDateTime.now().minusDays(1));
         discountDto.setEndDate(LocalDateTime.now().plusDays(10));
+
+        // Устанавливаем SecurityContext с аутентифицированным пользователем с ролью ADMIN
+        org.springframework.security.core.userdetails.User userPrincipal =
+                new org.springframework.security.core.userdetails.User("admin@example.com", "",
+                        Collections.singletonList(() -> "ROLE_ADMIN"));
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
     @Test
@@ -146,5 +157,29 @@ public class DiscountControllerTest {
                 .andExpect(jsonPath("$[0].id", is(discountDto.getId().intValue())))
                 .andExpect(jsonPath("$[0].productId", is(discountDto.getProductId().intValue())))
                 .andExpect(jsonPath("$[0].discountPrice", is(discountDto.getDiscountPrice().doubleValue())));
+    }
+
+    @Test
+    void testUpdateDiscount_NotFound() throws Exception {
+        when(discountService.updateDiscount(eq(1L), any(DiscountDto.class)))
+                .thenThrow(new DiscountNotFoundException(ErrorMessage.DISCOUNT_NOT_FOUND));
+
+        String discountJson = objectMapper.writeValueAsString(discountDto);
+
+        mockMvc.perform(put("/api/discounts/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(discountJson))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string(ErrorMessage.DISCOUNT_NOT_FOUND));
+    }
+
+    @Test
+    void testDeleteDiscount_NotFound() throws Exception {
+        doThrow(new DiscountNotFoundException(ErrorMessage.DISCOUNT_NOT_FOUND))
+                .when(discountService).deleteDiscount(1L);
+
+        mockMvc.perform(delete("/api/discounts/1"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string(ErrorMessage.DISCOUNT_NOT_FOUND));
     }
 }

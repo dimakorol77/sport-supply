@@ -26,5 +26,5 @@ import java.lang.annotation.Target;
 )
 public @interface GetUserFavorites {
     @AliasFor(annotation = RequestMapping.class, attribute = "path")
-    String[] path() default {"/{userId}"};
+    String[] path() default {"/"};
 }

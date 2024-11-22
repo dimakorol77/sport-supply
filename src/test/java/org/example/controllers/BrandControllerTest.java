@@ -13,10 +13,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -50,6 +55,14 @@ class BrandControllerTest {
         brandDto.setId(1L);
         brandDto.setName("Test Brand");
         brandDto.setDescription("Test Description");
+
+        // Устанавливаем SecurityContext с аутентифицированным пользователем с ролью ADMIN
+        org.springframework.security.core.userdetails.User userPrincipal =
+                new org.springframework.security.core.userdetails.User("admin@example.com", "",
+                        Collections.singletonList(() -> "ROLE_ADMIN"));
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
     @Test
@@ -97,7 +110,6 @@ class BrandControllerTest {
                 .andExpect(jsonPath("$.name", is(brandDto.getName())))
                 .andExpect(jsonPath("$.description", is(brandDto.getDescription())));
     }
-
 
     @Test
     void testCreateBrand_AlreadyExists() throws Exception {
@@ -166,4 +178,5 @@ class BrandControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(content().string(ErrorMessage.BRAND_NOT_FOUND));
     }
+
 }

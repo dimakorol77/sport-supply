@@ -2,6 +2,8 @@ package org.example.controllers;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.annotations.AuthAnnotations.AuthenticateUser;
+import org.example.annotations.AuthAnnotations.RegisterUser;
 import org.example.dto.AuthenticationResponseDto;
 import org.example.dto.UserAfterCreationDto;
 import org.example.dto.UserCreateDto;
@@ -36,19 +38,14 @@ public class AuthController {
     private final UserService userService;
     private final JwtSecurityService jwtSecurityService;
 
-    /**
-     * Метод для регистрации нового пользователя
-     */
-    @PostMapping("/register")
+
+    @RegisterUser
     public ResponseEntity<?> registerUser(@Valid @RequestBody UserCreateDto userCreateDto) {
         UserAfterCreationDto createdUser = userService.createUser(userCreateDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
     }
 
-    /**
-     * Метод для логина пользователя
-     */
-    @PostMapping("/login")
+    @AuthenticateUser
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody UserLoginDto userLoginDto) {
         try {
             Authentication authentication = authenticationManager.authenticate(

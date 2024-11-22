@@ -8,11 +8,13 @@ import org.example.annotations.CategoryAnnotations.CreateCategory;
 import org.example.annotations.CategoryAnnotations.UpdateCategory;
 import org.example.annotations.CategoryAnnotations.DeleteCategory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/categories")
+@PreAuthorize("hasRole('ADMIN')")
 public class CategoryController {
 
     private final CategoryService categoryService;

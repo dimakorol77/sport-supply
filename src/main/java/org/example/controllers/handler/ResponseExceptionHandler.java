@@ -190,6 +190,12 @@ public class ResponseExceptionHandler {
         return new ResponseEntity<>(ErrorMessage.FAVORITE_NOT_FOUND, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(PromotionNotFoundException.class)
+    public ResponseEntity<String> handlePromotionNotFoundException(PromotionNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+
     // Обработка ошибок валидации
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<String> handleValidationExceptions(MethodArgumentNotValidException ex) {

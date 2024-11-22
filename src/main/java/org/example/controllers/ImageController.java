@@ -4,12 +4,14 @@ import org.example.dto.ImageDto;
 import org.example.services.interfaces.ImageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
 @RequestMapping("/images")
+@PreAuthorize("hasRole('ADMIN')")
 public class ImageController {
 
     private final ImageService imageService;
