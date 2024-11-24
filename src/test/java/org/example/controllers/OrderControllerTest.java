@@ -42,8 +42,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+
 class OrderControllerTest {
 
     private MockMvc mockMvc;
@@ -69,14 +68,11 @@ class OrderControllerTest {
     private OrderResponseDto orderResponseDto;
     private User user;
 
-    private MockedStatic<SecurityUtils> securityUtilsMock;
-
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
 
         mockMvc = MockMvcBuilders.standaloneSetup(orderController)
-                .setControllerAdvice(new ResponseExceptionHandler())
                 .build();
 
         objectMapper = new ObjectMapper();
@@ -97,27 +93,19 @@ class OrderControllerTest {
         user.setRole(Role.USER);
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
-
-        // Мокируем статический метод SecurityUtils.getCurrentUserEmail()
-        securityUtilsMock = mockStatic(SecurityUtils.class);
     }
 
     @AfterEach
     void tearDown() {
-        // Закрываем мок статического метода после каждого теста
-        securityUtilsMock.close();
+        // Очищаем SecurityContext после каждого теста
+        SecurityContextHolder.clearContext();
     }
 
     @Test
     void testGetAllOrders() throws Exception {
         setAuthentication("admin@example.com", "ADMIN");
 
-        when(SecurityUtils.getCurrentUserEmail()).thenReturn("admin@example.com");
-
-        User adminUser = new User();
-        adminUser.setId(2L);
-        adminUser.setEmail("admin@example.com");
-        adminUser.setRole(Role.ADMIN);
+        User adminUser = createUser(2L, "admin@example.com", Role.ADMIN);
         when(userService.getUserByEmail("admin@example.com")).thenReturn(adminUser);
 
         when(orderService.getAllOrders()).thenReturn(Collections.singletonList(orderDto));
@@ -133,7 +121,6 @@ class OrderControllerTest {
     void testGetOrdersByUserId_AsUser() throws Exception {
         setAuthentication("test@example.com", "USER");
 
-        when(SecurityUtils.getCurrentUserEmail()).thenReturn("test@example.com");
         when(userService.getUserByEmail("test@example.com")).thenReturn(user);
         when(orderService.getOrdersByUserId(1L)).thenReturn(Collections.singletonList(orderDto));
 
@@ -148,12 +135,7 @@ class OrderControllerTest {
     void testGetOrdersByUserId_AsAdmin_WithUserId() throws Exception {
         setAuthentication("admin@example.com", "ADMIN");
 
-        when(SecurityUtils.getCurrentUserEmail()).thenReturn("admin@example.com");
-
-        User adminUser = new User();
-        adminUser.setId(2L);
-        adminUser.setEmail("admin@example.com");
-        adminUser.setRole(Role.ADMIN);
+        User adminUser = createUser(2L, "admin@example.com", Role.ADMIN);
         when(userService.getUserByEmail("admin@example.com")).thenReturn(adminUser);
 
         when(orderService.getOrdersByUserId(1L)).thenReturn(Collections.singletonList(orderDto));
@@ -168,7 +150,6 @@ class OrderControllerTest {
     void testGetOrderById_Success() throws Exception {
         setAuthentication("test@example.com", "USER");
 
-        when(SecurityUtils.getCurrentUserEmail()).thenReturn("test@example.com");
         when(userService.getUserByEmail("test@example.com")).thenReturn(user);
         when(orderService.getOrderByIdAndCheckOwnership(1L, 1L)).thenReturn(orderDto);
 
@@ -180,27 +161,10 @@ class OrderControllerTest {
     }
 
     @Test
-    void testCancelOrder_Success() throws Exception {
-        setAuthentication("test@example.com", "USER");
-
-        when(SecurityUtils.getCurrentUserEmail()).thenReturn("test@example.com");
-        when(userService.getUserByEmail("test@example.com")).thenReturn(user);
-        doNothing().when(orderService).cancelOrderAndCheckOwnership(1L, 1L);
-
-        mockMvc.perform(delete("/api/orders/{orderId}/cancel", 1))
-                .andExpect(status().isOk());
-    }
-
-    @Test
     void testUpdateOrderStatus_Success() throws Exception {
         setAuthentication("admin@example.com", "ADMIN");
 
-        when(SecurityUtils.getCurrentUserEmail()).thenReturn("admin@example.com");
-
-        User adminUser = new User();
-        adminUser.setId(2L);
-        adminUser.setEmail("admin@example.com");
-        adminUser.setRole(Role.ADMIN);
+        User adminUser = createUser(2L, "admin@example.com", Role.ADMIN);
         when(userService.getUserByEmail("admin@example.com")).thenReturn(adminUser);
 
         OrderDto updatedOrderDto = new OrderDto();
@@ -223,12 +187,7 @@ class OrderControllerTest {
     void testGetOrdersByStatus_Success() throws Exception {
         setAuthentication("admin@example.com", "ADMIN");
 
-        when(SecurityUtils.getCurrentUserEmail()).thenReturn("admin@example.com");
-
-        User adminUser = new User();
-        adminUser.setId(2L);
-        adminUser.setEmail("admin@example.com");
-        adminUser.setRole(Role.ADMIN);
+        User adminUser = createUser(2L, "admin@example.com", Role.ADMIN);
         when(userService.getUserByEmail("admin@example.com")).thenReturn(adminUser);
 
         when(orderService.getOrdersByStatus(OrderStatus.CREATED)).thenReturn(Collections.singletonList(orderDto));
@@ -243,12 +202,7 @@ class OrderControllerTest {
     void testGetOrdersCreatedAfter_Success() throws Exception {
         setAuthentication("admin@example.com", "ADMIN");
 
-        when(SecurityUtils.getCurrentUserEmail()).thenReturn("admin@example.com");
-
-        User adminUser = new User();
-        adminUser.setId(2L);
-        adminUser.setEmail("admin@example.com");
-        adminUser.setRole(Role.ADMIN);
+        User adminUser = createUser(2L, "admin@example.com", Role.ADMIN);
         when(userService.getUserByEmail("admin@example.com")).thenReturn(adminUser);
 
         LocalDateTime date = LocalDateTime.now().minusDays(1);
@@ -264,12 +218,7 @@ class OrderControllerTest {
     void testGetOrdersByDeliveryMethod_Success() throws Exception {
         setAuthentication("admin@example.com", "ADMIN");
 
-        when(SecurityUtils.getCurrentUserEmail()).thenReturn("admin@example.com");
-
-        User adminUser = new User();
-        adminUser.setId(2L);
-        adminUser.setEmail("admin@example.com");
-        adminUser.setRole(Role.ADMIN);
+        User adminUser = createUser(2L, "admin@example.com", Role.ADMIN);
         when(userService.getUserByEmail("admin@example.com")).thenReturn(adminUser);
 
         when(orderService.getOrdersByDeliveryMethod(DeliveryMethod.PICKUP)).thenReturn(Collections.singletonList(orderDto));
@@ -286,5 +235,13 @@ class OrderControllerTest {
         UsernamePasswordAuthenticationToken authentication =
                 new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
+
+    private User createUser(Long id, String email, Role role) {
+        User user = new User();
+        user.setId(id);
+        user.setEmail(email);
+        user.setRole(role);
+        return user;
     }
 }

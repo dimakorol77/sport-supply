@@ -10,12 +10,14 @@ import org.example.annotations.ReviewAnnotations.DeleteReview;
 import org.example.annotations.ReviewAnnotations.GetReviewsByProductId;
 import org.example.annotations.ReviewAnnotations.GetReviewsByUserId;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/reviews")
+@PreAuthorize("isAuthenticated()")
 public class ReviewController {
 
     private final ReviewService reviewService;

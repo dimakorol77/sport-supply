@@ -1,12 +1,8 @@
 package org.example.services.interfaces;
 
-import org.apache.catalina.User;
 import org.example.dto.CartDto;
 import org.example.dto.OrderCreateDto;
 import org.example.dto.OrderDto;
-import org.example.dto.UserCreateDto;
-import org.example.models.Cart;
-import org.example.models.Order;
 
 import java.math.BigDecimal;
 

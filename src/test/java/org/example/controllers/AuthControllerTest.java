@@ -4,10 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.controllers.handler.ResponseExceptionHandler;
 import org.example.dto.AuthenticationResponseDto;
 import org.example.dto.UserAfterCreationDto;
-import org.example.dto.UserCreateDto;
+import org.example.dto.UserDto;
 import org.example.dto.UserLoginDto;
 import org.example.exceptions.UserAlreadyExistsException;
-import org.example.exceptions.UserNotFoundException;
 import org.example.exceptions.errorMessage.ErrorMessage;
 import org.example.models.User;
 import org.example.services.impl.JwtSecurityService;
@@ -24,7 +23,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.*;
@@ -51,7 +49,7 @@ class AuthControllerTest {
 
     private ObjectMapper objectMapper;
 
-    private UserCreateDto userCreateDto;
+    private UserDto userDto;
     private UserAfterCreationDto userAfterCreationDto;
     private UserLoginDto userLoginDto;
     private AuthenticationResponseDto authenticationResponseDto;
@@ -64,10 +62,10 @@ class AuthControllerTest {
                 .build();
         objectMapper = new ObjectMapper();
 
-        userCreateDto = new UserCreateDto();
-        userCreateDto.setEmail("test@example.com");
-        userCreateDto.setName("Test User");
-        userCreateDto.setPassword("password");
+        userDto = new UserDto();
+        userDto.setEmail("test@example.com");
+        userDto.setName("Test User");
+        userDto.setPassword("password");
 
         userAfterCreationDto = new UserAfterCreationDto();
         userAfterCreationDto.setId(1L);
@@ -83,9 +81,9 @@ class AuthControllerTest {
 
     @Test
     void testRegisterUser_Success() throws Exception {
-        when(userService.createUser(any(UserCreateDto.class))).thenReturn(userAfterCreationDto);
+        when(userService.createUser(any(UserDto.class))).thenReturn(userAfterCreationDto);
 
-        String userJson = objectMapper.writeValueAsString(userCreateDto);
+        String userJson = objectMapper.writeValueAsString(userDto);
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -98,9 +96,9 @@ class AuthControllerTest {
 
     @Test
     void testRegisterUser_AlreadyExists() throws Exception {
-        when(userService.createUser(any(UserCreateDto.class))).thenThrow(new UserAlreadyExistsException(ErrorMessage.USER_ALREADY_EXISTS));
+        when(userService.createUser(any(UserDto.class))).thenThrow(new UserAlreadyExistsException(ErrorMessage.USER_ALREADY_EXISTS));
 
-        String userJson = objectMapper.writeValueAsString(userCreateDto);
+        String userJson = objectMapper.writeValueAsString(userDto);
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)

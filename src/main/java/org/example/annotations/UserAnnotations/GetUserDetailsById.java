@@ -28,5 +28,5 @@ import java.lang.annotation.Target;
 )
 public @interface GetUserDetailsById {
     @AliasFor(annotation = RequestMapping.class, attribute = "path")
-    String[] path() default {"/{id}/details"};
+    String[] path() default {"/{id}"};
 }
