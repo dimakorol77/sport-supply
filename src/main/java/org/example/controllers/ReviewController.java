@@ -1,6 +1,8 @@
 package org.example.controllers;
 
 import org.example.dto.ReviewDto;
+import org.example.models.User;
+import org.example.security.SecurityUtils;
 import org.example.services.interfaces.ReviewService;
 import org.example.annotations.ReviewAnnotations.GetAllReviews;
 import org.example.annotations.ReviewAnnotations.GetReviewById;
@@ -21,56 +23,63 @@ import java.util.List;
 public class ReviewController {
 
     private final ReviewService reviewService;
+    private final SecurityUtils securityUtils;
 
-    // Конструкторная инъекция
-    public ReviewController(ReviewService reviewService) {
+
+    public ReviewController(ReviewService reviewService, SecurityUtils securityUtils) {
         this.reviewService = reviewService;
+        this.securityUtils = securityUtils;
     }
 
-    // Получить все отзывы
+    private User getCurrentUser() {
+        return securityUtils.getCurrentUser();
+    }
+
     @GetAllReviews
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<ReviewDto>> getAllReviews() {
         List<ReviewDto> reviews = reviewService.getAllReviews();
         return ResponseEntity.ok(reviews);
     }
 
-    // Получить отзыв по ID
+
     @GetReviewById
     public ResponseEntity<ReviewDto> getReviewById(@PathVariable Long id) {
         ReviewDto review = reviewService.getReviewById(id);
         return ResponseEntity.ok(review);
     }
 
-    // Создать новый отзыв
+
     @CreateReview
     public ResponseEntity<ReviewDto> createReview(@Valid @RequestBody ReviewDto reviewDto) {
         ReviewDto created = reviewService.createReview(reviewDto);
         return ResponseEntity.status(201).body(created);
     }
 
-    // Обновить отзыв
+
     @UpdateReview
     public ResponseEntity<ReviewDto> updateReview(@PathVariable Long id, @Valid @RequestBody ReviewDto reviewDto) {
         ReviewDto updated = reviewService.updateReview(id, reviewDto);
         return ResponseEntity.ok(updated);
     }
 
-    // Удалить отзыв
+
     @DeleteReview
     public ResponseEntity<Void> deleteReview(@PathVariable Long id) {
         reviewService.deleteReview(id);
         return ResponseEntity.noContent().build();
     }
 
-    // Получить отзывы по ID продукта
+
     @GetReviewsByProductId
     public ResponseEntity<List<ReviewDto>> getReviewsByProductId(@PathVariable Long productId) {
         List<ReviewDto> reviews = reviewService.getReviewsByProductId(productId);
         return ResponseEntity.ok(reviews);
     }
 
-    // Получить отзывы по ID пользователя
+
     @GetReviewsByUserId
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<ReviewDto>> getReviewsByUserId(@PathVariable Long userId) {
         List<ReviewDto> reviews = reviewService.getReviewsByUserId(userId);
         return ResponseEntity.ok(reviews);

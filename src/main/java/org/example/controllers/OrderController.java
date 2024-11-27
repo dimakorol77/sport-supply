@@ -10,22 +10,17 @@ import org.example.annotations.OrderAnnotations.*;
 import org.example.dto.*;
 import org.example.enums.DeliveryMethod;
 import org.example.enums.OrderStatus;
-import org.example.enums.Role;
 import org.example.mappers.OrderMapper;
 import org.example.models.User;
 import org.example.security.SecurityUtils;
 import org.example.services.interfaces.CartService;
 import org.example.services.interfaces.OrderService;
-import org.example.services.interfaces.UserService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 
 
@@ -36,16 +31,18 @@ public class OrderController {
     private final OrderService orderService;
     private final CartService cartService;
     private final OrderMapper orderMapper;
-    private final UserService userService;
+    private final SecurityUtils securityUtils;
 
-    public OrderController(OrderService orderService, CartService cartService, OrderMapper orderMapper, UserService userService) {
+    public OrderController(OrderService orderService, CartService cartService, OrderMapper orderMapper, SecurityUtils securityUtils) {
         this.orderService = orderService;
         this.cartService = cartService;
         this.orderMapper = orderMapper;
-        this.userService = userService;
+        this.securityUtils = securityUtils;
+    }
+    private User getCurrentUser() {
+        return securityUtils.getCurrentUser();
     }
 
-    // Получение всех заказов
     @GetAllOrders
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<OrderDto>> getAllOrders() {
@@ -56,24 +53,7 @@ public class OrderController {
     @GetOrdersByUserId
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<OrderDto>> getOrdersByUserId(@RequestParam(required = false) Long userId) {
-        String email = SecurityUtils.getCurrentUserEmail();
-        User currentUser = userService.getUserByEmail(email);
-
-        List<OrderDto> orderDtos;
-
-        if (currentUser.getRole() == Role.ADMIN) {
-            // Если админ и указан userId, получаем заказы указанного пользователя
-            if (userId != null) {
-                orderDtos = orderService.getOrdersByUserId(userId);
-            } else {
-                // Если userId не указан, получаем все заказы
-                orderDtos = orderService.getAllOrders();
-            }
-        } else {
-            // Если не админ, получаем только свои заказы
-            orderDtos = orderService.getOrdersByUserId(currentUser.getId());
-        }
-
+        List<OrderDto> orderDtos = orderService.getOrdersByUserId(userId);
         return ResponseEntity.ok(orderDtos);
     }
 
@@ -88,18 +68,16 @@ public class OrderController {
     @GetOrderById
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<OrderDto> getOrderById(@PathVariable Long orderId) {
-        String email = SecurityUtils.getCurrentUserEmail();
-        User user = userService.getUserByEmail(email);
-        OrderDto orderDto = orderService.getOrderByIdAndCheckOwnership(orderId, user.getId());
+        User currentUser = getCurrentUser();
+        OrderDto orderDto = orderService.getOrderByIdAndCheckOwnership(orderId, currentUser.getId());
         return ResponseEntity.ok(orderDto);
     }
 
     @CancelOrder
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> cancelOrder(@PathVariable Long orderId) {
-        String email = SecurityUtils.getCurrentUserEmail();
-        User user = userService.getUserByEmail(email);
-        orderService.cancelOrderAndCheckOwnership(orderId, user.getId());
+        User currentUser = getCurrentUser();
+        orderService.cancelOrderAndCheckOwnership(orderId, currentUser.getId());
         return ResponseEntity.ok().build();
     }
 

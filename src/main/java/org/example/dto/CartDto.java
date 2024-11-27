@@ -15,7 +15,7 @@ public class CartDto {
     @NotNull(message = ErrorMessage.CART_ITEM_USER_REQUIRED) // для userId
     private Long userId;
 
-    @NotNull(message = ErrorMessage.CART_ITEM_CREATED_AT_REQUIRED) // для createdAt
+
     private LocalDateTime createdAt;
 
 

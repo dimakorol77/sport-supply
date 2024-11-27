@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 @Component
 public class PaymentMapper {
-    // Преобразование сущности Payment в PaymentResponseDto
+
     public PaymentResponseDto toResponseDto(Payment payment) {
         if (payment == null) {
             return null;
@@ -25,7 +25,7 @@ public class PaymentMapper {
         return dto;
     }
 
-    // Преобразование PaymentRequestDto в сущность Payment
+
     public Payment toEntity(PaymentRequestDto dto, Order order) {
         if (dto == null) {
             return null;
@@ -33,18 +33,10 @@ public class PaymentMapper {
         Payment payment = new Payment();
         payment.setOrder(order);
         payment.setAmount(dto.getAmount());
-        payment.setStatus(PaymentStatus.PENDING); // Устанавливаем статус по умолчанию
+        payment.setStatus(PaymentStatus.PENDING);
         payment.setCreatedAt(LocalDateTime.now());
         payment.setUpdatedAt(LocalDateTime.now());
         return payment;
     }
 
-//    public void updateEntityFromDto(PaymentRequestDto dto, Payment payment) {
-//        if (dto == null || payment == null) {
-//            return;
-//        }
-//        payment.setAmount(dto.getAmount());
-//        payment.setStatus(dto.getStatus());
-//        payment.setUpdatedAt(LocalDateTime.now()); // Время обновления
-//    }
 }

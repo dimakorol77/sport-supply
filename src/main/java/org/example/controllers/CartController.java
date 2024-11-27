@@ -14,7 +14,6 @@ import org.example.dto.*;
 import org.example.models.User;
 import org.example.security.SecurityUtils;
 import org.example.services.interfaces.CartService;
-import org.example.services.interfaces.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,40 +30,38 @@ import java.math.BigDecimal;
 @RestController
 @RequestMapping("/api/cart")
 @Validated
+@PreAuthorize("isAuthenticated()")
 public class CartController {
     private final CartService cartService;
-    private final UserService userService;
+    private final SecurityUtils securityUtils;
 
     @Autowired
-    public CartController(CartService cartService, UserService userService) {
+    public CartController(CartService cartService,  SecurityUtils securityUtils) {
         this.cartService = cartService;
-        this.userService = userService;
+        this.securityUtils = securityUtils;
     }
 
+    private User getCurrentUser() {
+        return securityUtils.getCurrentUser();
+    }
 
     @CalculateTotalPrice
-    @PreAuthorize("isAuthenticated()")
     public BigDecimal calculateTotalPrice(@PathVariable Long cartId) {
-        String email = SecurityUtils.getCurrentUserEmail();
-        User user = userService.getUserByEmail(email);
+        User user = getCurrentUser();
         return cartService.calculateTotalPrice(cartId, user.getId());
     }
     @ClearCart
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> clearCart(@PathVariable Long cartId) {
-        String email = SecurityUtils.getCurrentUserEmail();
-        User user = userService.getUserByEmail(email);
-        cartService.clearCart(cartId, user.getId());
+        User user = getCurrentUser();
+        cartService.clearCart(cartId, user.getId(), false);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @ConvertCartToOrder
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<OrderResponseDto> convertCartToOrder(
             @PathVariable Long cartId,
             @RequestBody @Valid OrderCreateDto orderCreateDto) {
-        String email = SecurityUtils.getCurrentUserEmail();
-        User user = userService.getUserByEmail(email);
+        User user = getCurrentUser();
         OrderDto orderDto = cartService.convertCartToOrder(cartId, user.getId(), orderCreateDto);
         OrderResponseDto responseDto = new OrderResponseDto(
                 orderDto.getId(),

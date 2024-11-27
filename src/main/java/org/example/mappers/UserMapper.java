@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class UserMapper {
-    // Преобразование User в UserListDto
+
     public UserListDto toUserListDto(User user) {
         if (user == null) {
             return null;
@@ -19,7 +19,7 @@ public class UserMapper {
         return dto;
     }
 
-    // Преобразование User в UserAfterCreationDto
+
     public UserAfterCreationDto toUserAfterCreationDto(User user) {
         if (user == null) {
             return null;
@@ -34,7 +34,7 @@ public class UserMapper {
         return dto;
     }
 
-    // Преобразование User в UserAfterUpdateDto
+
     public UserAfterUpdateDto toUserAfterUpdateDto(User user) {
         if (user == null) {
             return null;
@@ -47,7 +47,7 @@ public class UserMapper {
         return dto;
     }
 
-    // Преобразование UserDto в User
+
     public User toEntity(UserDto dto) {
         User user = new User();
         copyProperties(dto, user);
@@ -55,7 +55,7 @@ public class UserMapper {
         return user;
     }
 
-    // Обновление User из UserDto
+
     public void updateEntityFromDto(UserDto dto, User user) {
         copyProperties(dto, user);
     }

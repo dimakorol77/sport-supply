@@ -19,43 +19,41 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/cart-items")
 @Validated
+@PreAuthorize("isAuthenticated()")
 public class CartItemController {
     private final CartItemService cartItemService;
-    private final UserService userService;
+    private final SecurityUtils securityUtils;
 
     @Autowired
-    public CartItemController(CartItemService cartItemService, UserService userService) {
+    public CartItemController(CartItemService cartItemService, UserService userService, SecurityUtils securityUtils) {
         this.cartItemService = cartItemService;
-        this.userService = userService;
+        this.securityUtils = securityUtils;
+    }
+    private User getCurrentUser() {
+        return securityUtils.getCurrentUser();
     }
 
     @AddItemToCart
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<CartItemResponseDto> addItemToCart(@PathVariable Long cartId,
                                                              @RequestBody CartItemDto cartItemDto) {
-        String email = SecurityUtils.getCurrentUserEmail();
-        User user = userService.getUserByEmail(email);
+        User user = getCurrentUser();
 
         CartItemResponseDto responseDto = cartItemService.addItemToCart(cartId, user.getId(), cartItemDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 
     @UpdateCartItemQuantity
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<CartItemResponseDto> updateCartItemQuantity(@PathVariable Long cartItemId,
                                                                       @RequestParam Integer quantity) {
-        String email = SecurityUtils.getCurrentUserEmail();
-        User user = userService.getUserByEmail(email);
+        User user = getCurrentUser();
 
         CartItemResponseDto updatedCartItem = cartItemService.updateCartItemQuantity(cartItemId, user.getId(), quantity);
         return new ResponseEntity<>(updatedCartItem, HttpStatus.OK);
     }
 
     @RemoveCartItem
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> removeCartItem(@PathVariable Long cartItemId) {
-        String email = SecurityUtils.getCurrentUserEmail();
-        User user = userService.getUserByEmail(email);
+        User user = getCurrentUser();
 
         cartItemService.removeCartItem(cartItemId, user.getId());
         return ResponseEntity.noContent().build();

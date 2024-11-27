@@ -19,40 +19,40 @@ public class BrandController {
 
     private final BrandService brandService;
 
-    // Конструкторная инъекция
+
     public BrandController(BrandService brandService) {
         this.brandService = brandService;
     }
 
-    // Получить все бренды
+
     @GetAllBrands
     public ResponseEntity<List<BrandDto>> getAllBrands() {
         List<BrandDto> brands = brandService.getAllBrands();
         return ResponseEntity.ok(brands);
     }
 
-    // Получить бренд по ID
+
     @GetBrandById
     public ResponseEntity<BrandDto> getBrandById(@PathVariable Long id) {
         BrandDto brand = brandService.getBrandById(id);
         return ResponseEntity.ok(brand);
     }
 
-    // Создать новый бренд
+
     @CreateBrand
     public ResponseEntity<BrandDto> createBrand(@RequestBody BrandDto brandDto) {
         BrandDto created = brandService.createBrand(brandDto);
         return ResponseEntity.status(201).body(created);
     }
 
-    // Обновить бренд
+
     @UpdateBrand
     public ResponseEntity<BrandDto> updateBrand(@PathVariable Long id, @RequestBody BrandDto brandDto) {
         BrandDto updated = brandService.updateBrand(id, brandDto);
         return ResponseEntity.ok(updated);
     }
 
-    // Удалить бренд
+
     @DeleteBrand
     public ResponseEntity<Void> deleteBrand(@PathVariable Long id) {
         brandService.deleteBrand(id);

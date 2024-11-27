@@ -7,6 +7,5 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface PromotionRepository extends JpaRepository<Promotion, Long> {
-    // Поиск активных акций
-    List<Promotion> findByStartDateBeforeAndEndDateAfter(LocalDateTime startDate, LocalDateTime endDate);
+  //  List<Promotion> findByStartDateBeforeAndEndDateAfter(LocalDateTime startDate, LocalDateTime endDate);
 }

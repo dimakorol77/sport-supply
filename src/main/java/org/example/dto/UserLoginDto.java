@@ -7,10 +7,10 @@ import lombok.Data;
 @Data
 public class UserLoginDto {
     //обработка данных при логине
-    @Email(message = "Неверный формат электронной почты")
-    @NotBlank(message = "Электронная почта не должна быть пустой")
+    @Email(message = "Invalid email format")
+    @NotBlank(message = "Email must not be empty")
     private String email;
 
-    @NotBlank(message = "Пароль не должен быть пустым")
+    @NotBlank(message = "The password must not be empty")
     private String password;
 }

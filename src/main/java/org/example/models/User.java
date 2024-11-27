@@ -36,7 +36,7 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    // Связь с избранными товарами
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Favorite> favorites = new ArrayList<>();
 

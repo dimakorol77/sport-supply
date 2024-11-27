@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserListDto {
-    //для получения информации о пользователе по его ИД и получении списка всех пользователей
+
     private Long id;
     private String name;
     private String email;

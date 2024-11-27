@@ -15,22 +15,21 @@ import java.util.List;
 public class OrderDto {
     private Long id;
 
-    @NotNull(message = "Общая сумма заказа не может быть пустой")
-    @DecimalMin(value = "0.01", message = "Сумма заказа должна быть больше нуля")
-    private BigDecimal totalAmount;  // Общая сумма заказа
+    @NotNull(message = "Order total cannot be empty")
+    @DecimalMin(value = "0.01", message = "The order amount must be greater than zero")
+    private BigDecimal totalAmount;
 
-    @NotNull(message = "Метод доставки не может быть пустым")
-    private DeliveryMethod deliveryMethod;  // Метод доставки
+    @NotNull(message = "Shipping method cannot be empty")
+    private DeliveryMethod deliveryMethod;
 
-    @NotBlank(message = "Адрес доставки не может быть пустым")
-    private String deliveryAddress;  // Адрес доставки
+    @NotBlank(message = "Delivery address cannot be empty")
+    private String deliveryAddress;
 
-    @NotBlank(message = "Контактная информация не может быть пустой")
-    private String contactInfo;  // Контактная информация
+    @NotBlank(message = "Contact information cannot be empty")
+    private String contactInfo;
+    private Long userId;
 
-    private Long userId;  // ID пользователя
-
-    private List<OrderItemDto> orderItems;  // Список товаров в заказе
+    private List<OrderItemDto> orderItems;
 
     private OrderStatus status;  // Статус заказа
 

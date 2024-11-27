@@ -14,14 +14,14 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OrderItemCreateDto {
-    @NotNull(message = "ID продукта не может быть пустым")
+    @NotNull(message = "Product ID cannot be empty")
     private Long productId;
 
-    @NotNull(message = "Цена не может быть пустой")
-    @DecimalMin(value = "0.0", inclusive = true, message = "Цена не может быть отрицательной")
+    @NotNull(message = "Price cannot be empty")
+    @DecimalMin(value = "0.0", inclusive = true, message = "Price cannot be negative")
     private BigDecimal price;
 
-    @NotNull(message = "Количество не может быть пустым")
-    @Min(value = 1, message = "Количество должно быть не менее 1")
+    @NotNull(message = "Quantity cannot be empty")
+    @Min(value = 1, message = "The quantity must be at least 1")
     private int quantity;
 }

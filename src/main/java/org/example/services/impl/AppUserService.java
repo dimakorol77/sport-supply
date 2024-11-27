@@ -18,11 +18,10 @@ public class AppUserService implements UserDetailsService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
-        // Преобразование User в объект UserDetails для использования в Spring Security
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getEmail())
                 .password(user.getPassword())
-                .roles(user.getRole().name())  // Присваиваем роль, например, "USER" или "ADMIN"
+                .roles(user.getRole().name())
                 .build();
     }
 }

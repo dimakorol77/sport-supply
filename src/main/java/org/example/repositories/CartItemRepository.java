@@ -10,7 +10,6 @@ import java.util.Optional;
 
 public interface CartItemRepository extends JpaRepository<CartItem, Long> {
 
-   // Метод для поиска товара в корзине по корзине и товару
    Optional<CartItem> findByCartAndProduct(Cart cart, Product product);
 
 }

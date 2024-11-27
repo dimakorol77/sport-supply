@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CartItemResponseDto {
-    //для ответа на запрос добавления товара
+
     private Long productId;
     private Integer quantity;
     private BigDecimal price;

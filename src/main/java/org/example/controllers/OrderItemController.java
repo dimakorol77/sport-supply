@@ -9,7 +9,7 @@ import org.example.annotations.OrderItemAnnotations.UpdateOrderItem;
 
 import org.example.dto.OrderItemCreateDto;
 import org.example.dto.OrderItemDto;
-import org.example.models.OrderItem;
+
 import org.example.services.interfaces.OrderItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,11 +19,12 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
+
 
 @RestController
 @RequestMapping("/api/order-items")
 @Validated
+@PreAuthorize("hasRole('ADMIN')")
 public class OrderItemController {
     private final OrderItemService orderItemService;
 
@@ -33,7 +34,6 @@ public class OrderItemController {
     }
 
     @CreateOrderItem
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<OrderItemDto> createOrderItem(
             @PathVariable Long orderId,
             @Valid @RequestBody OrderItemCreateDto orderItemCreateDto) {
@@ -42,7 +42,6 @@ public class OrderItemController {
     }
 
     @GetOrderItemsByOrderId
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<OrderItemDto>> getOrderItemsByOrderId(
             @PathVariable Long orderId) {
         List<OrderItemDto> orderItemDtos = orderItemService.getOrderItemsByOrderId(orderId);
@@ -50,7 +49,6 @@ public class OrderItemController {
     }
 
     @UpdateOrderItem
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<OrderItemDto> updateOrderItem(
             @PathVariable Long orderItemId,
             @Valid @RequestBody OrderItemCreateDto orderItemCreateDto) {
@@ -59,7 +57,6 @@ public class OrderItemController {
     }
 
     @DeleteOrderItem
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteOrderItem(
             @PathVariable Long orderItemId) {
         orderItemService.deleteOrderItem(orderItemId);

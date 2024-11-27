@@ -7,7 +7,6 @@ import org.example.dto.ProductDto;
 import org.example.models.User;
 import org.example.security.SecurityUtils;
 import org.example.services.interfaces.FavoriteService;
-import org.example.services.interfaces.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,20 +19,22 @@ import java.util.List;
 @RequestMapping("/api/favorites")
 public class FavoriteController {
     private final FavoriteService favoriteService;
-    private final UserService userService;
+    private final SecurityUtils securityUtils;
+
 
     @Autowired
-    public FavoriteController(FavoriteService favoriteService, UserService userService) {
+    public FavoriteController(FavoriteService favoriteService, SecurityUtils securityUtils) {
         this.favoriteService = favoriteService;
-        this.userService = userService;
+        this.securityUtils = securityUtils;
     }
 
+    private User getCurrentUser() {
+        return securityUtils.getCurrentUser();
+    }
     @AddProductToFavorites
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> addProductToFavorites(@PathVariable Long productId) {
-        String email = SecurityUtils.getCurrentUserEmail();
-        User user = userService.getUserByEmail(email);
-
+        User user = getCurrentUser();
         favoriteService.addProductToFavorites(user.getId(), productId);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
@@ -41,9 +42,7 @@ public class FavoriteController {
     @GetUserFavorites
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<ProductDto>> getUserFavorites() {
-        String email = SecurityUtils.getCurrentUserEmail();
-        User user = userService.getUserByEmail(email);
-
+        User user = getCurrentUser();
         List<ProductDto> favorites = favoriteService.getUserFavorites(user.getId());
         return ResponseEntity.ok(favorites);
     }
@@ -51,9 +50,7 @@ public class FavoriteController {
     @RemoveProductFromFavorites
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> removeProductFromFavorites(@PathVariable Long productId) {
-        String email = SecurityUtils.getCurrentUserEmail();
-        User user = userService.getUserByEmail(email);
-
+        User user = getCurrentUser();
         favoriteService.removeProductFromFavorites(user.getId(), productId);
         return ResponseEntity.noContent().build();
     }

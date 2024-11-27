@@ -1,8 +1,11 @@
 package org.example.services.impl;
 
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 import org.example.dto.CartItemDto;
 import org.example.dto.CartItemResponseDto;
 import org.example.dto.DiscountDto;
+import org.example.dto.PromotionDto;
 import org.example.exceptions.*;
 import org.example.exceptions.errorMessage.ErrorMessage;
 import org.example.mappers.CartItemMapper;
@@ -14,12 +17,15 @@ import org.example.repositories.CartRepository;
 import org.example.repositories.ProductRepository;
 import org.example.services.interfaces.CartItemService;
 import org.example.services.interfaces.DiscountService;
+import org.example.services.interfaces.PromotionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.regex.Matcher;
 
 @Service
 public class CartItemServiceImpl  implements CartItemService {
@@ -28,16 +34,18 @@ public class CartItemServiceImpl  implements CartItemService {
     private final ProductRepository productRepository;
     private final CartItemMapper cartItemMapper;
     private final DiscountService discountService;
+    private final PromotionService promotionService;
 
     @Autowired
     public CartItemServiceImpl(CartItemRepository cartItemRepository, CartRepository cartRepository,
                                ProductRepository productRepository, CartItemMapper cartItemMapper,
-                               DiscountService discountService) {
+                               DiscountService discountService, PromotionService promotionService) {
         this.cartItemRepository = cartItemRepository;
         this.cartRepository = cartRepository;
         this.productRepository = productRepository;
         this.cartItemMapper = cartItemMapper;
         this.discountService = discountService;
+        this.promotionService = promotionService;
     }
 
     @Override
@@ -49,7 +57,6 @@ public class CartItemServiceImpl  implements CartItemService {
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new CartNotFoundException(ErrorMessage.CART_NOT_FOUND));
 
-        // Проверка прав доступа
         if (!cart.getUser().getId().equals(userId)) {
             throw new org.springframework.security.access.AccessDeniedException(ErrorMessage.ACCESS_DENIED);
         }
@@ -57,17 +64,16 @@ public class CartItemServiceImpl  implements CartItemService {
         Product product = productRepository.findById(cartItemDto.getProductId())
                 .orElseThrow(() -> new ProductNotFoundException(ErrorMessage.PRODUCT_NOT_FOUND));
 
-        // Получаем текущую скидку для продукта
+
         Optional<DiscountDto> optionalDiscount = discountService.getCurrentDiscountForProduct(product.getId());
         BigDecimal discountPrice = optionalDiscount.map(DiscountDto::getDiscountPrice).orElse(BigDecimal.ZERO);
 
-        // Получаем активные акции для продукта (пример: 10% скидка на акцию)
+
         BigDecimal promotionDiscount = getPromotionDiscountForProduct(product);
 
-        // Рассчитываем итоговую цену с учетом скидки и акции
+
         BigDecimal finalPrice = calculateFinalPrice(product.getPrice(), discountPrice, promotionDiscount);
 
-        // Находим существующий CartItem или создаем новый
         CartItem cartItem = cartItemRepository.findByCartAndProduct(cart, product)
                 .orElseGet(() -> {
                     CartItem newItem = new CartItem();
@@ -91,33 +97,75 @@ public class CartItemServiceImpl  implements CartItemService {
 
         cartItemRepository.save(cartItem);
 
-        // Пересчитываем общую стоимость корзины после добавления товара
         updateTotalPrice(cart);
 
         return cartItemMapper.toResponseDto(cartItem);
     }
 
-    // Метод для вычисления итоговой цены товара с учетом скидки
+
     private BigDecimal calculateFinalPrice(BigDecimal itemPrice, BigDecimal discountPrice, BigDecimal promotionDiscount) {
-        BigDecimal discountedPrice = itemPrice.subtract(discountPrice).subtract(promotionDiscount);
+        BigDecimal discountedPrice = itemPrice.subtract(discountPrice);
+
+
+        if (promotionDiscount.compareTo(BigDecimal.ONE) <= 0) {
+
+            discountedPrice = discountedPrice.subtract(discountedPrice.multiply(promotionDiscount));
+        } else {
+
+            discountedPrice = discountedPrice.subtract(promotionDiscount);
+        }
+
         return discountedPrice.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : discountedPrice;
     }
 
-    // Метод для получения активной скидки по акции для продукта
+
     private BigDecimal getPromotionDiscountForProduct(Product product) {
-        // Пример получения акции: допустим, 10% скидка по акции
-        BigDecimal promotionDiscountPercentage = new BigDecimal("0.10");
-        return product.getPrice().multiply(promotionDiscountPercentage);
+        List<PromotionDto> promotions = promotionService.getPromotionsForProduct(product.getId());
+
+        BigDecimal totalPromotionDiscount = BigDecimal.ZERO;
+
+        for (PromotionDto promotion : promotions) {
+            BigDecimal promotionDiscount = extractDiscountFromPromotion(promotion);
+
+            if (promotionDiscount != null) {
+                totalPromotionDiscount = totalPromotionDiscount.add(promotionDiscount);
+            }
+        }
+
+        return totalPromotionDiscount;
+    }
+    private BigDecimal extractDiscountFromPromotion(PromotionDto promotion) {
+        // Предполагаем, что информация о скидке хранится в поле description в формате "Скидка 10%"
+        String description = promotion.getDescription();
+        if (description != null && !description.isEmpty()) {
+            // Используем регулярное выражение для поиска скидки в процентах
+            Pattern pattern = Pattern.compile("(\\d+)%");
+            Matcher matcher = pattern.matcher(description);
+            if (matcher.find()) {
+                String percentageStr = matcher.group(1);
+                BigDecimal percentage = new BigDecimal(percentageStr).divide(BigDecimal.valueOf(100));
+                return percentage;
+            } else {
+                // Можно также обрабатывать фиксированные скидки, если они указаны в описании
+                // Например, "Скидка 500 рублей"
+                pattern = Pattern.compile("(\\d+)\\s*руб");
+                matcher = pattern.matcher(description);
+                if (matcher.find()) {
+                    String amountStr = matcher.group(1);
+                    BigDecimal amount = new BigDecimal(amountStr);
+                    return amount;
+                }
+            }
+        }
+        return null;
     }
 
-
-    // Метод для обновления количества товара в корзине
     @Override
     public CartItemResponseDto updateCartItemQuantity(Long cartItemId, Long userId, Integer quantity) {
         CartItem cartItem = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new CartItemNotFoundException(ErrorMessage.CART_ITEM_NOT_FOUND));
 
-        // Проверка прав доступа
+
         if (!cartItem.getCart().getUser().getId().equals(userId)) {
             throw new org.springframework.security.access.AccessDeniedException(ErrorMessage.ACCESS_DENIED);
         }
@@ -128,15 +176,14 @@ public class CartItemServiceImpl  implements CartItemService {
 
         cartItem.setQuantity(quantity);
 
-        // Обновляем скидку и цену на случай, если они изменились
         Product product = cartItem.getProduct();
         Optional<DiscountDto> optionalDiscount = discountService.getCurrentDiscountForProduct(product.getId());
         BigDecimal discountPrice = optionalDiscount.map(DiscountDto::getDiscountPrice).orElse(BigDecimal.ZERO);
 
-        // Получаем активную скидку по акции для продукта
+
         BigDecimal promotionDiscount = getPromotionDiscountForProduct(product);
 
-        // Рассчитываем итоговую цену с учетом скидки и акции
+
         BigDecimal finalPrice = calculateFinalPrice(product.getPrice(), discountPrice, promotionDiscount);
 
         cartItem.setPrice(finalPrice);
@@ -144,19 +191,19 @@ public class CartItemServiceImpl  implements CartItemService {
 
         cartItemRepository.save(cartItem);
 
-        // Пересчитываем общую стоимость корзины после изменения количества товара
+
         updateTotalPrice(cartItem.getCart());
 
         return cartItemMapper.toResponseDto(cartItem);
     }
 
-    // Метод для удаления товара из корзины
+
     @Override
     public void removeCartItem(Long cartItemId, Long userId) {
         CartItem cartItem = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new CartItemNotFoundException(ErrorMessage.CART_ITEM_NOT_FOUND));
 
-        // Проверка прав доступа
+
         if (!cartItem.getCart().getUser().getId().equals(userId)) {
             throw new org.springframework.security.access.AccessDeniedException(ErrorMessage.ACCESS_DENIED);
         }
@@ -164,11 +211,11 @@ public class CartItemServiceImpl  implements CartItemService {
         cartItem.setDeleted(true);
         cartItemRepository.save(cartItem);
 
-        // Пересчитываем общую стоимость корзины после удаления товара
+
         updateTotalPrice(cartItem.getCart());
     }
 
-    // Метод для обновления общей стоимости корзины
+
     private void updateTotalPrice(Cart cart) {
         BigDecimal newTotalPrice = cart.getCartItems().stream()
                 .filter(cartItem -> !cartItem.isDeleted())

@@ -9,7 +9,7 @@ import org.example.exceptions.errorMessage.ErrorMessage;
 @Data
 public class CartItemDto {
 
-    //данные при добавлении и обновлении товара в корзине
+
     @NotNull(message = ErrorMessage.CART_ITEM_PRODUCT_REQUIRED)
     private Long productId;
 
@@ -18,5 +18,4 @@ public class CartItemDto {
     private Integer quantity;
 
 
-    //private BigDecimal discountPrice;
 }

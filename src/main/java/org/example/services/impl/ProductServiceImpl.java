@@ -68,7 +68,6 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductDto createProduct(ProductDto productDto) {
-        // Предполагаем, что продукт уникален по названию
         productRepository.findByName(productDto.getName()).ifPresent(product -> {
             throw new ProductAlreadyExistsException(ErrorMessage.PRODUCT_ALREADY_EXISTS);
         });
@@ -137,13 +136,13 @@ public class ProductServiceImpl implements ProductService {
         }
 
         if (sortBy != null && !sortBy.isEmpty()) {
-            // Проверка допустимых полей для сортировки
+
             if (!isSortableField(sortBy)) {
                 throw new IllegalArgumentException(ErrorMessage.INVALID_SORT_FIELD + sortBy);
             }
             spec = spec.and(ProductSpecification.sortBy(sortBy, Boolean.TRUE.equals(asc)));
         } else {
-            // Сортировка по умолчанию - по названию
+
             spec = spec.and(ProductSpecification.sortBy("name", true));
         }
 

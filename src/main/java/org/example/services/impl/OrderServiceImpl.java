@@ -12,10 +12,13 @@ import org.example.exceptions.OrderCancellationException;
 import org.example.mappers.OrderMapper;
 import org.example.models.*;
 import org.example.repositories.*;
+import org.example.security.SecurityUtils;
 import org.example.services.interfaces.OrderService;
 import org.example.services.interfaces.PaymentService;
+import org.example.services.interfaces.UserService;
 import org.springframework.stereotype.Service;
 import org.example.dto.OrderCreateDto;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -27,38 +30,73 @@ import java.util.stream.Collectors;
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
-    private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final OrderMapper orderMapper;
     private final CartRepository cartRepository;
     private final OrderStatusHistoryRepository orderStatusHistoryRepository;
     private final PaymentService paymentService;
+    private final SecurityUtils securityUtils;
 
-    // Используем конструкторную инъекцию
-    public OrderServiceImpl(OrderRepository orderRepository, UserRepository userRepository,
-                            ProductRepository productRepository, OrderMapper orderMapper,
+
+    public OrderServiceImpl(OrderRepository orderRepository,
+                            ProductRepository productRepository,
+                            OrderMapper orderMapper,
                             OrderStatusHistoryRepository orderStatusHistoryRepository,
-                            CartRepository cartRepository, PaymentService paymentService) {
+                            CartRepository cartRepository,
+                            PaymentService paymentService,
+                            SecurityUtils securityUtils) {
         this.orderRepository = orderRepository;
-        this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.orderMapper = orderMapper;
         this.orderStatusHistoryRepository = orderStatusHistoryRepository;
         this.cartRepository = cartRepository;
-        this.paymentService = paymentService; // Добавляем PaymentService
+        this.paymentService = paymentService;
+        this.securityUtils = securityUtils;
     }
 
-    // Получение заказов по ID пользователя
+    private User getCurrentUser() {
+        return securityUtils.getCurrentUser();
+    }
+    private void checkOrderOwnership(Order order, User user) {
+        if (!order.getUser().getId().equals(user.getId()) && user.getRole() != Role.ADMIN) {
+            throw new AccessDeniedException(ErrorMessage.ACCESS_DENIED);
+        }
+    }
+
+
     @Override
     public List<OrderDto> getOrdersByUserId(Long userId) {
-        List<Order> orders = orderRepository.findByUserId(userId);
-        return orders.isEmpty() ? Collections.emptyList() : orders.stream()
+        User currentUser = getCurrentUser();
+
+        List<Order> orders;
+
+        if (userId == null) {
+            if (currentUser.getRole() != Role.ADMIN) {
+                userId = currentUser.getId();
+            }
+        }
+
+        if (userId != null) {
+            if (currentUser.getRole() != Role.ADMIN && !userId.equals(currentUser.getId())) {
+                throw new AccessDeniedException(ErrorMessage.ACCESS_DENIED);
+            }
+            orders = orderRepository.findByUserId(userId);
+        } else {
+            orders = orderRepository.findAll();
+        }
+
+        return orders.stream()
                 .map(orderMapper::toDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<OrderDto> getAllOrders() {
+        User currentUser = getCurrentUser();
+
+        if (currentUser.getRole() != Role.ADMIN) {
+            throw new AccessDeniedException(ErrorMessage.ACCESS_DENIED);
+        }
         List<Order> orders = orderRepository.findAll();
         return orders.stream()
                 .map(orderMapper::toDto)
@@ -68,35 +106,17 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     @Override
     public OrderDto updateOrderStatus(Long orderId, OrderStatus status) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException(ErrorMessage.ORDER_NOT_FOUND));
+        User currentUser = getCurrentUser();
 
-        order.setStatus(status);
-        order.setUpdatedAt(LocalDateTime.now());
-
-        OrderStatusHistory statusHistory = new OrderStatusHistory();
-        statusHistory.setOrder(order);
-        statusHistory.setStatus(status);
-        statusHistory.setChangedAt(LocalDateTime.now());
-
-        if (order.getStatusHistory() == null) {
-            order.setStatusHistory(new ArrayList<>());
+        if (currentUser.getRole() != Role.ADMIN) {
+            throw new AccessDeniedException(ErrorMessage.ACCESS_DENIED);
         }
-        order.getStatusHistory().add(statusHistory);
 
-        order = orderRepository.save(order);
-
-        return orderMapper.toDto(order);
+        return updateOrderStatusInternal(orderId, status);
     }
 
     @Override
     public OrderDto createOrderFromCart(Cart cart, OrderCreateDto orderCreateDto) {
-        boolean hasActiveItems = cart.getCartItems().stream()
-                .anyMatch(cartItem -> !cartItem.isDeleted());
-
-        if (!hasActiveItems) {
-            throw new CartEmptyException(ErrorMessage.CART_EMPTY);
-        }
 
         Order order = createOrder(cart, orderCreateDto);
         order = orderRepository.save(order);
@@ -105,11 +125,7 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderItems(orderItems);
         order = orderRepository.save(order);
 
-        OrderStatusHistory statusHistory = new OrderStatusHistory();
-        statusHistory.setOrder(order);
-        statusHistory.setStatus(order.getStatus());
-        statusHistory.setChangedAt(LocalDateTime.now());
-        orderStatusHistoryRepository.save(statusHistory);
+        addOrderStatusHistory(order, order.getStatus());
 
         return orderMapper.toDto(order);
     }
@@ -153,6 +169,11 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<OrderDto> getOrdersByStatus(OrderStatus status) {
+        User currentUser = getCurrentUser();
+
+        if (currentUser.getRole() != Role.ADMIN) {
+            throw new AccessDeniedException(ErrorMessage.ACCESS_DENIED);
+        }
         List<Order> orders = orderRepository.findByStatus(status);
         return orders.stream()
                 .map(orderMapper::toDto)
@@ -161,6 +182,11 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<OrderDto> getOrdersCreatedAfter(LocalDateTime date) {
+        User currentUser = getCurrentUser();
+
+        if (currentUser.getRole() != Role.ADMIN) {
+            throw new AccessDeniedException(ErrorMessage.ACCESS_DENIED);
+        }
         List<Order> orders = orderRepository.findByCreatedAtAfter(date);
         return orders.stream()
                 .map(orderMapper::toDto)
@@ -169,6 +195,11 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<OrderDto> getOrdersByDeliveryMethod(DeliveryMethod deliveryMethod) {
+        User currentUser = getCurrentUser();
+
+        if (currentUser.getRole() != Role.ADMIN) {
+            throw new AccessDeniedException(ErrorMessage.ACCESS_DENIED);
+        }
         List<Order> orders = orderRepository.findByDeliveryMethod(deliveryMethod);
         return orders.stream()
                 .map(orderMapper::toDto)
@@ -189,10 +220,8 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException(ErrorMessage.ORDER_NOT_FOUND));
 
-        if (!order.getUser().getId().equals(userId) && !hasAdminRole(userId)) {
-            throw new org.springframework.security.access.AccessDeniedException(ErrorMessage.ACCESS_DENIED);
-
-        }
+        User currentUser = getCurrentUser();
+        checkOrderOwnership(order, currentUser);
 
         return orderMapper.toDto(order);
     }
@@ -203,23 +232,14 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException(ErrorMessage.ORDER_NOT_FOUND));
 
-        if (!order.getUser().getId().equals(userId) && !hasAdminRole(userId)) {
-            throw new org.springframework.security.access.AccessDeniedException(ErrorMessage.ACCESS_DENIED);
-        }
+        User currentUser = getCurrentUser();
+        checkOrderOwnership(order, currentUser);
 
         if (order.getStatus() == OrderStatus.WAITING_PAYMENT || order.getStatus() == OrderStatus.CREATED) {
             order.setStatus(OrderStatus.CANCELLED);
             order.setUpdatedAt(LocalDateTime.now());
 
-            OrderStatusHistory statusHistory = new OrderStatusHistory();
-            statusHistory.setOrder(order);
-            statusHistory.setStatus(OrderStatus.CANCELLED);
-            statusHistory.setChangedAt(LocalDateTime.now());
-
-            if (order.getStatusHistory() == null) {
-                order.setStatusHistory(new ArrayList<>());
-            }
-            order.getStatusHistory().add(statusHistory);
+            addOrderStatusHistory(order, OrderStatus.CANCELLED);
 
             orderRepository.save(order);
 
@@ -228,10 +248,39 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    private boolean hasAdminRole(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(ErrorMessage.USER_NOT_FOUND));
-        return user.getRole() == Role.ADMIN;
+
+    private void addOrderStatusHistory(Order order, OrderStatus status) {
+        OrderStatusHistory statusHistory = new OrderStatusHistory();
+        statusHistory.setOrder(order);
+        statusHistory.setStatus(status);
+        statusHistory.setChangedAt(LocalDateTime.now());
+
+        if (order.getStatusHistory() == null) {
+            order.setStatusHistory(new ArrayList<>());
+        }
+        order.getStatusHistory().add(statusHistory);
+        orderStatusHistoryRepository.save(statusHistory);
     }
+
+    @Transactional
+    @Override
+    public OrderDto updateOrderStatusBySystem(Long orderId, OrderStatus status) {
+        return updateOrderStatusInternal(orderId, status);
+    }
+
+    private OrderDto updateOrderStatusInternal(Long orderId, OrderStatus status) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException(ErrorMessage.ORDER_NOT_FOUND));
+
+        order.setStatus(status);
+        order.setUpdatedAt(LocalDateTime.now());
+
+        addOrderStatusHistory(order, status);
+
+        order = orderRepository.save(order);
+
+        return orderMapper.toDto(order);
+    }
+
 }
 

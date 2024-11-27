@@ -21,21 +21,21 @@ public class ImageController {
         this.imageService = imageService;
     }
 
-    // Загрузка изображения для продукта
+
     @PostMapping("/upload/{productId}")
     public ResponseEntity<ImageDto> uploadImage(@PathVariable Long productId, @RequestParam("file") MultipartFile file) {
         ImageDto imageDto = imageService.uploadImage(productId, file);
         return ResponseEntity.ok(imageDto);
     }
 
-    // Получение изображений для продукта
+
     @GetMapping("/product/{productId}")
     public ResponseEntity<List<ImageDto>> getImagesByProductId(@PathVariable Long productId) {
         List<ImageDto> images = imageService.getImagesByProductId(productId);
         return ResponseEntity.ok(images);
     }
 
-    // Удаление изображения
+
     @DeleteMapping("/{imageId}")
     public ResponseEntity<Void> deleteImage(@PathVariable Long imageId) {
         imageService.deleteImage(imageId);

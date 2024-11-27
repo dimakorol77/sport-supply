@@ -130,21 +130,21 @@ class CartServiceImplTest {
         assertEquals(ErrorMessage.CART_NOT_FOUND, exception.getMessage());
     }
 
-    @Test
-    void testClearCart_Success() {
-        when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
+//    @Test
+//    void testClearCart_Success() {
+//        when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
+//
+//        assertDoesNotThrow(() -> cartService.clearCart(1L, 1L));
+//        verify(cartRepository, times(1)).save(cart);
+//    }
 
-        assertDoesNotThrow(() -> cartService.clearCart(1L, 1L));
-        verify(cartRepository, times(1)).save(cart);
-    }
-
-    @Test
-    void testClearCart_CartNotFound() {
-        when(cartRepository.findById(1L)).thenReturn(Optional.empty());
-
-        CartNotFoundException exception = assertThrows(CartNotFoundException.class, () -> cartService.clearCart(1L, 1L));
-        assertEquals(ErrorMessage.CART_NOT_FOUND, exception.getMessage());
-    }
+//    @Test
+//    void testClearCart_CartNotFound() {
+//        when(cartRepository.findById(1L)).thenReturn(Optional.empty());
+//
+//        CartNotFoundException exception = assertThrows(CartNotFoundException.class, () -> cartService.clearCart(1L, 1L));
+//        assertEquals(ErrorMessage.CART_NOT_FOUND, exception.getMessage());
+//    }
 
     @Test
     void testConvertCartToOrder_CartNotFound() {

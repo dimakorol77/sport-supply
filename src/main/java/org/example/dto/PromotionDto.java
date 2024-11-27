@@ -13,25 +13,25 @@ import java.time.LocalDateTime;
 public class PromotionDto {
     private Long id;
 
-    @NotBlank(message = "Название акции не может быть пустым")
-    @Size(max = 200, message = "Название акции не должно превышать 200 символов")
+    @NotBlank(message = "The promotion name cannot be empty")
+    @Size(max = 200, message = "The promotion name must not exceed 200 characters")
     private String name;
 
-    @Size(max = 1000, message = "Описание не должно превышать 1000 символов")
+    @Size(max = 1000, message = "Description should not exceed 1000 characters")
     private String description;
 
-    @NotNull(message = "Дата начала обязательна")
-    @PastOrPresent(message = "Дата начала не может быть в будущем")
+    @NotNull(message = "Start date required")
+    @PastOrPresent(message = "Start date cannot be in the future")
     private LocalDateTime startDate;
 
-    @NotNull(message = "Дата окончания обязательна")
-    @Future(message = "Дата окончания должна быть в будущем")
+    @NotNull(message = "End date required")
+    @Future(message = "The end date must be in the future")
     private LocalDateTime endDate;
 
-    @AssertTrue(message = "Дата окончания должна быть после даты начала")
+    @AssertTrue(message = "The end date must be after the start date")
     private boolean isEndDateAfterStartDate() {
         if (startDate == null || endDate == null) {
-            return true; // Проверку @NotNull выполняют другие аннотации
+            return true;
         }
         return endDate.isAfter(startDate);
     }

@@ -29,14 +29,18 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final CartService cartService;
     private final PasswordEncoder passwordEncoder;
+    private final SecurityUtils securityUtils;
 
-    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper, CartService cartService, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper, CartService cartService, PasswordEncoder passwordEncoder,  SecurityUtils securityUtils) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.cartService = cartService;
         this.passwordEncoder = passwordEncoder;
+        this.securityUtils = securityUtils;
     }
-
+    private User getCurrentUser() {
+        return securityUtils.getCurrentUser();
+    }
     @Override
     public List<UserListDto> getAllUsers() {
         return userRepository.findAll().stream()
@@ -46,9 +50,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserListDto getUserDetailsById(Long id) {
-        User currentUser = getCurrentUser();
+        User currentUser = securityUtils.getCurrentUser();
 
-        // Проверка прав доступа: разрешить только если текущий пользователь запрашивает свои данные или является администратором
         if (!id.equals(currentUser.getId()) && !currentUser.getRole().equals(Role.ADMIN)) {
             throw new AccessDeniedException(ErrorMessage.ACCESS_DENIED);
         }
@@ -79,9 +82,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserAfterUpdateDto updateUser(Long id, UserDto userDto) {
-        User currentUser = getCurrentUser();
+        User currentUser = securityUtils.getCurrentUser();
 
-        // Проверка прав доступа
+
         if (!id.equals(currentUser.getId()) && !currentUser.getRole().equals(Role.ADMIN)) {
             throw new AccessDeniedException(ErrorMessage.ACCESS_DENIED);
         }
@@ -104,9 +107,9 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void deleteUser(Long id) {
-        User currentUser = getCurrentUser();
+        User currentUser = securityUtils.getCurrentUser();
 
-        // Проверка прав доступа
+
         if (!id.equals(currentUser.getId()) && !currentUser.getRole().equals(Role.ADMIN)) {
             throw new AccessDeniedException(ErrorMessage.ACCESS_DENIED);
         }
@@ -128,11 +131,4 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new UserNotFoundException(ErrorMessage.USER_NOT_FOUND));
     }
 
-    private User getCurrentUser() {
-        String email = SecurityUtils.getCurrentUserEmail();
-        if (email == null) {
-            throw new UserNotFoundException(ErrorMessage.USER_NOT_FOUND);
-        }
-        return getUserByEmail(email);
-    }
 }

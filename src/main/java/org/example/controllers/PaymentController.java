@@ -12,7 +12,6 @@ import org.example.enums.PaymentStatus;
 import org.example.models.User;
 import org.example.security.SecurityUtils;
 import org.example.services.interfaces.PaymentService;
-import org.example.services.interfaces.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,29 +24,29 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 public class PaymentController {
     private final PaymentService paymentService;
-    private final UserService userService;
+    private final SecurityUtils securityUtils;
 
     @Autowired
-    public PaymentController(PaymentService paymentService, UserService userService) {
+    public PaymentController(PaymentService paymentService, SecurityUtils securityUtils) {
         this.paymentService = paymentService;
-        this.userService = userService;
+        this.securityUtils = securityUtils;
     }
-
+    private User getCurrentUser() {
+        return securityUtils.getCurrentUser();
+    }
     @CreatePayment
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PaymentResponseDto> createPayment(@RequestBody @Valid PaymentRequestDto paymentRequestDto) {
-        String email = SecurityUtils.getCurrentUserEmail();
-        User user = userService.getUserByEmail(email);
-        PaymentResponseDto createdPayment = paymentService.createPayment(paymentRequestDto, user.getId());
+        User currentUser = getCurrentUser();
+        PaymentResponseDto createdPayment = paymentService.createPayment(paymentRequestDto, currentUser.getId());
         return new ResponseEntity<>(createdPayment, HttpStatus.CREATED);
     }
 
     @GetPaymentStatus
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PaymentResponseDto> getPaymentStatus(@PathVariable Long paymentId) {
-        String email = SecurityUtils.getCurrentUserEmail();
-        User user = userService.getUserByEmail(email);
-        PaymentResponseDto paymentResponseDto = paymentService.getPaymentStatus(paymentId, user.getId());
+        User currentUser = getCurrentUser();
+        PaymentResponseDto paymentResponseDto = paymentService.getPaymentStatus(paymentId, currentUser.getId());
         return new ResponseEntity<>(paymentResponseDto, HttpStatus.OK);
     }
 

@@ -24,7 +24,10 @@ public class CartItem {
     private Product product;
 
     private Integer quantity;
+    @Column(precision = 10, scale = 2)
     private BigDecimal price;
+
+    @Column(name = "discount_price", precision = 10, scale = 2)
     private BigDecimal discountPrice;
 
 

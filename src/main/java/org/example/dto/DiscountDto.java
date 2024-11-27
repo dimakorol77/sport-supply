@@ -13,25 +13,25 @@ import java.time.LocalDateTime;
 public class DiscountDto {
     private Long id;
 
-    @NotNull(message = "ID продукта обязателен")
+    @NotNull(message = "Product ID required")
     private Long productId;
 
-    @NotNull(message = "Цена со скидкой обязательна")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Цена со скидкой должна быть больше нуля")
+    @NotNull(message = "Discount price required")
+    @DecimalMin(value = "0.0", inclusive = false, message = "Discount price must be greater than zero")
     private BigDecimal discountPrice;
 
-    @NotNull(message = "Дата начала обязательна")
-    @PastOrPresent(message = "Дата начала не может быть в будущем")
+    @NotNull(message = "Start date required")
+    @PastOrPresent(message = "Start date cannot be in the future")
     private LocalDateTime startDate;
 
-    @NotNull(message = "Дата окончания обязательна")
-    @Future(message = "Дата окончания должна быть в будущем")
+    @NotNull(message = "End date required")
+    @Future(message = "The end date must be in the future")
     private LocalDateTime endDate;
 
-    @AssertTrue(message = "Дата окончания должна быть после даты начала")
+    @AssertTrue(message = "The end date must be after the start date")
     private boolean isEndDateAfterStartDate() {
         if (startDate == null || endDate == null) {
-            return true; // Проверку @NotNull выполняют другие аннотации
+            return true;
         }
         return endDate.isAfter(startDate);
     }

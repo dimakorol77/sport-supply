@@ -43,7 +43,6 @@ public class BrandServiceImpl implements BrandService {
 
     @Override
     public BrandDto createBrand(BrandDto brandDto) {
-        // Предполагаем, что бренд уникален по названию
         brandRepository.findByName(brandDto.getName()).ifPresent(brand -> {
             throw new BrandAlreadyExistsException(ErrorMessage.BRAND_ALREADY_EXISTS);
         });

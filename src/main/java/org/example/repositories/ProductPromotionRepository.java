@@ -12,7 +12,5 @@ public interface ProductPromotionRepository extends JpaRepository<ProductPromoti
 
     List<ProductPromotion> findByProductId(Long productId);
 
-    List<ProductPromotion> findByPromotionId(Long promotionId);
-
     Optional<ProductPromotion> findByProductIdAndPromotionId(Long productId, Long promotionId);
 }

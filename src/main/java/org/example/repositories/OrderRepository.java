@@ -14,14 +14,10 @@ import java.util.List;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-    // Поиск заказов по ID пользователя
     List<Order> findByUserId(Long userId);
-    //дописать поиск по статусу заказа, дате создания и методу доставки,
 
     List<Order> findByStatus(OrderStatus status);
-
     List<Order> findByCreatedAtAfter(LocalDateTime date);
-
     List<Order> findByDeliveryMethod(DeliveryMethod deliveryMethod);
     List<Order> findByStatusIn(List<OrderStatus> statuses);
 }

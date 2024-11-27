@@ -4,20 +4,27 @@ import org.example.dto.PaymentRequestDto;
 import org.example.dto.PaymentResponseDto;
 import org.example.enums.OrderStatus;
 import org.example.enums.PaymentStatus;
+import org.example.enums.Role;
 import org.example.exceptions.OrderNotFoundException;
 import org.example.exceptions.PaymentAlreadyExistsException;
 import org.example.exceptions.PaymentNotFoundException;
 import org.example.exceptions.errorMessage.ErrorMessage;
 import org.example.mappers.PaymentMapper;
 import org.example.models.Order;
+import org.example.models.OrderStatusHistory;
 import org.example.models.Payment;
+import org.example.models.User;
 import org.example.repositories.OrderRepository;
+import org.example.repositories.OrderStatusHistoryRepository;
 import org.example.repositories.PaymentRepository;
+import org.example.security.SecurityUtils;
 import org.example.services.interfaces.PaymentService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.example.services.interfaces.UserService;
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Optional;
 
 @Service
@@ -25,13 +32,29 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
     private final PaymentMapper paymentMapper;
+    private final SecurityUtils securityUtils;
+
+    private final OrderStatusHistoryRepository orderStatusHistoryRepository;
 
     public PaymentServiceImpl(PaymentRepository paymentRepository,
                               OrderRepository orderRepository,
-                              PaymentMapper paymentMapper) {
+                              PaymentMapper paymentMapper,
+                              OrderStatusHistoryRepository orderStatusHistoryRepository,
+                              SecurityUtils securityUtils) {
         this.paymentRepository = paymentRepository;
         this.orderRepository = orderRepository;
         this.paymentMapper = paymentMapper;
+        this.orderStatusHistoryRepository = orderStatusHistoryRepository;
+        this.securityUtils = securityUtils;
+    }
+
+    private User getCurrentUser() {
+        return securityUtils.getCurrentUser();
+    }
+    private void checkOrderOwnership(Order order, User user) {
+        if (!order.getUser().getId().equals(user.getId()) && user.getRole() != Role.ADMIN) {
+            throw new AccessDeniedException(ErrorMessage.ACCESS_DENIED);
+        }
     }
 
     @Override
@@ -39,9 +62,8 @@ public class PaymentServiceImpl implements PaymentService {
         Order order = orderRepository.findById(paymentRequestDto.getOrderId())
                 .orElseThrow(() -> new OrderNotFoundException(ErrorMessage.ORDER_NOT_FOUND));
 
-        if (!order.getUser().getId().equals(userId)) {
-            throw new org.springframework.security.access.AccessDeniedException(ErrorMessage.ACCESS_DENIED);
-        }
+        User currentUser = getCurrentUser();
+        checkOrderOwnership(order, currentUser);
 
         Optional<Payment> existingPayment = paymentRepository.findByOrderId(order.getId());
         if (existingPayment.isPresent()) {
@@ -60,9 +82,8 @@ public class PaymentServiceImpl implements PaymentService {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new PaymentNotFoundException(ErrorMessage.PAYMENT_NOT_FOUND));
 
-        if (!payment.getOrder().getUser().getId().equals(userId)) {
-            throw new org.springframework.security.access.AccessDeniedException(ErrorMessage.ACCESS_DENIED);
-        }
+        User currentUser = getCurrentUser();
+        checkOrderOwnership(payment.getOrder(), currentUser);
 
         return paymentMapper.toResponseDto(payment);
     }
@@ -102,5 +123,18 @@ public class PaymentServiceImpl implements PaymentService {
 
         order.setUpdatedAt(LocalDateTime.now());
         orderRepository.save(order);
+        addOrderStatusHistory(order, order.getStatus());
+    }
+    private void addOrderStatusHistory(Order order, OrderStatus status) {
+        OrderStatusHistory statusHistory = new OrderStatusHistory();
+        statusHistory.setOrder(order);
+        statusHistory.setStatus(status);
+        statusHistory.setChangedAt(LocalDateTime.now());
+
+        if (order.getStatusHistory() == null) {
+            order.setStatusHistory(new ArrayList<>());
+        }
+        order.getStatusHistory().add(statusHistory);
+        orderStatusHistoryRepository.save(statusHistory);
     }
 }

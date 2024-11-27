@@ -8,13 +8,13 @@ import org.example.exceptions.errorMessage.ErrorMessage;
 
 @Data
 public class UserDto {
-    // Данные, которые вводятся при создании нового пользователя
+
     @Email(message = ErrorMessage.EMAIL_FORMAT_INVALID)
     @NotBlank(message = ErrorMessage.INVALID_USER_DATA)
     private String email;
 
     @NotBlank(message = ErrorMessage.PASSWORD_NOT_EMPTY)
-    @Size(min = 8, message = "Пароль должен содержать минимум 8 символов")
+    @Size(min = 8, message = "Password must contain at least 8 characters")
     private String password;
     @NotBlank(message = ErrorMessage.NAME_NOT_EMPTY)
     private String name;

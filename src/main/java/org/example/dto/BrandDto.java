@@ -8,10 +8,10 @@ import jakarta.validation.constraints.Size;
 public class BrandDto {
     private Long id;
 
-    @NotBlank(message = "Название бренда не может быть пустым")
-    @Size(max = 100, message = "Название бренда не должно превышать 100 символов")
+    @NotBlank(message = "Brand name cannot be empty")
+    @Size(max = 100, message = "The brand name should not exceed 100 characters")
     private String name;
 
-    @Size(max = 500, message = "Описание не должно превышать 500 символов")
+    @Size(max = 500, message = "Description should not exceed 500 characters")
     private String description;
 }

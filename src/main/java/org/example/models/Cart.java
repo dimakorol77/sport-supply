@@ -40,13 +40,4 @@ public class Cart {
     @Column(name = "total_price", nullable = false)
     private BigDecimal totalPrice = BigDecimal.ZERO;
 
-
-   // public void addToTotalPrice(BigDecimal amount) {
-    //    this.totalPrice = this.totalPrice.add(amount);
-   // }
-
-
-   // public void subtractFromTotalPrice(BigDecimal amount) {
-      //  this.totalPrice = this.totalPrice.subtract(amount);
-   // }
 }

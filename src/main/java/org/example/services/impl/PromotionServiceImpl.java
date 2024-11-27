@@ -17,6 +17,7 @@ import org.example.services.interfaces.PromotionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -109,9 +110,11 @@ public class PromotionServiceImpl implements PromotionService {
 
     @Override
     public List<PromotionDto> getPromotionsForProduct(Long productId) {
+        LocalDateTime now = LocalDateTime.now();
         List<ProductPromotion> productPromotions = productPromotionRepository.findByProductId(productId);
         return productPromotions.stream()
                 .map(ProductPromotion::getPromotion)
+                .filter(promotion -> promotion.getStartDate().isBefore(now) && promotion.getEndDate().isAfter(now))
                 .map(promotionMapper::toDto)
                 .collect(Collectors.toList());
     }

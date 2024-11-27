@@ -20,4 +20,5 @@ public interface OrderService {
     boolean isOrderOwner(Long orderId, Long userId);
     OrderDto getOrderByIdAndCheckOwnership(Long orderId, Long userId);
     void cancelOrderAndCheckOwnership(Long orderId, Long userId);
+    OrderDto updateOrderStatusBySystem(Long orderId, OrderStatus status);
 }

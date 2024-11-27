@@ -21,7 +21,7 @@ public class PromotionController {
         this.promotionService = promotionService;
     }
 
-    // Получить все акции
+
 
     @GetAllPromotions
     public ResponseEntity<List<PromotionDto>> getAllPromotions() {
@@ -29,28 +29,28 @@ public class PromotionController {
         return ResponseEntity.ok(promotions);
     }
 
-    // Получить акцию по ID
+
     @GetPromotionById
     public ResponseEntity<PromotionDto> getPromotionById(@PathVariable Long id) {
         PromotionDto promotion = promotionService.getPromotionById(id);
         return ResponseEntity.ok(promotion);
     }
 
-    // Создать новую акцию
+
     @CreatePromotion
     public ResponseEntity<PromotionDto> createPromotion(@RequestBody PromotionDto promotionDto) {
         PromotionDto createdPromotion = promotionService.createPromotion(promotionDto);
         return ResponseEntity.status(201).body(createdPromotion);
     }
 
-    // Обновить акцию
+
     @UpdatePromotion
     public ResponseEntity<PromotionDto> updatePromotion(@PathVariable Long id, @RequestBody PromotionDto promotionDto) {
         PromotionDto updatedPromotion = promotionService.updatePromotion(id, promotionDto);
         return ResponseEntity.ok(updatedPromotion);
     }
 
-    // Удалить акцию
+
 
     @DeletePromotion
     public ResponseEntity<Void> deletePromotion(@PathVariable Long id) {
@@ -58,21 +58,21 @@ public class PromotionController {
         return ResponseEntity.noContent().build();
     }
 
-    // Добавить продукт в акцию
+
     @AddProductToPromotion
     public ResponseEntity<Void> addProductToPromotion(@PathVariable Long promotionId, @PathVariable Long productId) {
         promotionService.addProductToPromotion(promotionId, productId);
         return ResponseEntity.status(201).build();
     }
 
-    // Удалить продукт из акции
+
     @RemoveProductFromPromotion
     public ResponseEntity<Void> removeProductFromPromotion(@PathVariable Long promotionId, @PathVariable Long productId) {
         promotionService.removeProductFromPromotion(promotionId, productId);
         return ResponseEntity.noContent().build();
     }
 
-    // Получить акции для продукта
+
     @GetPromotionsForProduct
     public ResponseEntity<List<PromotionDto>> getPromotionsForProduct(@PathVariable Long productId) {
         List<PromotionDto> promotions = promotionService.getPromotionsForProduct(productId);

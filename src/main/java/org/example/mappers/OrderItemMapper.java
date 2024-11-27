@@ -8,12 +8,12 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class OrderItemMapper {
-    // Преобразование сущности OrderItem в DTO OrderItemDto
+
     public OrderItemDto toDto(OrderItem orderItem) {
         return new OrderItemDto(orderItem);
     }
 
-    // Преобразование DTO OrderItemCreateDto и Product в сущность OrderItem
+
     public OrderItem toEntity(OrderItemCreateDto orderItemCreateDto, Product product) {
         if (orderItemCreateDto == null || product == null) {
             return null;
@@ -28,7 +28,7 @@ public class OrderItemMapper {
         return orderItem;
     }
 
-    // Обновление сущности OrderItem на основе данных из DTO OrderItemCreateDto и Product
+
     public void updateEntityFromCreateDto(OrderItemCreateDto orderItemCreateDto, OrderItem orderItem, Product product) {
         if (orderItemCreateDto == null || orderItem == null || product == null) {
             return;

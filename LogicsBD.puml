@@ -6,27 +6,25 @@ class User {
     + email: String
     + password: String
     + name: String
-    + role:  RoleEnum
-    + created_at: DateTime
+    + role: RoleEnum
+    + createdAt: DateTime
     + updatedAt: DateTime
     + phoneNumber: String
-
 }
 
 class Product {
-        + id: Long
-        + name: String
-        + description: String
-        + price: BigDecimal
-        + discountPrice: BigDecimal
-        + categoryId: Long
-        + brandId: Long
-        + images: List<Image>
-        + proteinType: ProteinType
-        + vitaminGroup: String
-        + form: Form
-        + createdAt: DateTime
-        + updatedAt: DateTime
+    + id: Long
+    + name: String
+    + description: String
+    + price: BigDecimal
+    + categoryId: Long
+    + brandId: Long
+    + images: List<Image>
+    + proteinType: ProteinType
+    + vitaminGroup: String
+    + form: Form
+    + createdAt: DateTime
+    + updatedAt: DateTime
 }
 
 class Category {
@@ -58,6 +56,7 @@ class Image {
 class Cart {
     + id: Long
     + userId: Long
+    + totalPrice: BigDecimal
     + createdAt: DateTime
     + updatedAt: DateTime
 }
@@ -69,6 +68,7 @@ class CartItem {
     + quantity: Integer
     + price: BigDecimal
     + discountPrice: BigDecimal
+    + deleted: Boolean
 }
 
 class Order {
@@ -87,9 +87,11 @@ class OrderItem {
     + id: Long
     + orderId: Long
     + productId: Long
+    + productName: String
+    + productDescription: String
+    + productCategoryName: String
     + quantity: Integer
     + price: BigDecimal
-    + discountPrice: BigDecimal
 }
 
 class OrderStatusHistory {
@@ -103,7 +105,7 @@ class Favorite {
     + id: Long
     + userId: Long
     + productId: Long
-    + createdAt: DateTime
+    + addedAt: DateTime
 }
 
 class Promotion {
@@ -128,6 +130,8 @@ class Discount {
     + discountPrice: BigDecimal
     + startDate: DateTime
     + endDate: DateTime
+    + createdAt: DateTime
+    + updatedAt: DateTime
 }
 
 class Payment {
@@ -136,6 +140,7 @@ class Payment {
     + amount: BigDecimal
     + status: PaymentStatus
     + createdAt: DateTime
+    + updatedAt: DateTime
 }
 
 class Review {
@@ -143,10 +148,12 @@ class Review {
     + userId: Long
     + productId: Long
     + rating: Integer
-    + comment: String
+    + userComment: String
     + createdAt: DateTime
+    + updatedAt: DateTime
 }
 
+' Enums
 
 enum RoleEnum {
     + USER
@@ -186,7 +193,7 @@ enum PaymentStatus {
     + FAILED
 }
 
-' Define relationships
+' Отношения
 
 ' User relationships
 User "1" -- "0..*" Order : places >
@@ -198,18 +205,20 @@ User "1" -- "0..*" Review : writes >
 Product "1" -- "1" Category : belongs to >
 Product "1" -- "1" Brand : manufactured by >
 Product "1" -- "0..*" Image : has >
-Product "1" -- "0..*" OrderItem : included in >
 Product "1" -- "0..*" CartItem : added to >
 Product "1" -- "0..*" Favorite : favorited by >
-Product "0..*" -- "0..*" Promotion : participates in >
+Product "1" -- "0..*" Discount : has >
 Product "1" -- "0..*" Review : has reviews >
+Product "1" -- "0..*" ProductPromotion : participates in >
 
 ' Category relationships
 Category "1" -- "0..*" Product : contains >
 Category "1" -- "0..*" Category : subcategories >
+Category "0..1" -- "1" Category : parent category >
 
 ' Cart relationships
 Cart "1" -- "0..*" CartItem : contains >
+Cart "1" -- "1" User : belongs to >
 
 ' CartItem relationships
 CartItem "1" -- "1" Product : refers to >
@@ -222,12 +231,12 @@ Order "1" -- "1" Payment : has >
 Order "1" -- "1" User : placed by >
 
 ' OrderItem relationships
-OrderItem "1" -- "1" Product : refers to >
 OrderItem "1" -- "1" Order : part of >
 
 ' Favorite relationships
 Favorite "1" -- "1" Product : refers to >
 Favorite "1" -- "1" User : belongs to >
+
 ' Promotion relationships
 Promotion "1" -- "0..*" ProductPromotion : includes >
 ProductPromotion "1" -- "1" Product : links to >

@@ -44,7 +44,6 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryDto createCategory(CategoryDto categoryDto) {
-        // Предполагаем, что категория уникальна по названию
         categoryRepository.findByName(categoryDto.getName()).ifPresent(category -> {
             throw new CategoryAlreadyExistsException(ErrorMessage.CATEGORY_ALREADY_EXISTS);
         });

@@ -29,7 +29,6 @@ public class ImageServiceImpl implements ImageService {
     private final ProductRepository productRepository;
     private final ImageMapper imageMapper;
 
-    // Директория для хранения изображений
     private final String uploadDir = "uploads/images/";
 
     @Autowired
@@ -40,7 +39,7 @@ public class ImageServiceImpl implements ImageService {
         this.productRepository = productRepository;
         this.imageMapper = imageMapper;
 
-        // Создаем директорию, если ее нет
+
         try {
             Files.createDirectories(Paths.get(uploadDir));
         } catch (IOException e) {
@@ -83,7 +82,7 @@ public class ImageServiceImpl implements ImageService {
         imageRepository.deleteById(imageId);
     }
 
-    // Метод для сохранения файла на диск
+
     String saveFile(MultipartFile file) {
         String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
         try {
@@ -95,10 +94,10 @@ public class ImageServiceImpl implements ImageService {
         return fileName;
     }
 
-    // Метод для удаления файла с диска
+
     private void deleteFile(String fileUrl) {
         try {
-            Path filePath = Paths.get(fileUrl.substring(1)); // Убираем первый слеш
+            Path filePath = Paths.get(fileUrl.substring(1));
             Files.deleteIfExists(filePath);
         } catch (IOException e) {
             throw new ImageNotFoundException(ErrorMessage.IMAGE_NOT_FOUND);

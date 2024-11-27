@@ -61,7 +61,7 @@ public class AuthController {
             return ResponseEntity.ok(responseDto);
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
-            error.put("error", "Неверные учетные данные");
+            error.put("error", "Incorrect credentials");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
         }
     }

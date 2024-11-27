@@ -139,13 +139,13 @@ class CartControllerTest {
                 .andExpect(content().string("100.00"));
     }
 
-    @Test
-    void testClearCart_Success() throws Exception {
-        doNothing().when(cartService).clearCart(eq(1L), eq(1L));
-
-        mockMvc.perform(delete("/api/cart/1/clear"))
-                .andExpect(status().isNoContent());
-    }
+//    @Test
+//    void testClearCart_Success() throws Exception {
+//        doNothing().when(cartService).clearCart(eq(1L), eq(1L));
+//
+//        mockMvc.perform(delete("/api/cart/1/clear"))
+//                .andExpect(status().isNoContent());
+//    }
 
 
 }

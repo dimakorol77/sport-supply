@@ -14,67 +14,70 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/products")
-@PreAuthorize("hasRole('ADMIN')")
 public class ProductController {
 
     private final ProductService productService;
 
-    // Конструкторная инъекция
     public ProductController(ProductService productService) {
         this.productService = productService;
     }
 
-    // Получить все продукты
     @GetAllProducts
+    @PreAuthorize("permitAll()")
     public ResponseEntity<List<ProductDto>> getAllProducts() {
         List<ProductDto> products = productService.getAllProducts();
         return ResponseEntity.ok(products);
     }
 
-    // Получить продукт по ID
     @GetProductById
+    @PreAuthorize("permitAll()")
     public ResponseEntity<ProductDto> getProductById(@PathVariable Long id) {
         ProductDto product = productService.getProductById(id);
         return ResponseEntity.ok(product);
     }
 
-    // Создать новый продукт
+
     @CreateProduct
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductDto> createProduct(@RequestBody ProductDto productDto) {
         ProductDto created = productService.createProduct(productDto);
         return ResponseEntity.status(201).body(created);
     }
 
-    // Обновить продукт
+
     @UpdateProduct
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductDto> updateProduct(@PathVariable Long id, @RequestBody ProductDto productDto) {
         ProductDto updated = productService.updateProduct(id, productDto);
         return ResponseEntity.ok(updated);
     }
 
-    // Удалить продукт
+
     @DeleteProduct
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
-        return ResponseEntity.noContent().build(); // Возвращаем статус 204 No Content
+        return ResponseEntity.noContent().build();
     }
 
-    // Получить активные скидки для продукта
     @GetActiveDiscounts
+    @PreAuthorize("permitAll()")
     public ResponseEntity<List<DiscountDto>> getActiveDiscounts(@PathVariable Long id) {
         List<DiscountDto> discounts = productService.getActiveDiscounts(id);
         return ResponseEntity.ok(discounts);
     }
 
-    // Получить акции для продукта
+
     @GetPromotionsForProduct
+    @PreAuthorize("permitAll()")
     public ResponseEntity<List<PromotionDto>> getPromotionsForProduct(@PathVariable Long id) {
         List<PromotionDto> promotions = productService.getPromotionsForProduct(id);
         return ResponseEntity.ok(promotions);
     }
 
-    // Фильтрация и сортировка продуктов
+
     @FilterAndSortProducts
+    @PreAuthorize("permitAll()")
     public ResponseEntity<List<ProductDto>> filterAndSortProducts(
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,

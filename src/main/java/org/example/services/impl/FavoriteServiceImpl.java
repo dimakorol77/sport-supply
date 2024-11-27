@@ -13,7 +13,9 @@ import org.example.models.User;
 import org.example.repositories.FavoriteRepository;
 import org.example.repositories.ProductRepository;
 import org.example.repositories.UserRepository;
+import org.example.security.SecurityUtils;
 import org.example.services.interfaces.FavoriteService;
+import org.example.services.interfaces.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,36 +26,37 @@ import java.util.stream.Collectors;
 @Service
 public class FavoriteServiceImpl implements FavoriteService {
     private final FavoriteRepository favoriteRepository;
-    private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
+    private final SecurityUtils securityUtils;
 
-    @Autowired
     public FavoriteServiceImpl(FavoriteRepository favoriteRepository,
-                               UserRepository userRepository,
                                ProductRepository productRepository,
-                               ProductMapper productMapper) {
+                               ProductMapper productMapper,
+                               SecurityUtils securityUtils) {
         this.favoriteRepository = favoriteRepository;
-        this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.productMapper = productMapper;
+        this.securityUtils = securityUtils;
+    }
+
+    private User getCurrentUser() {
+        return securityUtils.getCurrentUser();
     }
 
     @Override
     public void addProductToFavorites(Long userId, Long productId) {
+        User user = getCurrentUser();
         if (favoriteRepository.existsByUserIdAndProductId(userId, productId)) {
             throw new FavoriteAlreadyExistsException(ErrorMessage.FAVORITE_ALREADY_EXISTS);
         }
 
-        // Получаем пользователя по userId
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(ErrorMessage.USER_NOT_FOUND));
 
-        // Получаем продукт по productId
+
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(ErrorMessage.PRODUCT_NOT_FOUND));
 
-        // Создаем новый объект Favorite и устанавливаем пользователя и продукт
+
         Favorite favorite = new Favorite();
         favorite.setUser(user);
         favorite.setProduct(product);
@@ -64,7 +67,8 @@ public class FavoriteServiceImpl implements FavoriteService {
 
     @Override
     public List<ProductDto> getUserFavorites(Long userId) {
-        List<Favorite> favorites = favoriteRepository.findByUserId(userId);
+        User user = getCurrentUser();
+        List<Favorite> favorites = favoriteRepository.findByUserId(user.getId());
 
         return favorites.stream()
                 .map(favorite -> productMapper.toDto(favorite.getProduct()))
@@ -73,14 +77,12 @@ public class FavoriteServiceImpl implements FavoriteService {
 
     @Override
     public void removeProductFromFavorites(Long userId, Long productId) {
-        Favorite favorite = favoriteRepository.findByUserIdAndProductId(userId, productId)
+        User user = getCurrentUser();
+
+        Favorite favorite = favoriteRepository.findByUserIdAndProductId(user.getId(), productId)
                 .orElseThrow(() -> new FavoriteNotFoundException(ErrorMessage.FAVORITE_NOT_FOUND));
 
-        // Проверка прав доступа
-        if (!favorite.getUser().getId().equals(userId)) {
-            throw new org.springframework.security.access.AccessDeniedException(ErrorMessage.ACCESS_DENIED);
-        }
-
         favoriteRepository.delete(favorite);
+
     }
 }

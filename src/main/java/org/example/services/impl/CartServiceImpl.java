@@ -1,6 +1,6 @@
 package org.example.services.impl;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.example.dto.CartDto;
 import org.example.dto.OrderCreateDto;
 import org.example.dto.OrderDto;
@@ -21,19 +21,15 @@ import java.time.LocalDateTime;
 public class CartServiceImpl implements CartService {
     private final CartRepository cartRepository;
     private final UserRepository userRepository;
-    private final CartItemRepository cartItemRepository;
     private final CartMapper cartMapper;
-    private final OrderRepository orderRepository;
     private final OrderService orderService;
 
     @Autowired
     public CartServiceImpl(CartRepository cartRepository, UserRepository userRepository,
-                           CartItemRepository cartItemRepository, OrderRepository orderRepository,
                            OrderService orderService, CartMapper cartMapper) {
         this.cartRepository = cartRepository;
         this.userRepository = userRepository;
-        this.cartItemRepository = cartItemRepository;
-        this.orderRepository = orderRepository;
+
         this.orderService = orderService;
         this.cartMapper = cartMapper;
     }
@@ -55,67 +51,61 @@ public class CartServiceImpl implements CartService {
         Cart cart = cartMapper.toEntity(cartDto, user);
         Cart savedCart = cartRepository.save(cart);
 
-        BigDecimal totalPrice = calculateTotalPrice(savedCart.getId(), userId);
-        savedCart.setTotalPrice(totalPrice);
-        savedCart.setUpdatedAt(LocalDateTime.now());
-
-        cartRepository.save(savedCart);
 
         return cartMapper.toDto(savedCart);
     }
-    // Метод для подсчёта общей стоимости корзины
+
     @Override
     public BigDecimal calculateTotalPrice(Long cartId, Long userId) {
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new CartNotFoundException(ErrorMessage.CART_NOT_FOUND));
 
-        // Проверка, что корзина принадлежит пользователю
+
         if (!cart.getUser().getId().equals(userId)) {
             throw new org.springframework.security.access.AccessDeniedException(ErrorMessage.ACCESS_DENIED);
         }
 
         return cart.getCartItems().stream()
-                .filter(cartItem -> !cartItem.isDeleted())  // Игнорируем удаленные элементы
+                .filter(cartItem -> !cartItem.isDeleted())
                 .map(cartItem -> cartItem.getPrice() != null
-                        ? cartItem.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()))  // Учитываем количество
+                        ? cartItem.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()))
                         : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
-    // Очистка корзины (удаление всех товаров)
+
     @Override
-    public void clearCart(Long cartId, Long userId) {
+    public void clearCart(Long cartId, Long userId, boolean skipAccessCheck) {
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new CartNotFoundException(ErrorMessage.CART_NOT_FOUND));
 
-        // Проверка, что корзина принадлежит пользователю
-        if (!cart.getUser().getId().equals(userId)) {
+
+        if (!skipAccessCheck && !cart.getUser().getId().equals(userId)) {
             throw new org.springframework.security.access.AccessDeniedException(ErrorMessage.ACCESS_DENIED);
         }
 
         cart.getCartItems().forEach(cartItem -> {
             if (!cartItem.isDeleted()) {
                 cartItem.setDeleted(true);
-                cartItemRepository.save(cartItem);  // Сохраняем изменения для каждого товара
             }
         });
-
-        // Обновляем стоимость корзины после очистки
-        cart.setTotalPrice(BigDecimal.ZERO);  // Обнуляем сумму
+        cart.setTotalPrice(BigDecimal.ZERO);
         cart.setUpdatedAt(LocalDateTime.now());
-        cartRepository.save(cart);  // Сохраняем корзину
-    }
+        cartRepository.save(cart);
+        }
+
+
     @Transactional
     @Override
     public OrderDto convertCartToOrder(Long cartId, Long userId, OrderCreateDto orderCreateDto) {
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new CartNotFoundException(ErrorMessage.CART_NOT_FOUND));
 
-        // Проверка, что корзина принадлежит пользователю
+
         if (!cart.getUser().getId().equals(userId)) {
             throw new org.springframework.security.access.AccessDeniedException(ErrorMessage.ACCESS_DENIED);
         }
 
-        // Проверяем, есть ли в корзине активные (не удаленные) товары
+
         boolean hasActiveItems = cart.getCartItems().stream()
                 .anyMatch(cartItem -> !cartItem.isDeleted());
 
@@ -123,33 +113,16 @@ public class CartServiceImpl implements CartService {
             throw new CartEmptyException(ErrorMessage.CART_EMPTY);
         }
 
-        // Используем метод сервиса заказа для создания нового заказа из корзины и OrderCreateDto
+
         OrderDto orderDto = orderService.createOrderFromCart(cart, orderCreateDto);
 
-        // Обновляем корзину после создания заказа
-        updateCartAfterOrderCreation(cart);
+
+        clearCart(cartId, userId, true);
 
         return orderDto;
     }
 
-    // Метод обновления корзины после создания заказа
-    private void updateCartAfterOrderCreation(Cart cart) {
-        cart.getCartItems().forEach(cartItem -> {
-            if (!cartItem.isDeleted()) {
-                cartItem.setDeleted(true);
-                cartItemRepository.save(cartItem);  // Сохраняем изменения для каждого товара
-            }
-        });
 
-        // Обновляем сумму корзины
-        cart.setTotalPrice(BigDecimal.ZERO);  // Обнуляем сумму
-        cart.setUpdatedAt(LocalDateTime.now());
-        cartRepository.save(cart);  // Сохраняем корзину
-    }
-//    @Override
-//    public Cart getCartByUserId(Long userId) {
-//        return cartRepository.findByUserId(userId)
-//                .orElseThrow(() -> new CartNotFoundException(ErrorMessage.CART_NOT_FOUND));
-//    }
+
 }
 
