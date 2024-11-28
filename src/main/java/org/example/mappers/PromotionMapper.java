@@ -12,7 +12,6 @@ public class PromotionMapper {
             return null;
         }
         PromotionDto dto = new PromotionDto();
-        dto.setId(promotion.getId());
         dto.setName(promotion.getName());
         dto.setDescription(promotion.getDescription());
         dto.setStartDate(promotion.getStartDate());
@@ -32,7 +31,16 @@ public class PromotionMapper {
         return promotion;
     }
 
-    public void updateEntityFromDto(PromotionDto dto, Promotion promotion) {
+//    public void updateEntityFromDto(PromotionDto dto, Promotion promotion) {
+//        if (dto == null || promotion == null) {
+//            return;
+//        }
+//        promotion.setName(dto.getName());
+//        promotion.setDescription(dto.getDescription());
+//        promotion.setStartDate(dto.getStartDate());
+//        promotion.setEndDate(dto.getEndDate());
+//    }
+    public void updateEntityFromUpdateDto(PromotionDto dto, Promotion promotion) {
         if (dto == null || promotion == null) {
             return;
         }
@@ -40,5 +48,4 @@ public class PromotionMapper {
         promotion.setDescription(dto.getDescription());
         promotion.setStartDate(dto.getStartDate());
         promotion.setEndDate(dto.getEndDate());
-    }
-}
+    }}

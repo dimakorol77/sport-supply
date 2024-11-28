@@ -9,6 +9,7 @@ import org.example.annotations.BrandAnnotations.UpdateBrand;
 import org.example.annotations.BrandAnnotations.DeleteBrand;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -40,17 +41,20 @@ public class BrandController {
 
 
     @CreateBrand
-    public ResponseEntity<BrandDto> createBrand(@RequestBody BrandDto brandDto) {
+    public ResponseEntity<BrandDto> createBrand(
+            @Validated(BrandDto.OnCreate.class) @RequestBody BrandDto brandDto) {
         BrandDto created = brandService.createBrand(brandDto);
         return ResponseEntity.status(201).body(created);
     }
 
-
     @UpdateBrand
-    public ResponseEntity<BrandDto> updateBrand(@PathVariable Long id, @RequestBody BrandDto brandDto) {
+    public ResponseEntity<BrandDto> updateBrand(
+            @PathVariable Long id,
+            @Validated(BrandDto.OnUpdate.class) @RequestBody BrandDto brandDto) {
         BrandDto updated = brandService.updateBrand(id, brandDto);
         return ResponseEntity.ok(updated);
     }
+
 
 
     @DeleteBrand

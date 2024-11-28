@@ -10,6 +10,7 @@ import org.example.annotations.DiscountAnnotations.DeleteDiscount;
 import org.example.annotations.DiscountAnnotations.GetActiveDiscountsForProduct;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -49,10 +50,18 @@ public class DiscountController {
 
 
     @UpdateDiscount
-    public ResponseEntity<DiscountDto> updateDiscount(@PathVariable Long id, @Valid @RequestBody DiscountDto discountDto) {
-        DiscountDto updated = discountService.updateDiscount(id, discountDto);
-        return ResponseEntity.ok(updated);
+    public ResponseEntity<DiscountDto> updateDiscount(
+            @PathVariable Long id,
+            @Validated @RequestBody DiscountDto discountDto) {
+
+        // Обновляем Discount через сервис
+        DiscountDto updatedDiscount = discountService.updateDiscount(id, discountDto);
+
+        // Возвращаем результат с HTTP-статусом 200 (OK)
+        return ResponseEntity.ok(updatedDiscount);
     }
+
+
 
 
     @DeleteDiscount

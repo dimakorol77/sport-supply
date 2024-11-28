@@ -9,6 +9,7 @@ import org.example.annotations.CategoryAnnotations.UpdateCategory;
 import org.example.annotations.CategoryAnnotations.DeleteCategory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -40,17 +41,17 @@ public class CategoryController {
 
 
     @CreateCategory
-    public ResponseEntity<CategoryDto> createCategory(@RequestBody CategoryDto categoryDto) {
+    public ResponseEntity<CategoryDto> createCategory(@Validated(CategoryDto.OnCreate.class) @RequestBody CategoryDto categoryDto) {
         CategoryDto created = categoryService.createCategory(categoryDto);
         return ResponseEntity.status(201).body(created);
     }
 
-
     @UpdateCategory
-    public ResponseEntity<CategoryDto> updateCategory(@PathVariable Long id, @RequestBody CategoryDto categoryDto) {
+    public ResponseEntity<CategoryDto> updateCategory(@PathVariable Long id, @Validated(CategoryDto.OnUpdate.class) @RequestBody CategoryDto categoryDto) {
         CategoryDto updated = categoryService.updateCategory(id, categoryDto);
         return ResponseEntity.ok(updated);
     }
+
 
 
     @DeleteCategory

@@ -1,5 +1,10 @@
+
 package org.example.services.impl;
 
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.example.dto.ImageDto;
 import org.example.exceptions.ImageNotFoundException;
 import org.example.exceptions.ImageUploadException;
@@ -16,6 +21,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.http.HttpResponse;
 import java.nio.file.*;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -64,6 +72,47 @@ public class ImageServiceImpl implements ImageService {
         Image savedImage = imageRepository.save(image);
         return imageMapper.toDto(savedImage);
     }
+    @Override
+    public ImageDto uploadImageByUrl(Long productId, String imageUrl) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(ErrorMessage.PRODUCT_NOT_FOUND));
+
+        String fileName = saveFileFromUrl(imageUrl);
+
+        Image image = new Image();
+        image.setUrl("/" + uploadDir + fileName);
+        image.setAltText(fileName);
+        image.setProduct(product);
+        image.setCreatedAt(LocalDateTime.now());
+        image.setUpdatedAt(LocalDateTime.now());
+
+        Image savedImage = imageRepository.save(image);
+        return imageMapper.toDto(savedImage);
+    }
+
+    private String saveFileFromUrl(String imageUrl) {
+        try (CloseableHttpClient client = HttpClients.createDefault()) {
+
+            String sanitizedUrl = imageUrl.replaceAll("^\"|\"$", "");
+
+            HttpGet request = new HttpGet(sanitizedUrl);
+            try (CloseableHttpResponse response = client.execute(request);
+                 InputStream inputStream = response.getEntity().getContent()) {
+
+                String fileName = UUID.randomUUID().toString() + ".jpg";
+                Path filePath = Paths.get(uploadDir + fileName);
+
+                Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
+                return fileName;
+            }
+        } catch (IOException e) {
+            throw new ImageUploadException(ErrorMessage.IMAGE_UPLOAD_FAILED);
+        }
+    }
+
+
+
+
 
     @Override
     public List<ImageDto> getImagesByProductId(Long productId) {

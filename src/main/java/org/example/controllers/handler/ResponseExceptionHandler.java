@@ -12,6 +12,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @RestControllerAdvice
 public class ResponseExceptionHandler {
 
+
+
     @ExceptionHandler(IdNotFoundException.class)
     public ResponseEntity<String> handleIdNotFoundException(IdNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ErrorMessage.ID_NOT_FOUND);
@@ -212,6 +214,7 @@ public class ResponseExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleGenericException(Exception ex) {
+        ex.printStackTrace(); // Вывод полного стека исключения в консоль
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ErrorMessage.GENERIC_ERROR);
     }
 }

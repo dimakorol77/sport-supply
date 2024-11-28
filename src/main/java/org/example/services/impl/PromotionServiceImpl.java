@@ -1,10 +1,7 @@
 package org.example.services.impl;
 
 import org.example.dto.PromotionDto;
-import org.example.exceptions.ProductAlreadyInPromotionException;
-import org.example.exceptions.ProductNotFoundException;
-import org.example.exceptions.PromotionNotFoundException;
-import org.example.exceptions.ProductPromotionNotFoundException;
+import org.example.exceptions.*;
 import org.example.exceptions.errorMessage.ErrorMessage;
 import org.example.mappers.PromotionMapper;
 import org.example.models.Product;
@@ -14,8 +11,10 @@ import org.example.repositories.ProductPromotionRepository;
 import org.example.repositories.ProductRepository;
 import org.example.repositories.PromotionRepository;
 import org.example.services.interfaces.PromotionService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,6 +22,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class PromotionServiceImpl implements PromotionService {
+
 
     private final PromotionRepository promotionRepository;
     private final ProductRepository productRepository;
@@ -57,20 +57,29 @@ public class PromotionServiceImpl implements PromotionService {
 
     @Override
     public PromotionDto createPromotion(PromotionDto promotionDto) {
+        if (promotionRepository.existsByName(promotionDto.getName())) {
+            throw new PromotionDuplicateEntityException(ErrorMessage.PROMOTION_DUPLICATE_ENTITY_EXCEPTION);
+        }
         Promotion promotion = promotionMapper.toEntity(promotionDto);
         Promotion savedPromotion = promotionRepository.save(promotion);
         return promotionMapper.toDto(savedPromotion);
     }
+
 
     @Override
     public PromotionDto updatePromotion(Long id, PromotionDto promotionDto) {
         Promotion promotion = promotionRepository.findById(id)
                 .orElseThrow(() -> new PromotionNotFoundException(ErrorMessage.PROMOTION_NOT_FOUND));
 
-        promotionMapper.updateEntityFromDto(promotionDto, promotion);
+        promotion.setName(promotionDto.getName());
+        promotion.setDescription(promotionDto.getDescription());
+        promotion.setStartDate(promotionDto.getStartDate());
+        promotion.setEndDate(promotionDto.getEndDate());
+
         Promotion updatedPromotion = promotionRepository.save(promotion);
         return promotionMapper.toDto(updatedPromotion);
     }
+
 
     @Override
     public void deletePromotion(Long id) {
@@ -88,15 +97,12 @@ public class PromotionServiceImpl implements PromotionService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(ErrorMessage.PRODUCT_NOT_FOUND));
 
-        // Проверяем, существует ли уже связь
         productPromotionRepository.findByProductIdAndPromotionId(productId, promotionId).ifPresent(pp -> {
             throw new ProductAlreadyInPromotionException(ErrorMessage.PRODUCT_ALREADY_IN_PROMOTION);
         });
-
         ProductPromotion productPromotion = new ProductPromotion();
         productPromotion.setProduct(product);
         productPromotion.setPromotion(promotion);
-
         productPromotionRepository.save(productPromotion);
     }
 
@@ -119,5 +125,5 @@ public class PromotionServiceImpl implements PromotionService {
                 .collect(Collectors.toList());
     }
 
-    
+
 }

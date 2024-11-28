@@ -1,15 +1,17 @@
 package org.example.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.*;
 import lombok.Data;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.DecimalMin;
+
 import java.math.BigDecimal;
 
 @Data
 public class ProductDto {
+
+    @Schema(description = "ID продукта. Передавать только при обновлении", accessMode = Schema.AccessMode.READ_ONLY)
     private Long id;
+
 
     @NotBlank(message = "Product name cannot be empty")
     @Size(max = 200, message = "The product name must not exceed 200 characters")
@@ -36,4 +38,8 @@ public class ProductDto {
 
     @Size(max = 50, message = "The form must not exceed 50 characters")
     private String form;
+
+    // Группы для валидации
+    public interface OnCreate {}
+    public interface OnUpdate {}
 }

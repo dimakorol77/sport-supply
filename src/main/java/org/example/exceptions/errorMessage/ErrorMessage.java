@@ -41,6 +41,7 @@ public class ErrorMessage {
     public static final String FAVORITE_NOT_FOUND = "Favorite not found";
 
     public static final String PROMOTION_NOT_FOUND = "Promotion not found";
+    public static final String PROMOTION_DUPLICATE_ENTITY_EXCEPTION = "Promotion not found";
 
 
 
@@ -70,4 +71,6 @@ public class ErrorMessage {
 
 
     public static final String INVALID_SORT_FIELD = "Invalid sort field: ";
+    public static final String PARENT_CATEGORY_NOT_FOUND = "Parent category not found";
+
 }

@@ -22,19 +22,28 @@ public class ImageController {
     }
 
 
-    @PostMapping("/upload/{productId}")
-    public ResponseEntity<ImageDto> uploadImage(@PathVariable Long productId, @RequestParam("file") MultipartFile file) {
+    @PostMapping("/upload/file/{productId}")
+    public ResponseEntity<ImageDto> uploadImageFile(
+            @PathVariable Long productId,
+            @RequestParam("file") MultipartFile file) {
         ImageDto imageDto = imageService.uploadImage(productId, file);
         return ResponseEntity.ok(imageDto);
     }
 
+
+    @PostMapping("/upload/url/{productId}")
+    public ResponseEntity<ImageDto> uploadImageUrl(
+            @PathVariable Long productId,
+            @RequestBody String imageUrl) {
+        ImageDto imageDto = imageService.uploadImageByUrl(productId, imageUrl);
+        return ResponseEntity.ok(imageDto);
+    }
 
     @GetMapping("/product/{productId}")
     public ResponseEntity<List<ImageDto>> getImagesByProductId(@PathVariable Long productId) {
         List<ImageDto> images = imageService.getImagesByProductId(productId);
         return ResponseEntity.ok(images);
     }
-
 
     @DeleteMapping("/{imageId}")
     public ResponseEntity<Void> deleteImage(@PathVariable Long imageId) {

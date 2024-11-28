@@ -1,17 +1,17 @@
 package org.example.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.*;
 import lombok.Data;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.PastOrPresent;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.AssertTrue;
+
 import java.time.LocalDateTime;
 
 @Data
 public class PromotionDto {
+
+    @Schema(description = "ID акции. Передается только в URL", accessMode = Schema.AccessMode.READ_ONLY)
     private Long id;
+
 
     @NotBlank(message = "The promotion name cannot be empty")
     @Size(max = 200, message = "The promotion name must not exceed 200 characters")
@@ -35,4 +35,8 @@ public class PromotionDto {
         }
         return endDate.isAfter(startDate);
     }
+
+    public interface OnCreate {}
+    public interface OnUpdate {}
 }
+

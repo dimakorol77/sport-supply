@@ -1,6 +1,9 @@
 package org.example.services.interfaces;
 
 import org.example.dto.PromotionDto;
+
+
+
 import java.util.List;
 
 public interface PromotionService {

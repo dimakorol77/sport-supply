@@ -1,12 +1,15 @@
 package org.example.controllers;
 
+import jakarta.validation.Valid;
 import org.example.annotations.ProductAnnotations.*;
 import org.example.dto.DiscountDto;
 import org.example.dto.ProductDto;
 import org.example.dto.PromotionDto;
 import org.example.services.interfaces.ProductService;
+import org.example.services.interfaces.PromotionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -18,8 +21,10 @@ public class ProductController {
 
     private final ProductService productService;
 
+
     public ProductController(ProductService productService) {
         this.productService = productService;
+
     }
 
     @GetAllProducts
@@ -35,23 +40,19 @@ public class ProductController {
         ProductDto product = productService.getProductById(id);
         return ResponseEntity.ok(product);
     }
-
-
     @CreateProduct
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ProductDto> createProduct(@RequestBody ProductDto productDto) {
+    public ResponseEntity<ProductDto> createProduct(@Validated(ProductDto.OnCreate.class) @RequestBody ProductDto productDto) {
         ProductDto created = productService.createProduct(productDto);
         return ResponseEntity.status(201).body(created);
     }
 
-
     @UpdateProduct
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ProductDto> updateProduct(@PathVariable Long id, @RequestBody ProductDto productDto) {
+    public ResponseEntity<ProductDto> updateProduct(@PathVariable Long id, @Validated(ProductDto.OnUpdate.class) @RequestBody ProductDto productDto) {
         ProductDto updated = productService.updateProduct(id, productDto);
         return ResponseEntity.ok(updated);
     }
-
 
     @DeleteProduct
     @PreAuthorize("hasRole('ADMIN')")
@@ -65,14 +66,6 @@ public class ProductController {
     public ResponseEntity<List<DiscountDto>> getActiveDiscounts(@PathVariable Long id) {
         List<DiscountDto> discounts = productService.getActiveDiscounts(id);
         return ResponseEntity.ok(discounts);
-    }
-
-
-    @GetPromotionsForProduct
-    @PreAuthorize("permitAll()")
-    public ResponseEntity<List<PromotionDto>> getPromotionsForProduct(@PathVariable Long id) {
-        List<PromotionDto> promotions = productService.getPromotionsForProduct(id);
-        return ResponseEntity.ok(promotions);
     }
 
 

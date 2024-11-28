@@ -6,26 +6,29 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.AssertTrue;
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
 public class DiscountDto {
+    @Schema(description = "ID скидки. Передается только в URL", accessMode = Schema.AccessMode.READ_ONLY)
     private Long id;
 
-    @NotNull(message = "Product ID required")
+    @NotNull(groups = OnCreate.class, message = "Product ID required")
     private Long productId;
 
-    @NotNull(message = "Discount price required")
+    @NotNull(groups = {OnCreate.class, OnUpdate.class}, message = "Discount price required")
     @DecimalMin(value = "0.0", inclusive = false, message = "Discount price must be greater than zero")
     private BigDecimal discountPrice;
 
-    @NotNull(message = "Start date required")
-    @PastOrPresent(message = "Start date cannot be in the future")
+    @NotNull(groups = {OnCreate.class, OnUpdate.class}, message = "Start date required")
+    @PastOrPresent(groups = OnCreate.class, message = "Start date cannot be in the future")
     private LocalDateTime startDate;
 
-    @NotNull(message = "End date required")
-    @Future(message = "The end date must be in the future")
+    @NotNull(groups = {OnCreate.class, OnUpdate.class}, message = "End date required")
+    @Future(groups = {OnCreate.class, OnUpdate.class}, message = "The end date must be in the future")
     private LocalDateTime endDate;
 
     @AssertTrue(message = "The end date must be after the start date")
@@ -35,4 +38,9 @@ public class DiscountDto {
         }
         return endDate.isAfter(startDate);
     }
+
+    // Группы для валидации
+    public interface OnCreate {}
+    public interface OnUpdate {}
 }
+

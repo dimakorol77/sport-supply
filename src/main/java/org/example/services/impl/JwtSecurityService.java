@@ -16,7 +16,9 @@ import java.util.Map;
 @Service
 public class JwtSecurityService {
 
-    private static final String SECRET_KEY = "6yU3AaLTrj/YSKQtYF6yU3/YSKAaLTIv9aRtGxOcU39h7T/aRtGxO+syA=";
+//    private static final String SECRET_KEY = "6yU3AaLTrj/YSKQtYF6yU3/YSKAaLTIv9aRtGxOcU39h7T/aRtGxO+syA=";
+      private static final String SECRET_KEY = "KxJf8Rkv9UiO8n2z2pIcjQoLvt9W28S9b8F32Keh7Hc=";
+
 
 
     private SecretKey getSigningKey() {

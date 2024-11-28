@@ -1,11 +1,13 @@
 package org.example.controllers;
 
+import jakarta.validation.Valid;
 import org.example.annotations.PromotionAnnotations.*;
 import org.example.dto.PromotionDto;
 import org.example.services.interfaces.PromotionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -15,6 +17,7 @@ import java.util.List;
 public class PromotionController {
 
     private final PromotionService promotionService;
+
 
     @Autowired
     public PromotionController(PromotionService promotionService) {
@@ -38,19 +41,21 @@ public class PromotionController {
 
 
     @CreatePromotion
-    public ResponseEntity<PromotionDto> createPromotion(@RequestBody PromotionDto promotionDto) {
+    public ResponseEntity<PromotionDto> createPromotion(
+            @RequestBody @Validated(PromotionDto.OnCreate.class) PromotionDto promotionDto) {
         PromotionDto createdPromotion = promotionService.createPromotion(promotionDto);
         return ResponseEntity.status(201).body(createdPromotion);
     }
 
-
     @UpdatePromotion
-    public ResponseEntity<PromotionDto> updatePromotion(@PathVariable Long id, @RequestBody PromotionDto promotionDto) {
+    public ResponseEntity<PromotionDto> updatePromotion(
+            @PathVariable Long id,
+            @Validated(PromotionDto.OnUpdate.class) @RequestBody PromotionDto promotionDto) {
+
+        promotionDto.setId(id);
         PromotionDto updatedPromotion = promotionService.updatePromotion(id, promotionDto);
         return ResponseEntity.ok(updatedPromotion);
     }
-
-
 
     @DeletePromotion
     public ResponseEntity<Void> deletePromotion(@PathVariable Long id) {

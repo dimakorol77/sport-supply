@@ -17,6 +17,7 @@ import org.example.repositories.CartRepository;
 import org.example.repositories.ProductRepository;
 import org.example.services.interfaces.CartItemService;
 import org.example.services.interfaces.DiscountService;
+import org.example.services.interfaces.ProductService;
 import org.example.services.interfaces.PromotionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,17 +36,19 @@ public class CartItemServiceImpl  implements CartItemService {
     private final CartItemMapper cartItemMapper;
     private final DiscountService discountService;
     private final PromotionService promotionService;
+    private final ProductService productService;
 
     @Autowired
     public CartItemServiceImpl(CartItemRepository cartItemRepository, CartRepository cartRepository,
                                ProductRepository productRepository, CartItemMapper cartItemMapper,
-                               DiscountService discountService, PromotionService promotionService) {
+                               DiscountService discountService, PromotionService promotionService, ProductService productService) {
         this.cartItemRepository = cartItemRepository;
         this.cartRepository = cartRepository;
         this.productRepository = productRepository;
         this.cartItemMapper = cartItemMapper;
         this.discountService = discountService;
         this.promotionService = promotionService;
+        this.productService = productService;
     }
 
     @Override
