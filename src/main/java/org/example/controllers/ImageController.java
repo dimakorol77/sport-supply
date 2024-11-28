@@ -1,5 +1,12 @@
 package org.example.controllers;
 
+
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import org.example.annotations.ImageAnnotations.DeleteImage;
+import org.example.annotations.ImageAnnotations.GetImagesByProductId;
+import org.example.annotations.ImageAnnotations.UploadImageFile;
+import org.example.annotations.ImageAnnotations.UploadImageUrl;
 import org.example.dto.ImageDto;
 import org.example.services.interfaces.ImageService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,16 +29,20 @@ public class ImageController {
     }
 
 
-    @PostMapping("/upload/file/{productId}")
+
+    @UploadImageFile
     public ResponseEntity<ImageDto> uploadImageFile(
             @PathVariable Long productId,
+            @Parameter(description = "File to upload", required = true, schema = @Schema(type = "string", format = "binary"))
             @RequestParam("file") MultipartFile file) {
         ImageDto imageDto = imageService.uploadImage(productId, file);
         return ResponseEntity.ok(imageDto);
     }
 
 
-    @PostMapping("/upload/url/{productId}")
+
+
+    @UploadImageUrl
     public ResponseEntity<ImageDto> uploadImageUrl(
             @PathVariable Long productId,
             @RequestBody String imageUrl) {
@@ -39,13 +50,13 @@ public class ImageController {
         return ResponseEntity.ok(imageDto);
     }
 
-    @GetMapping("/product/{productId}")
+    @GetImagesByProductId
     public ResponseEntity<List<ImageDto>> getImagesByProductId(@PathVariable Long productId) {
         List<ImageDto> images = imageService.getImagesByProductId(productId);
         return ResponseEntity.ok(images);
     }
 
-    @DeleteMapping("/{imageId}")
+    @DeleteImage
     public ResponseEntity<Void> deleteImage(@PathVariable Long imageId) {
         imageService.deleteImage(imageId);
         return ResponseEntity.noContent().build();

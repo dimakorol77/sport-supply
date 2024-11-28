@@ -22,8 +22,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
-import java.net.http.HttpResponse;
 import java.nio.file.*;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -72,6 +70,7 @@ public class ImageServiceImpl implements ImageService {
         Image savedImage = imageRepository.save(image);
         return imageMapper.toDto(savedImage);
     }
+
     @Override
     public ImageDto uploadImageByUrl(Long productId, String imageUrl) {
         Product product = productRepository.findById(productId)
@@ -109,9 +108,6 @@ public class ImageServiceImpl implements ImageService {
             throw new ImageUploadException(ErrorMessage.IMAGE_UPLOAD_FAILED);
         }
     }
-
-
-
 
 
     @Override

@@ -29,14 +29,10 @@ import java.util.List;
 @Validated
 public class OrderController {
     private final OrderService orderService;
-    private final CartService cartService;
-    private final OrderMapper orderMapper;
     private final SecurityUtils securityUtils;
 
-    public OrderController(OrderService orderService, CartService cartService, OrderMapper orderMapper, SecurityUtils securityUtils) {
+    public OrderController(OrderService orderService, SecurityUtils securityUtils) {
         this.orderService = orderService;
-        this.cartService = cartService;
-        this.orderMapper = orderMapper;
         this.securityUtils = securityUtils;
     }
     private User getCurrentUser() {
