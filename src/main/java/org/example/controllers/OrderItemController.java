@@ -41,9 +41,9 @@ public class OrderItemController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdItem);
     }
 
+
     @GetOrderItemsByOrderId
-    public ResponseEntity<List<OrderItemDto>> getOrderItemsByOrderId(
-            @PathVariable Long orderId) {
+    public ResponseEntity<List<OrderItemDto>> getOrderItemsByOrderId(@PathVariable Long orderId) {
         List<OrderItemDto> orderItemDtos = orderItemService.getOrderItemsByOrderId(orderId);
         return ResponseEntity.ok(orderItemDtos);
     }

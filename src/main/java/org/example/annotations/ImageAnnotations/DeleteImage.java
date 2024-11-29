@@ -25,6 +25,5 @@ public @interface DeleteImage {
     @AliasFor(annotation = RequestMapping.class, attribute = "path")
     String[] path() default {"/{imageId}"};
 
-//    @Parameter(description = "ID of the image to delete", required = true)
-//    String imageIdParam() default "imageId";
+
 }

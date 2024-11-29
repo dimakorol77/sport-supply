@@ -49,6 +49,15 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Review> reviews= new ArrayList<>();
 
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now(); // Устанавливаем текущее время при создании
+        this.updatedAt = LocalDateTime.now();
+    }
 
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = LocalDateTime.now(); // Обновляем время при изменении
+    }
 }
 

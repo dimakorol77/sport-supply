@@ -27,7 +27,7 @@ public class Cart {
 
 
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.MERGE)
     @MapsId
     @JoinColumn(name = "user_id")
     private User user;

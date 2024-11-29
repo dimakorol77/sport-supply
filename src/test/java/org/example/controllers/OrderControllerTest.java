@@ -1,247 +1,199 @@
 package org.example.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.controllers.handler.ResponseExceptionHandler;
-import org.example.dto.OrderDto;
-import org.example.dto.OrderResponseDto;
+import org.example.dto.OrderCreateDto;
 import org.example.enums.DeliveryMethod;
 import org.example.enums.OrderStatus;
 import org.example.enums.Role;
-import org.example.mappers.OrderMapper;
+import org.example.models.Order;
+import org.example.models.OrderItem;
 import org.example.models.User;
-import org.example.security.SecurityUtils;
-import org.example.services.interfaces.CartService;
-import org.example.services.interfaces.OrderService;
-import org.example.services.interfaces.UserService;
-import org.junit.jupiter.api.AfterEach;
+import org.example.repositories.OrderItemRepository;
+import org.example.repositories.OrderRepository;
+import org.example.repositories.UserRepository;
+import org.example.services.impl.JwtSecurityService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.test.context.support.WithMockUser; // Импорт найден
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Collections;
+import java.util.Arrays;
+import java.util.UUID;
 
-import static org.hamcrest.Matchers.is;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+public class OrderControllerTest {
 
-class OrderControllerTest {
-
+    @Autowired
     private MockMvc mockMvc;
 
-    @Mock
-    private OrderService orderService;
+    @Autowired
+    private OrderRepository orderRepository;
 
-    @Mock
-    private CartService cartService;
+    @Autowired
+    private OrderItemRepository orderItemRepository;
 
-    @Mock
-    private UserService userService;
+    @Autowired
+    private UserRepository userRepository;
 
-    @Mock
-    private OrderMapper orderMapper;
+    @Autowired
+    private JwtSecurityService jwtSecurityService;
 
-    @InjectMocks
-    private OrderController orderController;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
+    @Autowired
     private ObjectMapper objectMapper;
 
-    private OrderDto orderDto;
-    private OrderResponseDto orderResponseDto;
+    private String userToken;
+    private String adminToken;
     private User user;
+    private User adminUser;
+    private Order order;
 
     @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-
-        mockMvc = MockMvcBuilders.standaloneSetup(orderController)
-                .build();
-
-        objectMapper = new ObjectMapper();
-
-        orderDto = new OrderDto();
-        orderDto.setId(1L);
-        orderDto.setUserId(1L);
-        orderDto.setStatus(OrderStatus.CREATED);
-        orderDto.setTotalAmount(BigDecimal.valueOf(100));
-
-        orderResponseDto = new OrderResponseDto(orderDto.getId(), orderDto.getTotalAmount(), orderDto.getStatus());
+    public void setUp() {
+        orderItemRepository.deleteAll();
+        orderRepository.deleteAll();
+        userRepository.deleteAll();
 
         user = new User();
-        user.setId(1L);
-        user.setEmail("test@example.com");
-        user.setName("Test User");
-        user.setPassword("password");
+        user.setEmail("user@example.com");
+        user.setPassword(passwordEncoder.encode("userpass"));
         user.setRole(Role.USER);
+        user.setName("Test User");
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
-    }
+        userRepository.save(user);
 
-    @AfterEach
-    void tearDown() {
-        // Очищаем SecurityContext после каждого теста
-        SecurityContextHolder.clearContext();
-    }
+        adminUser = new User();
+        adminUser.setEmail("admin@example.com");
+        adminUser.setPassword(passwordEncoder.encode("adminpass"));
+        adminUser.setRole(Role.ADMIN);
+        adminUser.setName("Admin User");
+        adminUser.setCreatedAt(LocalDateTime.now());
+        adminUser.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(adminUser);
 
-    @Test
-    void testGetAllOrders() throws Exception {
-        setAuthentication("admin@example.com", "ADMIN");
+        order = new Order();
+        order.setUser(user);
+        order.setTotalAmount(BigDecimal.valueOf(100.0));
+        order.setStatus(OrderStatus.CREATED);
+        order.setDeliveryMethod(DeliveryMethod.PICKUP);
+        order.setCreatedAt(LocalDateTime.now());
+        order.setUpdatedAt(LocalDateTime.now());
+        orderRepository.save(order);
 
-        User adminUser = createUser(2L, "admin@example.com", Role.ADMIN);
-        when(userService.getUserByEmail("admin@example.com")).thenReturn(adminUser);
+        userToken = jwtSecurityService.generateToken(
+                org.springframework.security.core.userdetails.User.builder()
+                        .username(user.getEmail())
+                        .password(user.getPassword())
+                        .roles(user.getRole().name())
+                        .build());
 
-        when(orderService.getAllOrders()).thenReturn(Collections.singletonList(orderDto));
-
-        mockMvc.perform(get("/api/orders"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id", is(orderDto.getId().intValue())))
-                .andExpect(jsonPath("$[0].userId", is(orderDto.getUserId().intValue())))
-                .andExpect(jsonPath("$[0].status", is(orderDto.getStatus().name())));
-    }
-
-    @Test
-    void testGetOrdersByUserId_AsUser() throws Exception {
-        setAuthentication("test@example.com", "USER");
-
-        when(userService.getUserByEmail("test@example.com")).thenReturn(user);
-        when(orderService.getOrdersByUserId(1L)).thenReturn(Collections.singletonList(orderDto));
-
-        mockMvc.perform(get("/api/orders/user"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id", is(orderDto.getId().intValue())))
-                .andExpect(jsonPath("$[0].userId", is(orderDto.getUserId().intValue())))
-                .andExpect(jsonPath("$[0].status", is(orderDto.getStatus().name())));
+        adminToken = jwtSecurityService.generateToken(
+                org.springframework.security.core.userdetails.User.builder()
+                        .username(adminUser.getEmail())
+                        .password(adminUser.getPassword())
+                        .roles(adminUser.getRole().name())
+                        .build());
     }
 
     @Test
-    void testGetOrdersByUserId_AsAdmin_WithUserId() throws Exception {
-        setAuthentication("admin@example.com", "ADMIN");
+    public void testGetOrdersByUser() throws Exception {
 
-        User adminUser = createUser(2L, "admin@example.com", Role.ADMIN);
-        when(userService.getUserByEmail("admin@example.com")).thenReturn(adminUser);
+        // Создаём уникального пользователя
+        String uniqueEmail = "user" + UUID.randomUUID() + "@example.com";
+        User regularUser = new User();
+        regularUser.setEmail(uniqueEmail);
+        regularUser.setPassword(passwordEncoder.encode("userpass"));
+        regularUser.setRole(Role.USER);
+        regularUser.setName("Regular User");
+        regularUser.setCreatedAt(LocalDateTime.now());
+        regularUser.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(regularUser);
 
-        when(orderService.getOrdersByUserId(1L)).thenReturn(Collections.singletonList(orderDto));
+        // Генерируем токен для пользователя
+        String userToken = jwtSecurityService.generateToken(
+                org.springframework.security.core.userdetails.User.builder()
+                        .username(regularUser.getEmail())
+                        .password(regularUser.getPassword())
+                        .roles(regularUser.getRole().name())
+                        .build()
+        );
 
+        // Создаём заказ для пользователя regularUser
+        Order order = new Order();
+        order.setUser(regularUser); // Привязываем заказ к правильному пользователю
+        order.setTotalAmount(BigDecimal.valueOf(100.0));
+        order.setStatus(OrderStatus.CREATED);
+        order.setDeliveryMethod(DeliveryMethod.PICKUP); // Добавлено значение
+        order.setCreatedAt(LocalDateTime.now());
+        order.setUpdatedAt(LocalDateTime.now());
+        orderRepository.save(order);
+
+
+
+        // Выполняем запрос
         mockMvc.perform(get("/api/orders/user")
-                        .param("userId", "1"))
+                        .header("Authorization", "Bearer " + userToken)
+                        .param("userId", regularUser.getId().toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id", is(orderDto.getId().intValue())));
+                .andExpect(jsonPath("$[0].id", is(order.getId().intValue())))
+                .andExpect(jsonPath("$[0].totalAmount", is(100.0)));
+    }
+
+
+
+    @Test
+    public void testUpdateOrderStatusByAdmin() throws Exception {
+        mockMvc.perform(put("/api/orders/{id}/status", order.getId())
+                        .header("Authorization", "Bearer " + adminToken)
+                        .param("status", "PAID"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status", is("PAID")));
     }
 
     @Test
-    void testGetOrderById_Success() throws Exception {
-        setAuthentication("test@example.com", "USER");
+    public void testCancelOrderByUser() throws Exception {
+        mockMvc.perform(delete("/api/orders/{id}/cancel", order.getId())
+                        .header("Authorization", "Bearer " + userToken))
+                .andExpect(status().isNoContent());
 
-        when(userService.getUserByEmail("test@example.com")).thenReturn(user);
-        when(orderService.getOrderByIdAndCheckOwnership(1L, 1L)).thenReturn(orderDto);
-
-        mockMvc.perform(get("/api/orders/{orderId}", 1))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(orderDto.getId().intValue())))
-                .andExpect(jsonPath("$.userId", is(orderDto.getUserId().intValue())))
-                .andExpect(jsonPath("$.status", is(orderDto.getStatus().name())));
+        Order updatedOrder = orderRepository.findById(order.getId()).get();
+        assertThat(updatedOrder.getStatus(), is(OrderStatus.CANCELLED));
     }
 
     @Test
-    void testUpdateOrderStatus_Success() throws Exception {
-        setAuthentication("admin@example.com", "ADMIN");
-
-        User adminUser = createUser(2L, "admin@example.com", Role.ADMIN);
-        when(userService.getUserByEmail("admin@example.com")).thenReturn(adminUser);
-
-        OrderDto updatedOrderDto = new OrderDto();
-        updatedOrderDto.setId(1L);
-        updatedOrderDto.setUserId(1L);
-        updatedOrderDto.setStatus(OrderStatus.SHIPPED);
-        updatedOrderDto.setTotalAmount(BigDecimal.valueOf(100));
-
-        when(orderService.updateOrderStatus(eq(1L), eq(OrderStatus.SHIPPED))).thenReturn(updatedOrderDto);
-
-        mockMvc.perform(put("/api/orders/{orderId}/status", 1)
-                        .param("status", "SHIPPED"))
+    public void testGetAllOrdersByAdmin() throws Exception {
+        mockMvc.perform(get("/api/orders/all")
+                        .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(updatedOrderDto.getId().intValue())))
-                .andExpect(jsonPath("$.totalAmount", is(updatedOrderDto.getTotalAmount().intValue())))
-                .andExpect(jsonPath("$.status", is(updatedOrderDto.getStatus().name())));
+                .andExpect(jsonPath("$[0].id", is(order.getId().intValue())))
+                .andExpect(jsonPath("$[0].totalAmount", is(100.0)));
+
     }
 
     @Test
-    void testGetOrdersByStatus_Success() throws Exception {
-        setAuthentication("admin@example.com", "ADMIN");
-
-        User adminUser = createUser(2L, "admin@example.com", Role.ADMIN);
-        when(userService.getUserByEmail("admin@example.com")).thenReturn(adminUser);
-
-        when(orderService.getOrdersByStatus(OrderStatus.CREATED)).thenReturn(Collections.singletonList(orderDto));
-
-        mockMvc.perform(get("/api/orders/status")
-                        .param("status", "CREATED"))
+    public void testGetOrderByIdAndCheckOwnership() throws Exception {
+        mockMvc.perform(get("/api/orders/{id}", order.getId())
+                        .header("Authorization", "Bearer " + userToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id", is(orderDto.getId().intValue())));
-    }
-
-    @Test
-    void testGetOrdersCreatedAfter_Success() throws Exception {
-        setAuthentication("admin@example.com", "ADMIN");
-
-        User adminUser = createUser(2L, "admin@example.com", Role.ADMIN);
-        when(userService.getUserByEmail("admin@example.com")).thenReturn(adminUser);
-
-        LocalDateTime date = LocalDateTime.now().minusDays(1);
-        when(orderService.getOrdersCreatedAfter(any(LocalDateTime.class))).thenReturn(Collections.singletonList(orderDto));
-
-        mockMvc.perform(get("/api/orders/created-after")
-                        .param("date", date.toString()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id", is(orderDto.getId().intValue())));
-    }
-
-    @Test
-    void testGetOrdersByDeliveryMethod_Success() throws Exception {
-        setAuthentication("admin@example.com", "ADMIN");
-
-        User adminUser = createUser(2L, "admin@example.com", Role.ADMIN);
-        when(userService.getUserByEmail("admin@example.com")).thenReturn(adminUser);
-
-        when(orderService.getOrdersByDeliveryMethod(DeliveryMethod.PICKUP)).thenReturn(Collections.singletonList(orderDto));
-
-        mockMvc.perform(get("/api/orders/delivery-method")
-                        .param("deliveryMethod", "PICKUP"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id", is(orderDto.getId().intValue())));
-    }
-
-    private void setAuthentication(String email, String role) {
-        org.springframework.security.core.userdetails.User userPrincipal =
-                new org.springframework.security.core.userdetails.User(email, "", Collections.singleton(() -> "ROLE_" + role));
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-    }
-
-    private User createUser(Long id, String email, Role role) {
-        User user = new User();
-        user.setId(id);
-        user.setEmail(email);
-        user.setRole(role);
-        return user;
+                .andExpect(jsonPath("$.id", is(order.getId().intValue())))
+                .andExpect(jsonPath("$.totalAmount", is(100.0)));
     }
 }

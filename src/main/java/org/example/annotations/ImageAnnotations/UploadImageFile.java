@@ -26,6 +26,4 @@ public @interface UploadImageFile {
     @AliasFor(annotation = RequestMapping.class, attribute = "path")
     String[] path() default {"/upload/file/{productId}"};
 
-//    @Parameter(description = "File to upload", required = true, schema = @Schema(type = "string", format = "binary"))
-//    String fileParam() default "file";
 }

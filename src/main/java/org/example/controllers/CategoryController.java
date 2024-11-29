@@ -15,23 +15,19 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/categories")
-@PreAuthorize("hasRole('ADMIN')")
 public class CategoryController {
 
     private final CategoryService categoryService;
 
-
     public CategoryController(CategoryService categoryService) {
         this.categoryService = categoryService;
     }
-
 
     @GetAllCategories
     public ResponseEntity<List<CategoryDto>> getAllCategories() {
         List<CategoryDto> categories = categoryService.getAllCategories();
         return ResponseEntity.ok(categories);
     }
-
 
     @GetCategoryById
     public ResponseEntity<CategoryDto> getCategoryById(@PathVariable Long id) {
@@ -40,20 +36,26 @@ public class CategoryController {
     }
 
 
+    @PreAuthorize("hasRole('ADMIN')")
     @CreateCategory
-    public ResponseEntity<CategoryDto> createCategory(@Validated(CategoryDto.OnCreate.class) @RequestBody CategoryDto categoryDto) {
+    public ResponseEntity<CategoryDto> createCategory(
+            @Validated(CategoryDto.OnCreate.class) @RequestBody CategoryDto categoryDto) {
         CategoryDto created = categoryService.createCategory(categoryDto);
         return ResponseEntity.status(201).body(created);
     }
 
+
+    @PreAuthorize("hasRole('ADMIN')")
     @UpdateCategory
-    public ResponseEntity<CategoryDto> updateCategory(@PathVariable Long id, @Validated(CategoryDto.OnUpdate.class) @RequestBody CategoryDto categoryDto) {
+    public ResponseEntity<CategoryDto> updateCategory(
+            @PathVariable Long id,
+            @Validated(CategoryDto.OnUpdate.class) @RequestBody CategoryDto categoryDto) {
         CategoryDto updated = categoryService.updateCategory(id, categoryDto);
         return ResponseEntity.ok(updated);
     }
 
 
-
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteCategory
     public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
         categoryService.deleteCategory(id);

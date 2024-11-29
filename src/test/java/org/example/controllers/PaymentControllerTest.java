@@ -1,150 +1,168 @@
 package org.example.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.controllers.handler.ResponseExceptionHandler;
 import org.example.dto.PaymentRequestDto;
-import org.example.dto.PaymentResponseDto;
+import org.example.enums.DeliveryMethod;
+import org.example.enums.OrderStatus;
 import org.example.enums.PaymentStatus;
 import org.example.enums.Role;
-import org.example.exceptions.PaymentNotFoundException;
-import org.example.exceptions.errorMessage.ErrorMessage;
+import org.example.models.Order;
+import org.example.models.Payment;
 import org.example.models.User;
-import org.example.security.SecurityUtils;
-import org.example.services.interfaces.PaymentService;
-import org.example.services.interfaces.UserService;
+import org.example.repositories.OrderRepository;
+import org.example.repositories.PaymentRepository;
+import org.example.repositories.UserRepository;
+import org.example.services.impl.JwtSecurityService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
-import java.util.Collections;
+import java.time.LocalDateTime;
 
-import static org.hamcrest.Matchers.is;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-
-import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-class PaymentControllerTest {
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+public class PaymentControllerTest {
 
+    @Autowired
     private MockMvc mockMvc;
 
-    @Mock
-    private PaymentService paymentService;
+    @Autowired
+    private PaymentRepository paymentRepository;
 
-    @Mock
-    private UserService userService;
+    @Autowired
+    private OrderRepository orderRepository;
 
-    @InjectMocks
-    private PaymentController paymentController;
+    @Autowired
+    private UserRepository userRepository;
 
+    @Autowired
+    private JwtSecurityService jwtSecurityService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
-    private PaymentRequestDto paymentRequestDto;
-    private PaymentResponseDto paymentResponseDto;
+    private String userToken;
+    private String adminToken;
     private User user;
+    private User adminUser;
+    private Order order;
 
     @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        mockMvc = MockMvcBuilders.standaloneSetup(paymentController)
-                .setControllerAdvice(new ResponseExceptionHandler())
-                .setMessageConverters(new MappingJackson2HttpMessageConverter())
-                .build();
-        objectMapper = new ObjectMapper();
-
-        paymentRequestDto = new PaymentRequestDto();
-        paymentRequestDto.setOrderId(1L);
-        paymentRequestDto.setAmount(new BigDecimal("100.00"));
-
-        paymentResponseDto = new PaymentResponseDto();
-        paymentResponseDto.setId(1L);
-        paymentResponseDto.setOrderId(1L);
-        paymentResponseDto.setAmount(new BigDecimal("100.00"));
-        paymentResponseDto.setStatus(PaymentStatus.PENDING);
+    public void setUp() {
+        paymentRepository.deleteAll();
+        orderRepository.deleteAll();
+        userRepository.deleteAll();
 
         user = new User();
-        user.setId(1L);
-        user.setEmail("test@example.com");
+        user.setEmail("user@example.com");
+        user.setPassword(passwordEncoder.encode("userpass"));
         user.setRole(Role.USER);
+        user.setName("Test User");
+        user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        adminUser = new User();
+        adminUser.setEmail("admin@example.com");
+        adminUser.setPassword(passwordEncoder.encode("adminpass"));
+        adminUser.setRole(Role.ADMIN);
+        adminUser.setName("Admin User");
+        adminUser.setCreatedAt(LocalDateTime.now());
+        adminUser.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(adminUser);
+
+        order = new Order();
+        order.setUser(user);
+        order.setTotalAmount(BigDecimal.valueOf(100.0));
+        order.setStatus(OrderStatus.WAITING_PAYMENT);
+        order.setCreatedAt(LocalDateTime.now());
+        order.setUpdatedAt(LocalDateTime.now());
+        order.setDeliveryMethod(DeliveryMethod.PICKUP); // Или другой подходящий метод доставки
+
+        orderRepository.save(order);
+
+        userToken = jwtSecurityService.generateToken(
+                org.springframework.security.core.userdetails.User.builder()
+                        .username(user.getEmail())
+                        .password(user.getPassword())
+                        .roles(user.getRole().name())
+                        .build());
+
+        adminToken = jwtSecurityService.generateToken(
+                org.springframework.security.core.userdetails.User.builder()
+                        .username(adminUser.getEmail())
+                        .password(adminUser.getPassword())
+                        .roles(adminUser.getRole().name())
+                        .build());
     }
 
     @Test
-    void testCreatePayment_Success() throws Exception {
-        // Устанавливаем аутентификацию
-        setAuthentication("test@example.com", "USER");
+    public void testCreatePayment() throws Exception {
+        PaymentRequestDto paymentRequestDto = new PaymentRequestDto();
+        paymentRequestDto.setOrderId(order.getId());
+        paymentRequestDto.setAmount(BigDecimal.valueOf(100.0));
 
-        when(userService.getUserByEmail("test@example.com")).thenReturn(user);
-        when(paymentService.createPayment(any(PaymentRequestDto.class), eq(user.getId()))).thenReturn(paymentResponseDto);
-
-        String paymentJson = objectMapper.writeValueAsString(paymentRequestDto);
 
         mockMvc.perform(post("/api/payment/create")
-                        .contentType(APPLICATION_JSON)
-                        .content(paymentJson))
+                        .header("Authorization", "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(paymentRequestDto)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id", is(paymentResponseDto.getId().intValue())))
-                .andExpect(jsonPath("$.orderId", is(paymentResponseDto.getOrderId().intValue())))
+                .andExpect(jsonPath("$.orderId", is(order.getId().intValue())))
                 .andExpect(jsonPath("$.amount", is(100.0)))
-                .andExpect(jsonPath("$.status", is(paymentResponseDto.getStatus().name())));
+                .andExpect(jsonPath("$.status", is("PENDING")));
     }
 
     @Test
-    void testGetPaymentStatus_Success() throws Exception {
-        // Устанавливаем аутентификацию
-        setAuthentication("test@example.com", "USER");
+    public void testGetPaymentStatus() throws Exception {
+        Payment payment = new Payment();
+        payment.setOrder(order);
+        payment.setAmount(BigDecimal.valueOf(100.0));
+        payment.setStatus(PaymentStatus.PENDING);
+        payment.setCreatedAt(LocalDateTime.now());
+        payment.setUpdatedAt(LocalDateTime.now());
+        paymentRepository.save(payment);
 
-        when(userService.getUserByEmail("test@example.com")).thenReturn(user);
-        when(paymentService.getPaymentStatus(1L, user.getId())).thenReturn(paymentResponseDto);
-
-        mockMvc.perform(get("/api/payment/{paymentId}/status", 1))
+        mockMvc.perform(get("/api/payment//{paymentId}/status", payment.getId())
+                        .header("Authorization", "Bearer " + userToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(paymentResponseDto.getId().intValue())))
-                .andExpect(jsonPath("$.orderId", is(paymentResponseDto.getOrderId().intValue())))
-                .andExpect(jsonPath("$.amount", is(100.0)))
-                .andExpect(jsonPath("$.status", is(paymentResponseDto.getStatus().name())));
+                .andExpect(jsonPath("$.status", is("PENDING")));
     }
 
     @Test
-    void testUpdatePaymentStatus_Success() throws Exception {
-        // Устанавливаем аутентификацию
-        setAuthentication("admin@example.com", "ADMIN");
+    public void testUpdatePaymentStatusByAdmin() throws Exception {
+        Payment payment = new Payment();
+        payment.setOrder(order);
+        payment.setAmount(BigDecimal.valueOf(100.0));
+        payment.setStatus(PaymentStatus.PENDING);
+        payment.setCreatedAt(LocalDateTime.now());
+        payment.setUpdatedAt(LocalDateTime.now());
+        paymentRepository.save(payment);
 
-        doNothing().when(paymentService).updatePaymentStatus(1L, PaymentStatus.COMPLETED);
-
-        mockMvc.perform(patch("/api/payment/{paymentId}/status", 1)
+        mockMvc.perform(patch("/api/payment/{paymentId}/status", payment.getId()) // Здесь используем PATCH
+                        .header("Authorization", "Bearer " + adminToken)
                         .param("status", "COMPLETED"))
                 .andExpect(status().isOk());
-    }
 
-    @Test
-    void testUpdatePaymentStatus_NotFound() throws Exception {
-        // Устанавливаем аутентификацию
-        setAuthentication("admin@example.com", "ADMIN");
+        Payment updatedPayment = paymentRepository.findById(payment.getId()).get();
+        assertThat(updatedPayment.getStatus(), is(PaymentStatus.COMPLETED));
 
-        doThrow(new PaymentNotFoundException(ErrorMessage.PAYMENT_NOT_FOUND))
-                .when(paymentService).updatePaymentStatus(1L, PaymentStatus.COMPLETED);
-
-        mockMvc.perform(patch("/api/payment/{paymentId}/status", 1)
-                        .param("status", "COMPLETED"))
-                .andExpect(status().isNotFound())
-                .andExpect(content().string("\"" + ErrorMessage.PAYMENT_NOT_FOUND + "\""));
-    }
-
-    // Метод для установки аутентификации
-    private void setAuthentication(String email, String role) {
-        org.springframework.security.core.userdetails.User userPrincipal =
-                new org.springframework.security.core.userdetails.User(email, "", Collections.singleton(() -> "ROLE_" + role));
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }

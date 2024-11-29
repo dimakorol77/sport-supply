@@ -25,6 +25,5 @@ public @interface GetImagesByProductId {
     @AliasFor(annotation = RequestMapping.class, attribute = "path")
     String[] path() default {"/product/{productId}"};
 
-//    @Parameter(description = "ID of the product", required = true)
-//    String productIdParam() default "productId";
+
 }

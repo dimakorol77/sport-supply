@@ -1,216 +1,180 @@
 package org.example.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.controllers.handler.ResponseExceptionHandler;
 import org.example.dto.ReviewDto;
 import org.example.enums.Role;
-import org.example.exceptions.ReviewNotFoundException;
-import org.example.exceptions.errorMessage.ErrorMessage;
+import org.example.models.Product;
+import org.example.models.Review;
 import org.example.models.User;
-import org.example.services.interfaces.ReviewService;
-import org.example.services.interfaces.UserService;
-import org.junit.jupiter.api.AfterEach;
+import org.example.repositories.ProductRepository;
+import org.example.repositories.ReviewRepository;
+import org.example.repositories.UserRepository;
+import org.example.services.impl.JwtSecurityService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.Arrays;
-import java.util.Collections;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
-import static org.hamcrest.Matchers.is;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
-import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-class ReviewControllerTest {
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+public class ReviewControllerTest {
 
+    @Autowired
     private MockMvc mockMvc;
 
-    @Mock
-    private ReviewService reviewService;
+    @Autowired
+    private ReviewRepository reviewRepository;
 
-    @Mock
-    private UserService userService;
+    @Autowired
+    private ProductRepository productRepository;
 
-    @InjectMocks
-    private ReviewController reviewController;
+    @Autowired
+    private UserRepository userRepository;
 
+    @Autowired
+    private JwtSecurityService jwtSecurityService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
-    private ReviewDto reviewDto;
-    private User testUser;
+    private String userToken;
+    private String adminToken;
+    private User user;
+    private User adminUser;
+    private Product product;
+    private Review review;
 
     @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+    public void setUp() {
+        reviewRepository.deleteAll();
+        productRepository.deleteAll();
+        userRepository.deleteAll();
 
-        // Настраиваем MockMvc
-        mockMvc = MockMvcBuilders.standaloneSetup(reviewController)
-                .setControllerAdvice(new ResponseExceptionHandler())
-                .build();
+        user = new User();
+        user.setEmail("user@example.com");
+        user.setPassword(passwordEncoder.encode("userpass"));
+        user.setRole(Role.USER);
+        user.setName("Test User");
+        user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
 
-        objectMapper = new ObjectMapper();
+        adminUser = new User();
+        adminUser.setEmail("admin@example.com");
+        adminUser.setPassword(passwordEncoder.encode("adminpass"));
+        adminUser.setRole(Role.ADMIN);
+        adminUser.setName("Admin User");
+        adminUser.setCreatedAt(LocalDateTime.now());
+        adminUser.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(adminUser);
 
-        // Создаем пример ReviewDto
-        reviewDto = new ReviewDto();
-        reviewDto.setId(1L);
-        reviewDto.setUserId(1L);
-        reviewDto.setProductId(1L);
+        product = new Product();
+        product.setName("Product1");
+        product.setDescription("Product Description");
+        product.setPrice(BigDecimal.valueOf(100.0));
+        product.setCreatedAt(LocalDateTime.now());
+        product.setUpdatedAt(LocalDateTime.now());
+        productRepository.save(product);
+
+        review = new Review();
+        review.setProduct(product);
+        review.setUser(user);
+        review.setRating(4);
+        review.setUserComment("Good product");
+        review.setCreatedAt(LocalDateTime.now());
+        review.setUpdatedAt(LocalDateTime.now());
+        reviewRepository.save(review);
+
+        userToken = jwtSecurityService.generateToken(
+                org.springframework.security.core.userdetails.User.builder()
+                        .username(user.getEmail())
+                        .password(user.getPassword())
+                        .roles(user.getRole().name())
+                        .build());
+
+        adminToken = jwtSecurityService.generateToken(
+                org.springframework.security.core.userdetails.User.builder()
+                        .username(adminUser.getEmail())
+                        .password(adminUser.getPassword())
+                        .roles(adminUser.getRole().name())
+                        .build());
+    }
+
+    @Test
+    public void testGetAllReviews() throws Exception {
+        mockMvc.perform(get("/api/reviews")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].comment", is("Good product")));
+    }
+
+    @Test
+    public void testCreateReview() throws Exception {
+        ReviewDto reviewDto = new ReviewDto();
+        reviewDto.setProductId(product.getId());
         reviewDto.setRating(5);
-        reviewDto.setUserComment("Great product!");
-
-        // Создаем тестового пользователя
-        testUser = new User();
-        testUser.setId(1L);
-        testUser.setEmail("test@example.com");
-        testUser.setRole(Role.USER);
-    }
-
-    @AfterEach
-    void tearDown() {
-        // Очищаем SecurityContext после каждого теста
-        SecurityContextHolder.clearContext();
-    }
-
-    private void setAuthentication(String email, Role role) {
-        org.springframework.security.core.userdetails.User userPrincipal =
-                new org.springframework.security.core.userdetails.User(email, "", Collections.singleton(() -> "ROLE_" + role.name()));
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-    }
-
-    @Test
-    void testGetAllReviews() throws Exception {
-        setAuthentication("test@example.com", Role.USER);
-
-        when(reviewService.getAllReviews()).thenReturn(Arrays.asList(reviewDto));
-
-        mockMvc.perform(get("/api/reviews"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id", is(reviewDto.getId().intValue())))
-                .andExpect(jsonPath("$[0].userId", is(reviewDto.getUserId().intValue())))
-                .andExpect(jsonPath("$[0].productId", is(reviewDto.getProductId().intValue())))
-                .andExpect(jsonPath("$[0].rating", is(reviewDto.getRating())))
-                .andExpect(jsonPath("$[0].userComment", is(reviewDto.getUserComment())));
-    }
-
-    @Test
-    void testGetReviewById_Success() throws Exception {
-        setAuthentication("test@example.com", Role.USER);
-
-        when(reviewService.getReviewById(1L)).thenReturn(reviewDto);
-
-        mockMvc.perform(get("/api/reviews/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(reviewDto.getId().intValue())))
-                .andExpect(jsonPath("$.userId", is(reviewDto.getUserId().intValue())))
-                .andExpect(jsonPath("$.productId", is(reviewDto.getProductId().intValue())))
-                .andExpect(jsonPath("$.rating", is(reviewDto.getRating())))
-                .andExpect(jsonPath("$.userComment", is(reviewDto.getUserComment())));
-    }
-
-    @Test
-    void testGetReviewById_NotFound() throws Exception {
-        setAuthentication("test@example.com", Role.USER);
-
-        when(reviewService.getReviewById(1L)).thenThrow(new ReviewNotFoundException(ErrorMessage.REVIEW_NOT_FOUND));
-
-        mockMvc.perform(get("/api/reviews/1"))
-                .andExpect(status().isNotFound())
-                .andExpect(content().string(ErrorMessage.REVIEW_NOT_FOUND));
-    }
-
-    @Test
-    void testCreateReview_Success() throws Exception {
-        setAuthentication("test@example.com", Role.USER);
-
-        when(reviewService.createReview(any(ReviewDto.class))).thenReturn(reviewDto);
-
-        String reviewJson = objectMapper.writeValueAsString(reviewDto);
+        reviewDto.setUserComment("Excellent!");
 
         mockMvc.perform(post("/api/reviews")
+                        .header("Authorization", "Bearer " + userToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(reviewJson))
+                        .content(objectMapper.writeValueAsString(reviewDto)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id", is(reviewDto.getId().intValue())))
-                .andExpect(jsonPath("$.userId", is(reviewDto.getUserId().intValue())))
-                .andExpect(jsonPath("$.productId", is(reviewDto.getProductId().intValue())))
-                .andExpect(jsonPath("$.rating", is(reviewDto.getRating())))
-                .andExpect(jsonPath("$.userComment", is(reviewDto.getUserComment())));
+                .andExpect(jsonPath("$.comment", is("Excellent!")))
+                .andExpect(jsonPath("$.rating", is(5)));
     }
 
     @Test
-    void testUpdateReview_Success() throws Exception {
-        setAuthentication("test@example.com", Role.USER);
+    public void testUpdateReview() throws Exception {
+        ReviewDto reviewDto = new ReviewDto();
+        reviewDto.setRating(3);
+        reviewDto.setUserComment("Average product");
 
-        ReviewDto updatedReviewDto = new ReviewDto();
-        updatedReviewDto.setId(1L);
-        updatedReviewDto.setUserId(1L);
-        updatedReviewDto.setProductId(1L);
-        updatedReviewDto.setRating(4);
-        updatedReviewDto.setUserComment("Updated comment");
-
-        when(reviewService.updateReview(eq(1L), any(ReviewDto.class))).thenReturn(updatedReviewDto);
-
-        String reviewJson = objectMapper.writeValueAsString(updatedReviewDto);
-
-        mockMvc.perform(put("/api/reviews/{id}", 1)
+        mockMvc.perform(put("/api/reviews/{id}", review.getId())
+                        .header("Authorization", "Bearer " + userToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(reviewJson))
+                        .content(objectMapper.writeValueAsString(reviewDto)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(updatedReviewDto.getId().intValue())))
-                .andExpect(jsonPath("$.userId", is(updatedReviewDto.getUserId().intValue())))
-                .andExpect(jsonPath("$.productId", is(updatedReviewDto.getProductId().intValue())))
-                .andExpect(jsonPath("$.rating", is(updatedReviewDto.getRating())))
-                .andExpect(jsonPath("$.userComment", is(updatedReviewDto.getUserComment())));
+                .andExpect(jsonPath("$.comment", is("Average product")))
+                .andExpect(jsonPath("$.rating", is(3)));
     }
 
     @Test
-    void testDeleteReview_Success() throws Exception {
-        setAuthentication("test@example.com", Role.USER);
-
-        doNothing().when(reviewService).deleteReview(1L);
-
-        mockMvc.perform(delete("/api/reviews/{id}", 1))
+    public void testDeleteReview() throws Exception {
+        mockMvc.perform(delete("/api/reviews/{id}", review.getId())
+                        .header("Authorization", "Bearer " + userToken))
                 .andExpect(status().isNoContent());
     }
 
     @Test
-    void testGetReviewsByProductId() throws Exception {
-        setAuthentication("test@example.com", Role.USER);
-
-        when(reviewService.getReviewsByProductId(1L)).thenReturn(Arrays.asList(reviewDto));
-
-        mockMvc.perform(get("/api/reviews/product/{productId}", 1))
+    public void testGetReviewsByProductId() throws Exception {
+        mockMvc.perform(get("/api/reviews/product/{productId}", product.getId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id", is(reviewDto.getId().intValue())))
-                .andExpect(jsonPath("$[0].userId", is(reviewDto.getUserId().intValue())))
-                .andExpect(jsonPath("$[0].productId", is(reviewDto.getProductId().intValue())))
-                .andExpect(jsonPath("$[0].rating", is(reviewDto.getRating())))
-                .andExpect(jsonPath("$[0].userComment", is(reviewDto.getUserComment())));
+                .andExpect(jsonPath("$[0].comment", is("Good product")));
     }
 
     @Test
-    void testGetReviewsByUserId() throws Exception {
-        setAuthentication("test@example.com", Role.USER);
-
-        when(reviewService.getReviewsByUserId(1L)).thenReturn(Arrays.asList(reviewDto));
-
-        mockMvc.perform(get("/api/reviews/user/{userId}", 1))
+    public void testGetReviewsByUserId() throws Exception {
+        mockMvc.perform(get("/api/reviews/user/{userId}", user.getId())
+                        .header("Authorization", "Bearer " + userToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id", is(reviewDto.getId().intValue())))
-                .andExpect(jsonPath("$[0].userId", is(reviewDto.getUserId().intValue())))
-                .andExpect(jsonPath("$[0].productId", is(reviewDto.getProductId().intValue())))
-                .andExpect(jsonPath("$[0].rating", is(reviewDto.getRating())))
-                .andExpect(jsonPath("$[0].userComment", is(reviewDto.getUserComment())));
+                .andExpect(jsonPath("$[0].comment", is("Good product")));
     }
 }

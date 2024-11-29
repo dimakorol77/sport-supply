@@ -20,6 +20,5 @@ import java.lang.annotation.*;
         }
 )
 public @interface GetAllDiscounts {
-    @AliasFor(annotation = RequestMapping.class, attribute = "path")
-    String[] path() default {"/"};
+
 }

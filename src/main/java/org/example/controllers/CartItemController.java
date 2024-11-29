@@ -25,7 +25,7 @@ public class CartItemController {
     private final SecurityUtils securityUtils;
 
     @Autowired
-    public CartItemController(CartItemService cartItemService, UserService userService, SecurityUtils securityUtils) {
+    public CartItemController(CartItemService cartItemService, SecurityUtils securityUtils) {
         this.cartItemService = cartItemService;
         this.securityUtils = securityUtils;
     }

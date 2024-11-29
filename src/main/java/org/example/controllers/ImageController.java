@@ -18,7 +18,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/images")
-@PreAuthorize("hasRole('ADMIN')")
+
 public class ImageController {
 
     private final ImageService imageService;
@@ -28,9 +28,8 @@ public class ImageController {
         this.imageService = imageService;
     }
 
-
-
     @UploadImageFile
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ImageDto> uploadImageFile(
             @PathVariable Long productId,
             @Parameter(description = "File to upload", required = true, schema = @Schema(type = "string", format = "binary"))
@@ -39,10 +38,8 @@ public class ImageController {
         return ResponseEntity.ok(imageDto);
     }
 
-
-
-
     @UploadImageUrl
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ImageDto> uploadImageUrl(
             @PathVariable Long productId,
             @RequestBody String imageUrl) {
@@ -51,14 +48,17 @@ public class ImageController {
     }
 
     @GetImagesByProductId
+    // Доступен для всех пользователей
     public ResponseEntity<List<ImageDto>> getImagesByProductId(@PathVariable Long productId) {
         List<ImageDto> images = imageService.getImagesByProductId(productId);
         return ResponseEntity.ok(images);
     }
 
     @DeleteImage
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteImage(@PathVariable Long imageId) {
         imageService.deleteImage(imageId);
         return ResponseEntity.noContent().build();
     }
 }
+

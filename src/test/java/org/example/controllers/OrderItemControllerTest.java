@@ -1,130 +1,216 @@
 package org.example.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.controllers.handler.ResponseExceptionHandler;
 import org.example.dto.OrderItemCreateDto;
 import org.example.dto.OrderItemDto;
-import org.example.exceptions.OrderItemNotFoundException;
-import org.example.exceptions.errorMessage.ErrorMessage;
-import org.example.services.interfaces.OrderItemService;
+import org.example.enums.DeliveryMethod;
+import org.example.enums.OrderStatus;
+import org.example.enums.Role;
+import org.example.models.*;
+import org.example.repositories.*;
+import org.example.services.impl.JwtSecurityService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
+import java.time.LocalDateTime;
+import java.util.List;
 
-import static org.hamcrest.Matchers.is;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-
-import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-class OrderItemControllerTest {
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+public class OrderItemControllerTest {
 
+    @Autowired
     private MockMvc mockMvc;
 
-    @Mock
-    private OrderItemService orderItemService;
+    @Autowired
+    private OrderItemRepository orderItemRepository;
 
-    @InjectMocks
-    private OrderItemController orderItemController;
+    @Autowired
+    private OrderRepository orderRepository;
 
+    @Autowired
+    private ProductRepository productRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private JwtSecurityService jwtSecurityService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
-    private OrderItemCreateDto orderItemCreateDto;
-    private OrderItemDto orderItemDto;
+    private String adminToken;
+    private User adminUser;
+    private Order order;
 
     @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        mockMvc = MockMvcBuilders.standaloneSetup(orderItemController)
-                .setControllerAdvice(new ResponseExceptionHandler())
-                .build();
-        objectMapper = new ObjectMapper();
+    public void setUp() {
+        orderItemRepository.deleteAll();
+        orderRepository.deleteAll();
+        productRepository.deleteAll();
+        userRepository.deleteAll();
 
-        orderItemCreateDto = new OrderItemCreateDto();
-        orderItemCreateDto.setProductId(1L);
+        // Создаем администратора
+        adminUser = new User();
+        adminUser.setEmail("admin@example.com");
+        adminUser.setPassword(passwordEncoder.encode("adminpass"));
+        adminUser.setRole(Role.ADMIN);
+        adminUser.setName("Admin User");
+        adminUser.setCreatedAt(LocalDateTime.now());
+        adminUser.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(adminUser);
+
+        // Создаем заказ
+        order = new Order();
+        order.setUser(adminUser);
+        order.setTotalAmount(BigDecimal.ZERO);
+        order.setStatus(OrderStatus.CREATED);
+        order.setDeliveryMethod(DeliveryMethod.PICKUP); // Пример значения
+        order.setCreatedAt(LocalDateTime.now());
+        order.setUpdatedAt(LocalDateTime.now());
+        orderRepository.save(order);
+
+        // Генерируем JWT токен для администратора
+        adminToken = jwtSecurityService.generateToken(
+                org.springframework.security.core.userdetails.User.builder()
+                        .username(adminUser.getEmail())
+                        .password(adminUser.getPassword())
+                        .roles(adminUser.getRole().name())
+                        .build());
+    }
+
+    @Test
+    public void testCreateOrderItem() throws Exception {
+        // Создаем продукт
+        Product product = new Product();
+        product.setName("Product1");
+        product.setDescription("Description1");
+        product.setPrice(BigDecimal.valueOf(100.0));
+        product.setCreatedAt(LocalDateTime.now());
+        product.setUpdatedAt(LocalDateTime.now());
+        productRepository.save(product);
+
+        // Создаем DTO для создания элемента заказа
+        OrderItemCreateDto orderItemCreateDto = new OrderItemCreateDto();
+        orderItemCreateDto.setProductId(product.getId());
         orderItemCreateDto.setQuantity(2);
-        orderItemCreateDto.setPrice(new BigDecimal("100.00"));
+        orderItemCreateDto.setPrice(BigDecimal.valueOf(100.0)); // Установка цены
 
-        orderItemDto = new OrderItemDto();
-        orderItemDto.setProductId(1L);
-        orderItemDto.setQuantity(2);
-        orderItemDto.setPrice(new BigDecimal("100.00"));
-    }
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void testCreateOrderItem_Success() throws Exception {
-        when(orderItemService.createOrderItem(any(OrderItemCreateDto.class), eq(1L))).thenReturn(orderItemDto);
-
-        String orderItemJson = objectMapper.writeValueAsString(orderItemCreateDto);
-
-        mockMvc.perform(post("/api/order-items/{orderId}", 1)
-                        .contentType(APPLICATION_JSON)
-                        .content(orderItemJson))
+        // Выполняем запрос
+        mockMvc.perform(post("/api/order-items/{orderId}/items", order.getId())
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(orderItemCreateDto)))
                 .andExpect(status().isCreated())
-                // Убираем проверки по id и orderId
-                .andExpect(jsonPath("$.productId", is(orderItemDto.getProductId().intValue())))
-                .andExpect(jsonPath("$.quantity", is(orderItemDto.getQuantity())));
+                .andExpect(jsonPath("$.productId", is(product.getId().intValue())))
+                .andExpect(jsonPath("$.quantity", is(2)))
+                .andExpect(jsonPath("$.price", is(100.0)));
     }
 
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void testGetOrderItemsByOrderId_Success() throws Exception {
-        when(orderItemService.getOrderItemsByOrderId(1L)).thenReturn(Arrays.asList(orderItemDto));
 
-        mockMvc.perform(get("/api/order-items/{orderId}", 1))
+
+
+    @Test
+    public void testGetOrderItemsByOrderId() throws Exception {
+        // Создаем продукт
+        Product product = new Product();
+        product.setName("Product2");
+        product.setDescription("Description2");
+        product.setPrice(BigDecimal.valueOf(50.0));
+        product.setCreatedAt(LocalDateTime.now());
+        product.setUpdatedAt(LocalDateTime.now());
+        productRepository.save(product);
+
+        // Создаем элемент заказа
+        OrderItem orderItem = new OrderItem();
+        orderItem.setOrder(order);
+        orderItem.setProductId(product.getId());
+        orderItem.setProductName(product.getName());
+        orderItem.setPrice(product.getPrice());
+        orderItem.setQuantity(1);
+        orderItemRepository.save(orderItem);
+
+        mockMvc.perform(get("/api/order-items/{orderId}", order.getId())
+                        .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk())
-                // Убираем проверки по id и orderId
-                //.andExpect(jsonPath("$[0].id", is(orderItemDto.getId().intValue())))
-                //.andExpect(jsonPath("$[0].orderId", is(orderItemDto.getOrderId().intValue())))
-                .andExpect(jsonPath("$[0].productId", is(orderItemDto.getProductId().intValue())))
-                .andExpect(jsonPath("$[0].quantity", is(orderItemDto.getQuantity())));
+                .andExpect(jsonPath("$[0].productId", is(product.getId().intValue())))
+                .andExpect(jsonPath("$[0].quantity", is(1)))
+                .andExpect(jsonPath("$[0].price", is(50.0)));
     }
 
-
     @Test
-    @WithMockUser(roles = "ADMIN")
-    void testUpdateOrderItem_Success() throws Exception {
-        when(orderItemService.updateOrderItem(eq(1L), any(OrderItemCreateDto.class))).thenReturn(orderItemDto);
+    public void testUpdateOrderItem() throws Exception {
+        // Создаем продукт
+        Product product = new Product();
+        product.setName("Product3");
+        product.setDescription("Description3");
+        product.setPrice(BigDecimal.valueOf(70.0));
+        product.setCreatedAt(LocalDateTime.now());
+        product.setUpdatedAt(LocalDateTime.now());
+        productRepository.save(product);
 
-        String orderItemJson = objectMapper.writeValueAsString(orderItemCreateDto);
+        // Создаем элемент заказа
+        OrderItem orderItem = new OrderItem();
+        orderItem.setOrder(order);
+        orderItem.setProductId(product.getId());
+        orderItem.setProductName(product.getName());
+        orderItem.setPrice(product.getPrice());
+        orderItem.setQuantity(1);
+        orderItemRepository.save(orderItem);
 
-        mockMvc.perform(put("/api/order-items/{orderItemId}", 1)
-                        .contentType(APPLICATION_JSON)
-                        .content(orderItemJson))
+        // Создаем DTO для обновления элемента заказа
+        OrderItemCreateDto orderItemCreateDto = new OrderItemCreateDto();
+        orderItemCreateDto.setProductId(product.getId());
+        orderItemCreateDto.setQuantity(3);
+
+        mockMvc.perform(put("/api/order-items/{orderItemId}", orderItem.getId())
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(orderItemCreateDto)))
                 .andExpect(status().isOk())
-                // Убираем проверки по id и orderId
-                //.andExpect(jsonPath("$.id", is(orderItemDto.getId().intValue())))
-                //.andExpect(jsonPath("$.orderId", is(orderItemDto.getOrderId().intValue())))
-                .andExpect(jsonPath("$.productId", is(orderItemDto.getProductId().intValue())))
-                .andExpect(jsonPath("$.quantity", is(orderItemDto.getQuantity())));
+                .andExpect(jsonPath("$.quantity", is(3)));
     }
 
-
     @Test
-    @WithMockUser(roles = "ADMIN")
-    void testDeleteOrderItem_Success() throws Exception {
-        doNothing().when(orderItemService).deleteOrderItem(1L);
+    public void testDeleteOrderItem() throws Exception {
+        // Создаем продукт
+        Product product = new Product();
+        product.setName("Product4");
+        product.setDescription("Description4");
+        product.setPrice(BigDecimal.valueOf(80.0));
+        product.setCreatedAt(LocalDateTime.now());
+        product.setUpdatedAt(LocalDateTime.now());
+        productRepository.save(product);
 
-        mockMvc.perform(delete("/api/order-items/{orderItemId}", 1))
+        // Создаем элемент заказа
+        OrderItem orderItem = new OrderItem();
+        orderItem.setOrder(order);
+        orderItem.setProductId(product.getId());
+        orderItem.setProductName(product.getName());
+        orderItem.setPrice(product.getPrice());
+        orderItem.setQuantity(1);
+        orderItemRepository.save(orderItem);
+
+        mockMvc.perform(delete("/api/order-items/{orderItemId}", orderItem.getId())
+                        .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isNoContent());
-    }
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void testDeleteOrderItem_NotFound() throws Exception {
-        doThrow(new OrderItemNotFoundException(ErrorMessage.ORDER_ITEM_NOT_FOUND)).when(orderItemService).deleteOrderItem(1L);
-
-        mockMvc.perform(delete("/api/order-items/{orderItemId}", 1))
-                .andExpect(status().isNotFound())
-                .andExpect(content().string(ErrorMessage.ORDER_ITEM_NOT_FOUND));
     }
 }

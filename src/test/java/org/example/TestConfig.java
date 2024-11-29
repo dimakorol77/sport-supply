@@ -1,10 +1,14 @@
 package org.example;
 
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 
-@Configuration
-@Profile("test")
+
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.test.context.ActiveProfiles;
+
+
+@TestConfiguration
 public class TestConfig {
 
 }
+
+

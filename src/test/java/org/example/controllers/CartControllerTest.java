@@ -1,151 +1,205 @@
 package org.example.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.controllers.handler.ResponseExceptionHandler;
-import org.example.dto.CartDto;
+import org.example.dto.CartItemDto;
 import org.example.dto.OrderCreateDto;
-import org.example.dto.OrderDto;
 import org.example.enums.DeliveryMethod;
-import org.example.enums.OrderStatus;
-import org.example.exceptions.CartEmptyException;
-import org.example.exceptions.CartNotFoundException;
-import org.example.exceptions.errorMessage.ErrorMessage;
+import org.example.enums.Role;
+import org.example.models.Cart;
+import org.example.models.CartItem;
+import org.example.models.Product;
 import org.example.models.User;
-import org.example.services.interfaces.CartService;
-import org.example.services.interfaces.UserService;
+import org.example.repositories.CartItemRepository;
+import org.example.repositories.CartRepository;
+import org.example.repositories.ProductRepository;
+import org.example.repositories.UserRepository;
+import org.example.services.impl.JwtSecurityService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Collections;
 
-import static org.hamcrest.Matchers.is;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-class CartControllerTest {
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+public class CartControllerTest {
 
+    @Autowired
     private MockMvc mockMvc;
 
-    @Mock
-    private CartService cartService;
+    @Autowired
+    private CartRepository cartRepository;
 
-    @Mock
-    private UserService userService;
+    @Autowired
+    private CartItemRepository cartItemRepository;
 
-    @InjectMocks
-    private CartController cartController;
+    @Autowired
+    private UserRepository userRepository;
 
-    private CartDto cartDto;
-    private OrderCreateDto orderCreateDto;
-    private OrderDto orderDto;
+    @Autowired
+    private ProductRepository productRepository;
+
+    @Autowired
+    private JwtSecurityService jwtSecurityService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
+    private String userToken;
+    private User user;
+    private Cart cart;
+
     @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        mockMvc = MockMvcBuilders.standaloneSetup(cartController)
-                .setControllerAdvice(new ResponseExceptionHandler())
-                .build();
-        objectMapper = new ObjectMapper();
+    public void setUp() {
+        // Удаляем все данные
+        cartRepository.deleteAll();
+        userRepository.deleteAll();
+        productRepository.deleteAll();
 
-        cartDto = new CartDto();
-        cartDto.setId(1L);
-        cartDto.setUserId(1L);
-        cartDto.setCreatedAt(LocalDateTime.now());
-        cartDto.setTotalPrice(new BigDecimal("0.00"));
+        // Создаем и сохраняем пользователя
+        user = new User();
+        user.setEmail("user@example.com");
+        user.setPassword(passwordEncoder.encode("password123"));
+        user.setRole(Role.USER);
+        user.setName("Test User");
+        user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
+        user = userRepository.save(user); // Сохраняем пользователя
 
-        orderCreateDto = new OrderCreateDto();
+        // Создаем и сохраняем корзину
+        cart = new Cart(); // Здесь инициализируем объект
+        cart.setUser(user); // Устанавливаем связь с пользователем
+        cart.setCreatedAt(LocalDateTime.now());
+        cart.setUpdatedAt(LocalDateTime.now());
+        cart.setTotalPrice(BigDecimal.ZERO);
+        cart = cartRepository.saveAndFlush(cart); // Сохраняем корзину
+
+        // Генерируем токен
+        userToken = jwtSecurityService.generateToken(
+                org.springframework.security.core.userdetails.User.builder()
+                        .username(user.getEmail())
+                        .password(user.getPassword())
+                        .roles(user.getRole().name())
+                        .build()
+        );
+    }
+
+
+
+
+
+
+    @Test
+    public void testAddItemToCart() throws Exception {
+        Product product = new Product();
+        product.setName("Product1");
+        product.setDescription("Description");
+        product.setPrice(BigDecimal.valueOf(100.0));
+        product.setCreatedAt(LocalDateTime.now());
+        product.setUpdatedAt(LocalDateTime.now());
+        productRepository.save(product);
+
+        CartItemDto cartItemDto = new CartItemDto();
+        cartItemDto.setProductId(product.getId());
+        cartItemDto.setQuantity(2);
+
+        mockMvc.perform(post("/api/carts/{id}/items", cart.getId())
+                        .header("Authorization", "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cartItemDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.productId", is(product.getId().intValue())))
+                .andExpect(jsonPath("$.quantity", is(2)))
+                .andExpect(jsonPath("$.price", is(100.0)))
+                .andExpect(jsonPath("$.name", is("Product1")));
+    }
+
+    @Test
+    public void testCalculateTotalPrice() throws Exception {
+        Product product1 = new Product();
+        product1.setName("Product1");
+        product1.setDescription("Description1");
+        product1.setPrice(BigDecimal.valueOf(100.0));
+        product1.setCreatedAt(LocalDateTime.now());
+        product1.setUpdatedAt(LocalDateTime.now());
+        productRepository.save(product1);
+
+        CartItem cartItem1 = new CartItem();
+        cartItem1.setCart(cart);
+        cartItem1.setProduct(product1);
+        cartItem1.setQuantity(2);
+        cartItem1.setPrice(product1.getPrice());
+        cartItem1.setDeleted(false);
+        cartItemRepository.save(cartItem1);
+
+        Product product2 = new Product();
+        product2.setName("Product2");
+        product2.setDescription("Description2");
+        product2.setPrice(BigDecimal.valueOf(50.0));
+        product2.setCreatedAt(LocalDateTime.now());
+        product2.setUpdatedAt(LocalDateTime.now());
+        productRepository.save(product2);
+
+        CartItem cartItem2 = new CartItem();
+        cartItem2.setCart(cart);
+        cartItem2.setProduct(product2);
+        cartItem2.setQuantity(1);
+        cartItem2.setPrice(product2.getPrice());
+        cartItem2.setDeleted(false);
+        cartItemRepository.save(cartItem2);
+
+        mockMvc.perform(get("/api/carts/{id}/total-price", cart.getId())
+                        .header("Authorization", "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(content().string("250.0"));
+    }
+
+    @Test
+    public void testConvertCartToOrder() throws Exception {
+        Product product = new Product();
+        product.setName("Product1");
+        product.setDescription("Description1");
+        product.setPrice(BigDecimal.valueOf(100.0));
+        product.setCreatedAt(LocalDateTime.now());
+        product.setUpdatedAt(LocalDateTime.now());
+        productRepository.save(product);
+
+        CartItem cartItem = new CartItem();
+        cartItem.setCart(cart);
+        cartItem.setProduct(product);
+        cartItem.setQuantity(1);
+        cartItem.setPrice(product.getPrice());
+        cartItem.setDeleted(false);
+        cartItemRepository.save(cartItem);
+
+        OrderCreateDto orderCreateDto = new OrderCreateDto();
         orderCreateDto.setDeliveryMethod(DeliveryMethod.COURIER);
         orderCreateDto.setDeliveryAddress("123 Street");
-        orderCreateDto.setContactInfo("user@example.com");
+        orderCreateDto.setContactInfo("Contact Info");
 
-        orderDto = new OrderDto();
-        orderDto.setId(1L);
-        orderDto.setUserId(1L);
-        orderDto.setStatus(OrderStatus.CREATED);
-
-        // Устанавливаем SecurityContext с аутентифицированным пользователем
-        org.springframework.security.core.userdetails.User userPrincipal =
-                new org.springframework.security.core.userdetails.User("user@example.com", "", Collections.emptyList());
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(userPrincipal, null, Collections.emptyList());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        // Мокаем метод userService.getUserByEmail()
-        User user = new User();
-        user.setId(1L);
-        user.setEmail("user@example.com");
-        when(userService.getUserByEmail("user@example.com")).thenReturn(user);
-    }
-
-    @Test
-    void testConvertCartToOrder_Success() throws Exception {
-        when(cartService.convertCartToOrder(eq(1L), eq(1L), any(OrderCreateDto.class))).thenReturn(orderDto);
-
-        String orderJson = objectMapper.writeValueAsString(orderCreateDto);
-
-        mockMvc.perform(post("/api/cart/convert/1")
+        mockMvc.perform(post("/api/carts/{id}/convert-to-order", cart.getId())
+                        .header("Authorization", "Bearer " + userToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(orderJson))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id", is(orderDto.getId().intValue())))
-                .andExpect(jsonPath("$.status", is(orderDto.getStatus().name())));
-    }
-
-    @Test
-    void testConvertCartToOrder_CartNotFound() throws Exception {
-        when(cartService.convertCartToOrder(eq(1L), eq(1L), any(OrderCreateDto.class)))
-                .thenThrow(new CartNotFoundException(ErrorMessage.CART_NOT_FOUND));
-
-        String orderJson = objectMapper.writeValueAsString(orderCreateDto);
-
-        mockMvc.perform(post("/api/cart/convert/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(orderJson))
-                .andExpect(status().isNotFound())
-                .andExpect(content().string(ErrorMessage.CART_NOT_FOUND));
-    }
-
-    @Test
-    void testConvertCartToOrder_EmptyCart() throws Exception {
-        when(cartService.convertCartToOrder(eq(1L), eq(1L), any(OrderCreateDto.class)))
-                .thenThrow(new CartEmptyException(ErrorMessage.CART_EMPTY));
-
-        String orderJson = objectMapper.writeValueAsString(orderCreateDto);
-
-        mockMvc.perform(post("/api/cart/convert/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(orderJson))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string(ErrorMessage.CART_EMPTY));
-    }
-
-    @Test
-    void testCalculateTotalPrice_Success() throws Exception {
-        when(cartService.calculateTotalPrice(eq(1L), eq(1L))).thenReturn(new BigDecimal("100.00"));
-
-        mockMvc.perform(get("/api/cart/1/total"))
+                        .content(objectMapper.writeValueAsString(orderCreateDto)))
                 .andExpect(status().isOk())
-                .andExpect(content().string("100.00"));
+                .andExpect(jsonPath("$.userId", is(user.getId().intValue())))
+                .andExpect(jsonPath("$.deliveryMethod", is("HOME_DELIVERY")))
+                .andExpect(jsonPath("$.totalAmount", is(100.0)));
     }
-
-//    @Test
-//    void testClearCart_Success() throws Exception {
-//        doNothing().when(cartService).clearCart(eq(1L), eq(1L));
-//
-//        mockMvc.perform(delete("/api/cart/1/clear"))
-//                .andExpect(status().isNoContent());
-//    }
-
-
 }

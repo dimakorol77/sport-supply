@@ -46,6 +46,7 @@ public class OrderController {
         return ResponseEntity.ok(orderDtos);
     }
 
+
     @GetOrdersByUserId
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<OrderDto>> getOrdersByUserId(@RequestParam(required = false) Long userId) {
@@ -74,8 +75,9 @@ public class OrderController {
     public ResponseEntity<Void> cancelOrder(@PathVariable Long orderId) {
         User currentUser = getCurrentUser();
         orderService.cancelOrderAndCheckOwnership(orderId, currentUser.getId());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build(); // Изменено с ResponseEntity.ok() на ResponseEntity.noContent()
     }
+
 
     @GetOrdersByStatus
     @PreAuthorize("hasRole('ADMIN')")

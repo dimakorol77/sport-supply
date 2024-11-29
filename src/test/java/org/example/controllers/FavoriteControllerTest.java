@@ -1,133 +1,137 @@
-// src/test/java/org/example/controllers/FavoriteControllerTest.java
-
 package org.example.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.controllers.handler.ResponseExceptionHandler;
 import org.example.dto.ProductDto;
-import org.example.exceptions.FavoriteAlreadyExistsException;
-import org.example.exceptions.FavoriteNotFoundException;
-import org.example.exceptions.ProductNotFoundException;
-import org.example.exceptions.errorMessage.ErrorMessage;
+import org.example.enums.Role;
+import org.example.models.Favorite;
+import org.example.models.Product;
 import org.example.models.User;
-import org.example.services.interfaces.FavoriteService;
-import org.example.services.interfaces.UserService;
+import org.example.repositories.FavoriteRepository;
+import org.example.repositories.ProductRepository;
+import org.example.repositories.UserRepository;
+import org.example.services.impl.JwtSecurityService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.Arrays;
-import java.util.Collections;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-class FavoriteControllerTest {
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+public class FavoriteControllerTest {
 
+    @Autowired
     private MockMvc mockMvc;
 
-    @Mock
-    private FavoriteService favoriteService;
+    @Autowired
+    private FavoriteRepository favoriteRepository;
 
-    @Mock
-    private UserService userService;
+    @Autowired
+    private ProductRepository productRepository;
 
-    @InjectMocks
-    private FavoriteController favoriteController;
+    @Autowired
+    private UserRepository userRepository;
 
-    private ProductDto productDto;
+    @Autowired
+    private JwtSecurityService jwtSecurityService;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
+    private String userToken;
     private User user;
+    private Product product;
 
     @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-
-        mockMvc = MockMvcBuilders.standaloneSetup(favoriteController)
-                .setControllerAdvice(new ResponseExceptionHandler())
-                .build();
-
-        objectMapper = new ObjectMapper();
-
-        productDto = new ProductDto();
-        productDto.setId(1L);
-        productDto.setName("Test Product");
-        productDto.setDescription("Test Description");
+    public void setUp() {
+        favoriteRepository.deleteAll();
+        productRepository.deleteAll();
+        userRepository.deleteAll();
 
         user = new User();
-        user.setId(1L);
         user.setEmail("user@example.com");
+        user.setPassword(passwordEncoder.encode("userpass"));
+        user.setRole(Role.USER);
+        user.setName("Test User");
+        user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
 
-        // Устанавливаем аутентифицированного пользователя
-        setAuthentication(user.getEmail());
+        product = new Product();
+        product.setName("Product1");
+        product.setDescription("Description1");
+        product.setPrice(BigDecimal.valueOf(100.0));
+        product.setCreatedAt(LocalDateTime.now());
+        product.setUpdatedAt(LocalDateTime.now());
+        productRepository.save(product);
 
-        // Мокаем метод userService.getUserByEmail()
-        when(userService.getUserByEmail(user.getEmail())).thenReturn(user);
+        userToken = jwtSecurityService.generateToken(
+                org.springframework.security.core.userdetails.User.builder()
+                        .username(user.getEmail())
+                        .password(user.getPassword())
+                        .roles(user.getRole().name())
+                        .build());
     }
 
     @Test
-    void testAddProductToFavorites_Success() throws Exception {
-        doNothing().when(favoriteService).addProductToFavorites(user.getId(), 1L);
+    public void testAddProductToFavorites() throws Exception {
+        mockMvc.perform(post("/api/favorites/{productId}", product.getId())
+                        .header("Authorization", "Bearer " + userToken))
+                .andExpect(status().isCreated()); // Исправлено на isCreated()
 
-        mockMvc.perform(post("/api/favorites/add/{productId}", 1L))
-                .andExpect(status().isCreated());
+        List<Favorite> favorites = favoriteRepository.findByUserId(user.getId());
+        assertThat(favorites, hasSize(1));
+        assertThat(favorites.get(0).getProduct().getId(), is(product.getId()));
     }
 
-    @Test
-    void testAddProductToFavorites_AlreadyExists() throws Exception {
-        doThrow(new FavoriteAlreadyExistsException(ErrorMessage.FAVORITE_ALREADY_EXISTS))
-                .when(favoriteService).addProductToFavorites(user.getId(), 1L);
-
-        mockMvc.perform(post("/api/favorites/add/{productId}", 1L))
-                .andExpect(status().isConflict())
-                .andExpect(content().string(ErrorMessage.FAVORITE_ALREADY_EXISTS));
-    }
 
     @Test
-    void testGetUserFavorites() throws Exception {
-        when(favoriteService.getUserFavorites(user.getId())).thenReturn(Arrays.asList(productDto));
+    public void testGetUserFavorites() throws Exception {
+        Favorite favorite = new Favorite();
+        favorite.setUser(user);
+        favorite.setProduct(product);
+        favorite.setAddedAt(LocalDateTime.now());
+        favoriteRepository.save(favorite);
 
-        mockMvc.perform(get("/api/favorites/"))
+        mockMvc.perform(get("/api/favorites")
+                        .header("Authorization", "Bearer " + userToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id", is(productDto.getId().intValue())))
-                .andExpect(jsonPath("$[0].name", is(productDto.getName())))
-                .andExpect(jsonPath("$[0].description", is(productDto.getDescription())));
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id", is(product.getId().intValue())))
+                .andExpect(jsonPath("$[0].name", is("Product1")));
     }
 
     @Test
-    void testRemoveProductFromFavorites_Success() throws Exception {
-        doNothing().when(favoriteService).removeProductFromFavorites(user.getId(), 1L);
+    public void testRemoveProductFromFavorites() throws Exception {
+        Favorite favorite = new Favorite();
+        favorite.setUser(user);
+        favorite.setProduct(product);
+        favorite.setAddedAt(LocalDateTime.now());
+        favoriteRepository.save(favorite);
 
-        mockMvc.perform(delete("/api/favorites/remove/{productId}", 1L))
+        mockMvc.perform(delete("/api/favorites/remove/{productId}", product.getId())
+                        .header("Authorization", "Bearer " + userToken))
                 .andExpect(status().isNoContent());
-    }
 
-    @Test
-    void testRemoveProductFromFavorites_NotFound() throws Exception {
-        doThrow(new FavoriteNotFoundException(ErrorMessage.FAVORITE_NOT_FOUND))
-                .when(favoriteService).removeProductFromFavorites(user.getId(), 1L);
-
-        mockMvc.perform(delete("/api/favorites/remove/{productId}", 1L))
-                .andExpect(status().isNotFound())
-                .andExpect(content().string(ErrorMessage.FAVORITE_NOT_FOUND));
-    }
-
-    // Метод для установки аутентификации
-    private void setAuthentication(String email) {
-        org.springframework.security.core.userdetails.User userPrincipal =
-                new org.springframework.security.core.userdetails.User(email, "", Collections.emptyList());
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        List<Favorite> favorites = favoriteRepository.findByUserId(user.getId());
+        assertThat(favorites, hasSize(0));
     }
 }

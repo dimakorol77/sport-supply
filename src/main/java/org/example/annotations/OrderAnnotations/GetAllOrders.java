@@ -28,5 +28,6 @@ import java.lang.annotation.Target;
 public @interface GetAllOrders { // Объявление кастомной аннотации `@GetAllOrders`
     // Позволяет указывать путь при использовании аннотации
     @AliasFor(annotation = RequestMapping.class, attribute = "path")
-    String[] path() default {""};
+    String[] path() default {"/all"};
+
 }

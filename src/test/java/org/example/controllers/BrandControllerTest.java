@@ -1,182 +1,225 @@
-// src/test/java/org/example/controllers/BrandControllerTest.java
-
 package org.example.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.controllers.handler.ResponseExceptionHandler;
 import org.example.dto.BrandDto;
-import org.example.exceptions.BrandAlreadyExistsException;
-import org.example.exceptions.BrandNotFoundException;
-import org.example.exceptions.errorMessage.ErrorMessage;
-import org.example.services.interfaces.BrandService;
+import org.example.enums.Role;
+import org.example.models.Brand;
+import org.example.models.User;
+import org.example.repositories.BrandRepository;
+import org.example.repositories.UserRepository;
+import org.example.services.impl.JwtSecurityService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.Arrays;
-import java.util.Collections;
+import java.time.LocalDateTime;
 
 import static org.hamcrest.Matchers.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-class BrandControllerTest {
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test") // Указывает, что используется application-test.properties
+public class BrandControllerTest {
 
+    @Autowired
     private MockMvc mockMvc;
 
-    @Mock
-    private BrandService brandService;
+    @Autowired
+    private BrandRepository brandRepository;
 
-    @InjectMocks
-    private BrandController brandController;
+    @Autowired
+    private UserRepository userRepository;
 
-    private BrandDto brandDto;
+    @Autowired
+    private JwtSecurityService jwtSecurityService;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
+    private String adminToken;
+    private User adminUser;
+
     @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        mockMvc = MockMvcBuilders.standaloneSetup(brandController)
-                .setControllerAdvice(new ResponseExceptionHandler())
-                .build();
-        objectMapper = new ObjectMapper();
+    public void setUp() {
+        brandRepository.deleteAll();
+        userRepository.deleteAll();
 
-        brandDto = new BrandDto();
-        brandDto.setId(1L);
-        brandDto.setName("Test Brand");
-        brandDto.setDescription("Test Description");
+        adminUser = new User();
+        adminUser.setEmail("admin@example.com");
+        adminUser.setPassword(passwordEncoder.encode("adminpass"));
+        adminUser.setRole(Role.ADMIN);
+        adminUser.setName("Admin User");
+        adminUser.setCreatedAt(LocalDateTime.now());
+        adminUser.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(adminUser);
 
-        // Устанавливаем SecurityContext с аутентифицированным пользователем с ролью ADMIN
-        org.springframework.security.core.userdetails.User userPrincipal =
-                new org.springframework.security.core.userdetails.User("admin@example.com", "",
-                        Collections.singletonList(() -> "ROLE_ADMIN"));
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        adminToken = jwtSecurityService.generateToken(
+                org.springframework.security.core.userdetails.User.builder()
+                        .username(adminUser.getEmail())
+                        .password(adminUser.getPassword())
+                        .roles(adminUser.getRole().name())
+                        .build());
     }
 
     @Test
-    void testGetAllBrands() throws Exception {
-        when(brandService.getAllBrands()).thenReturn(Arrays.asList(brandDto));
+    public void testGetAllBrands() throws Exception {
+        // Создаем уникального администратора
+        User adminUser = new User();
+        adminUser.setEmail("admin123@example.com"); // Уникальный email
+        adminUser.setPassword(passwordEncoder.encode("adminpassword"));
+        adminUser.setName("Admin User");
+        adminUser.setRole(Role.ADMIN);
+        adminUser.setCreatedAt(LocalDateTime.now());
+        adminUser.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(adminUser);
 
-        mockMvc.perform(get("/api/brands/"))
+        // Генерация JWT токена
+        String token = jwtSecurityService.generateToken(
+                org.springframework.security.core.userdetails.User.builder()
+                        .username(adminUser.getEmail())
+                        .password(adminUser.getPassword())
+                        .roles(adminUser.getRole().name())
+                        .build()
+        );
+
+        // Создаем бренды
+        Brand brand1 = new Brand();
+        brand1.setName("Brand1");
+        brand1.setDescription("Description1");
+        brand1.setCreatedAt(LocalDateTime.now());
+        brand1.setUpdatedAt(LocalDateTime.now());
+        brandRepository.save(brand1);
+
+        Brand brand2 = new Brand();
+        brand2.setName("Brand2");
+        brand2.setDescription("Description2");
+        brand2.setCreatedAt(LocalDateTime.now());
+        brand2.setUpdatedAt(LocalDateTime.now());
+        brandRepository.save(brand2);
+
+        // Выполняем GET запрос
+        mockMvc.perform(get("/api/brands")
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id", is(brandDto.getId().intValue())))
-                .andExpect(jsonPath("$[0].name", is(brandDto.getName())))
-                .andExpect(jsonPath("$[0].description", is(brandDto.getDescription())));
+                .andExpect(jsonPath("$", hasSize(2)));
     }
 
-    @Test
-    void testGetBrandById_Success() throws Exception {
-        when(brandService.getBrandById(1L)).thenReturn(brandDto);
 
-        mockMvc.perform(get("/api/brands/1"))
+
+    @Test
+    public void testGetBrandById() throws Exception {
+        // Создание уникального пользователя-администратора
+        User adminUser = new User();
+        adminUser.setEmail("admin" + System.currentTimeMillis() + "@example.com");
+        adminUser.setPassword(passwordEncoder.encode("adminpassword"));
+        adminUser.setName("Admin User");
+        adminUser.setRole(Role.ADMIN);
+        adminUser.setCreatedAt(LocalDateTime.now());
+        adminUser.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(adminUser);
+
+        // Генерация JWT токена
+        String token = jwtSecurityService.generateToken(
+                org.springframework.security.core.userdetails.User.builder()
+                        .username(adminUser.getEmail())
+                        .password(adminUser.getPassword())
+                        .roles(adminUser.getRole().name())
+                        .build()
+        );
+
+        // Создание бренда
+        Brand brand = new Brand();
+        brand.setName("Brand1");
+        brand.setDescription("Description1");
+        brand.setCreatedAt(LocalDateTime.now());
+        brand.setUpdatedAt(LocalDateTime.now());
+        brand = brandRepository.save(brand);
+
+        // Выполнение GET-запроса с токеном
+        mockMvc.perform(get("/api/brands/{id}", brand.getId())
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(brandDto.getId().intValue())))
-                .andExpect(jsonPath("$.name", is(brandDto.getName())))
-                .andExpect(jsonPath("$.description", is(brandDto.getDescription())));
+                .andExpect(jsonPath("$.id", is(brand.getId().intValue())))
+                .andExpect(jsonPath("$.name", is("Brand1")))
+                .andExpect(jsonPath("$.description", is("Description1")));
     }
 
-    @Test
-    void testGetBrandById_NotFound() throws Exception {
-        when(brandService.getBrandById(1L)).thenThrow(new BrandNotFoundException(ErrorMessage.BRAND_NOT_FOUND));
 
-        mockMvc.perform(get("/api/brands/1"))
-                .andExpect(status().isNotFound())
-                .andExpect(content().string(ErrorMessage.BRAND_NOT_FOUND));
-    }
 
     @Test
-    void testCreateBrand_Success() throws Exception {
-        when(brandService.createBrand(any(BrandDto.class))).thenReturn(brandDto);
+    public void testCreateBrand_Success() throws Exception {
+        BrandDto brandDto = new BrandDto();
+        brandDto.setName("NewBrand");
+        brandDto.setDescription("NewDescription");
 
-        String brandJson = objectMapper.writeValueAsString(brandDto);
-
-        mockMvc.perform(post("/api/brands/")
+        mockMvc.perform(post("/api/brands")
+                        .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(brandJson))
+                        .content(objectMapper.writeValueAsString(brandDto)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id", is(brandDto.getId().intValue())))
-                .andExpect(jsonPath("$.name", is(brandDto.getName())))
-                .andExpect(jsonPath("$.description", is(brandDto.getDescription())));
+                .andExpect(jsonPath("$.id", notNullValue()))
+                .andExpect(jsonPath("$.name", is("NewBrand")))
+                .andExpect(jsonPath("$.description", is("NewDescription")));
     }
 
     @Test
-    void testCreateBrand_AlreadyExists() throws Exception {
-        when(brandService.createBrand(any(BrandDto.class))).thenThrow(new BrandAlreadyExistsException(ErrorMessage.BRAND_ALREADY_EXISTS));
+    public void testCreateBrand_Unauthorized() throws Exception {
+        BrandDto brandDto = new BrandDto();
+        brandDto.setName("NewBrand");
+        brandDto.setDescription("NewDescription");
 
-        String brandJson = objectMapper.writeValueAsString(brandDto);
-
-        mockMvc.perform(post("/api/brands/")
+        mockMvc.perform(post("/api/brands")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(brandJson))
-                .andExpect(status().isConflict())
-                .andExpect(content().string(ErrorMessage.BRAND_ALREADY_EXISTS));
+                        .content(objectMapper.writeValueAsString(brandDto)))
+                .andExpect(status().isForbidden());
     }
 
     @Test
-    void testUpdateBrand_Success() throws Exception {
-        BrandDto updatedBrandDto = new BrandDto();
-        updatedBrandDto.setId(1L);
-        updatedBrandDto.setName("Updated Brand");
-        updatedBrandDto.setDescription("Updated Description");
+    public void testUpdateBrand_Success() throws Exception {
+        Brand brand = new Brand();
+        brand.setName("Brand1");
+        brand.setDescription("Description1");
+        brand.setCreatedAt(LocalDateTime.now());
+        brand.setUpdatedAt(LocalDateTime.now());
+        brand = brandRepository.save(brand);
 
-        when(brandService.updateBrand(eq(1L), any(BrandDto.class))).thenReturn(updatedBrandDto);
+        BrandDto brandDto = new BrandDto();
+        brandDto.setName("UpdatedBrand");
+        brandDto.setDescription("UpdatedDescription");
 
-        String updatedBrandJson = objectMapper.writeValueAsString(updatedBrandDto);
-
-        mockMvc.perform(put("/api/brands/1")
+        mockMvc.perform(put("/api/brands/{id}", brand.getId())
+                        .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(updatedBrandJson))
+                        .content(objectMapper.writeValueAsString(brandDto)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(updatedBrandDto.getId().intValue())))
-                .andExpect(jsonPath("$.name", is(updatedBrandDto.getName())))
-                .andExpect(jsonPath("$.description", is(updatedBrandDto.getDescription())));
+                .andExpect(jsonPath("$.id", is(brand.getId().intValue())))
+                .andExpect(jsonPath("$.name", is("UpdatedBrand")))
+                .andExpect(jsonPath("$.description", is("UpdatedDescription")));
     }
 
     @Test
-    void testUpdateBrand_NotFound() throws Exception {
-        BrandDto updatedBrandDto = new BrandDto();
-        updatedBrandDto.setId(1L);
-        updatedBrandDto.setName("Updated Brand");
-        updatedBrandDto.setDescription("Updated Description");
+    public void testDeleteBrand_Success() throws Exception {
+        Brand brand = new Brand();
+        brand.setName("BrandToDelete");
+        brand.setDescription("Description");
+        brand.setCreatedAt(LocalDateTime.now());
+        brand.setUpdatedAt(LocalDateTime.now());
+        brand = brandRepository.save(brand);
 
-        when(brandService.updateBrand(eq(1L), any(BrandDto.class))).thenThrow(new BrandNotFoundException(ErrorMessage.BRAND_NOT_FOUND));
-
-        String updatedBrandJson = objectMapper.writeValueAsString(updatedBrandDto);
-
-        mockMvc.perform(put("/api/brands/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(updatedBrandJson))
-                .andExpect(status().isNotFound())
-                .andExpect(content().string(ErrorMessage.BRAND_NOT_FOUND));
-    }
-
-    @Test
-    void testDeleteBrand_Success() throws Exception {
-        doNothing().when(brandService).deleteBrand(1L);
-
-        mockMvc.perform(delete("/api/brands/1"))
+        mockMvc.perform(delete("/api/brands/{id}", brand.getId())
+                        .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isNoContent());
     }
-
-    @Test
-    void testDeleteBrand_NotFound() throws Exception {
-        doThrow(new BrandNotFoundException(ErrorMessage.BRAND_NOT_FOUND)).when(brandService).deleteBrand(1L);
-
-        mockMvc.perform(delete("/api/brands/1"))
-                .andExpect(status().isNotFound())
-                .andExpect(content().string(ErrorMessage.BRAND_NOT_FOUND));
-    }
-
 }

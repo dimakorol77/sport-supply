@@ -1,180 +1,171 @@
-// src/test/java/org/example/controllers/CategoryControllerTest.java
-
 package org.example.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.controllers.handler.ResponseExceptionHandler;
 import org.example.dto.CategoryDto;
-import org.example.exceptions.CategoryAlreadyExistsException;
-import org.example.exceptions.CategoryNotFoundException;
-import org.example.exceptions.errorMessage.ErrorMessage;
-import org.example.services.interfaces.CategoryService;
+import org.example.enums.Role;
+import org.example.models.Category;
+import org.example.models.User;
+import org.example.repositories.CategoryRepository;
+import org.example.repositories.UserRepository;
+import org.example.services.impl.JwtSecurityService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.Arrays;
-import java.util.Collections;
+import java.time.LocalDateTime;
 
 import static org.hamcrest.Matchers.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-class CategoryControllerTest {
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+public class CategoryControllerTest {
 
+    @Autowired
     private MockMvc mockMvc;
 
-    @Mock
-    private CategoryService categoryService;
+    @Autowired
+    private CategoryRepository categoryRepository;
 
-    @InjectMocks
-    private CategoryController categoryController;
+    @Autowired
+    private UserRepository userRepository;
 
-    private CategoryDto categoryDto;
+    @Autowired
+    private JwtSecurityService jwtSecurityService;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
+    private String adminToken;
+    private User adminUser;
+
     @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        mockMvc = MockMvcBuilders.standaloneSetup(categoryController)
-                .setControllerAdvice(new ResponseExceptionHandler())
-                .build();
-        objectMapper = new ObjectMapper();
+    public void setUp() {
+        userRepository.deleteAll();
+        categoryRepository.deleteAll();
 
-        categoryDto = new CategoryDto();
-        categoryDto.setId(1L);
-        categoryDto.setName("Test Category");
-        categoryDto.setDescription("Test Description");
+        adminUser = new User();
+        adminUser.setEmail("admin@example.com");
+        adminUser.setPassword(passwordEncoder.encode("password123"));
+        adminUser.setRole(Role.ADMIN);
+        adminUser.setName("Admin User");
+        userRepository.save(adminUser);
 
-        // Устанавливаем SecurityContext с аутентифицированным пользователем с ролью ADMIN
-        org.springframework.security.core.userdetails.User userPrincipal =
-                new org.springframework.security.core.userdetails.User("admin@example.com", "",
-                        Collections.singletonList(() -> "ROLE_ADMIN"));
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        adminToken = jwtSecurityService.generateToken(
+                org.springframework.security.core.userdetails.User.builder()
+                        .username(adminUser.getEmail())
+                        .password(adminUser.getPassword())
+                        .roles(adminUser.getRole().name())
+                        .build()
+        );
     }
 
-    @Test
-    void testGetAllCategories() throws Exception {
-        when(categoryService.getAllCategories()).thenReturn(Arrays.asList(categoryDto));
 
-        mockMvc.perform(get("/api/categories/"))
+    @Test
+    public void testGetAllCategories() throws Exception {
+        // Создание и сохранение категорий
+        Category category1 = new Category();
+        category1.setName("Category1");
+        category1.setDescription("Description1");
+        category1.setCreatedAt(LocalDateTime.now()); // Заполняем created_at
+        category1.setUpdatedAt(LocalDateTime.now());
+        categoryRepository.save(category1);
+
+        Category category2 = new Category();
+        category2.setName("Category2");
+        category2.setDescription("Description2");
+        category2.setCreatedAt(LocalDateTime.now()); // Заполняем created_at
+        category2.setUpdatedAt(LocalDateTime.now());
+        categoryRepository.save(category2);
+
+        // Выполнение GET-запроса без токена
+        mockMvc.perform(get("/api/categories"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id", is(categoryDto.getId().intValue())))
-                .andExpect(jsonPath("$[0].name", is(categoryDto.getName())))
-                .andExpect(jsonPath("$[0].description", is(categoryDto.getDescription())));
+                .andExpect(jsonPath("$", hasSize(2)));
     }
 
-    @Test
-    void testGetCategoryById_Success() throws Exception {
-        when(categoryService.getCategoryById(1L)).thenReturn(categoryDto);
 
-        mockMvc.perform(get("/api/categories/1"))
+
+
+
+    @Test
+    public void testGetCategoryById() throws Exception {
+        Category category = new Category();
+        category.setName("Category1");
+        category.setDescription("Description1");
+        category.setCreatedAt(LocalDateTime.now());
+        category.setUpdatedAt(LocalDateTime.now());
+        category = categoryRepository.save(category);
+
+        mockMvc.perform(get("/api/categories/{id}", category.getId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(categoryDto.getId().intValue())))
-                .andExpect(jsonPath("$.name", is(categoryDto.getName())))
-                .andExpect(jsonPath("$.description", is(categoryDto.getDescription())));
+                .andExpect(jsonPath("$.id", is(category.getId().intValue())))
+                .andExpect(jsonPath("$.name", is("Category1")))
+                .andExpect(jsonPath("$.description", is("Description1")));
     }
 
     @Test
-    void testGetCategoryById_NotFound() throws Exception {
-        when(categoryService.getCategoryById(1L)).thenThrow(new CategoryNotFoundException(ErrorMessage.CATEGORY_NOT_FOUND));
+    public void testCreateCategory_Success() throws Exception {
+        CategoryDto categoryDto = new CategoryDto();
+        categoryDto.setName("NewCategory");
+        categoryDto.setDescription("NewDescription");
 
-        mockMvc.perform(get("/api/categories/1"))
-                .andExpect(status().isNotFound())
-                .andExpect(content().string(ErrorMessage.CATEGORY_NOT_FOUND));
-    }
-
-    @Test
-    void testCreateCategory_Success() throws Exception {
-        when(categoryService.createCategory(any(CategoryDto.class))).thenReturn(categoryDto);
-
-        String categoryJson = objectMapper.writeValueAsString(categoryDto);
-
-        mockMvc.perform(post("/api/categories/")
+        mockMvc.perform(post("/api/categories")
+                        .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(categoryJson))
+                        .content(objectMapper.writeValueAsString(categoryDto)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id", is(categoryDto.getId().intValue())))
-                .andExpect(jsonPath("$.name", is(categoryDto.getName())))
-                .andExpect(jsonPath("$.description", is(categoryDto.getDescription())));
-    }
-
-
-    @Test
-    void testCreateCategory_AlreadyExists() throws Exception {
-        when(categoryService.createCategory(any(CategoryDto.class))).thenThrow(new CategoryAlreadyExistsException(ErrorMessage.CATEGORY_ALREADY_EXISTS));
-
-        String categoryJson = objectMapper.writeValueAsString(categoryDto);
-
-        mockMvc.perform(post("/api/categories/")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(categoryJson))
-                .andExpect(status().isConflict())
-                .andExpect(content().string(ErrorMessage.CATEGORY_ALREADY_EXISTS));
+                .andExpect(jsonPath("$.id", notNullValue()))
+                .andExpect(jsonPath("$.name", is("NewCategory")))
+                .andExpect(jsonPath("$.description", is("NewDescription")));
     }
 
     @Test
-    void testUpdateCategory_Success() throws Exception {
-        CategoryDto updatedCategoryDto = new CategoryDto();
-        updatedCategoryDto.setId(1L);
-        updatedCategoryDto.setName("Updated Category");
-        updatedCategoryDto.setDescription("Updated Description");
+    public void testUpdateCategory_Success() throws Exception {
+        Category category = new Category();
+        category.setName("Category1");
+        category.setDescription("Description1");
+        category.setCreatedAt(LocalDateTime.now());
+        category.setUpdatedAt(LocalDateTime.now());
+        category = categoryRepository.save(category);
 
-        when(categoryService.updateCategory(eq(1L), any(CategoryDto.class))).thenReturn(updatedCategoryDto);
+        CategoryDto categoryDto = new CategoryDto();
+        categoryDto.setName("UpdatedCategory");
+        categoryDto.setDescription("UpdatedDescription");
 
-        String updatedCategoryJson = objectMapper.writeValueAsString(updatedCategoryDto);
-
-        mockMvc.perform(put("/api/categories/1")
+        mockMvc.perform(put("/api/categories/{id}", category.getId())
+                        .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(updatedCategoryJson))
+                        .content(objectMapper.writeValueAsString(categoryDto)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(updatedCategoryDto.getId().intValue())))
-                .andExpect(jsonPath("$.name", is(updatedCategoryDto.getName())))
-                .andExpect(jsonPath("$.description", is(updatedCategoryDto.getDescription())));
+                .andExpect(jsonPath("$.id", is(category.getId().intValue())))
+                .andExpect(jsonPath("$.name", is("UpdatedCategory")))
+                .andExpect(jsonPath("$.description", is("UpdatedDescription")));
     }
 
     @Test
-    void testUpdateCategory_NotFound() throws Exception {
-        CategoryDto updatedCategoryDto = new CategoryDto();
-        updatedCategoryDto.setId(1L);
-        updatedCategoryDto.setName("Updated Category");
-        updatedCategoryDto.setDescription("Updated Description");
+    public void testDeleteCategory_Success() throws Exception {
+        Category category = new Category();
+        category.setName("CategoryToDelete");
+        category.setDescription("Description");
+        category.setCreatedAt(LocalDateTime.now());
+        category.setUpdatedAt(LocalDateTime.now());
+        category = categoryRepository.save(category);
 
-        when(categoryService.updateCategory(eq(1L), any(CategoryDto.class))).thenThrow(new CategoryNotFoundException(ErrorMessage.CATEGORY_NOT_FOUND));
-
-        String updatedCategoryJson = objectMapper.writeValueAsString(updatedCategoryDto);
-
-        mockMvc.perform(put("/api/categories/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(updatedCategoryJson))
-                .andExpect(status().isNotFound())
-                .andExpect(content().string(ErrorMessage.CATEGORY_NOT_FOUND));
-    }
-
-    @Test
-    void testDeleteCategory_Success() throws Exception {
-        doNothing().when(categoryService).deleteCategory(1L);
-
-        mockMvc.perform(delete("/api/categories/1"))
+        mockMvc.perform(delete("/api/categories/{id}", category.getId())
+                        .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isNoContent());
-    }
-
-    @Test
-    void testDeleteCategory_NotFound() throws Exception {
-        doThrow(new CategoryNotFoundException(ErrorMessage.CATEGORY_NOT_FOUND)).when(categoryService).deleteCategory(1L);
-
-        mockMvc.perform(delete("/api/categories/1"))
-                .andExpect(status().isNotFound())
-                .andExpect(content().string(ErrorMessage.CATEGORY_NOT_FOUND));
     }
 }

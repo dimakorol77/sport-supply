@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@RequestMapping(method = RequestMethod.POST)
+@RequestMapping(method = RequestMethod.DELETE) // Изменено с POST на DELETE
 @Operation(
         summary = "Отмена заказа",
         description = "Отменяет заказ по его ID",
@@ -26,7 +26,6 @@ import java.lang.annotation.Target;
                 @ApiResponse(responseCode = "403", description = "У вас нет доступа")
         }
 )
-
 public @interface CancelOrder {
     @AliasFor(annotation = RequestMapping.class, attribute = "path")
     String[] path() default {"/{orderId}/cancel"};

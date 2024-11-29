@@ -21,6 +21,5 @@ import java.lang.annotation.*;
         }
 )
 public @interface GetAllCategories {
-    @AliasFor(annotation = RequestMapping.class, attribute = "path")
-    String[] path() default {"/"};
+
 }

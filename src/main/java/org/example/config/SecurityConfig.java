@@ -37,6 +37,17 @@ public class SecurityConfig {
                                 "/swagger-ui.html"
                         ).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
+                        // Открытый доступ к просмотру продуктов
+                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                        
+                        // Доступ к изменению, созданию и удалению только для администраторов
+                        .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.GET, "/api/promotions/**").permitAll() // Только GET доступен всем
+                        .requestMatchers("/api/promotions/**").hasRole("ADMIN") // Остальные методы только для ADMIN
+
                         // Разрешаем администраторам доступ к GET /api/users и GET /api/users/{id}/details
                         .requestMatchers(HttpMethod.GET, "/api/users").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/users/{id}/details").hasRole("ADMIN")

@@ -31,6 +31,7 @@ public class FavoriteController {
     private User getCurrentUser() {
         return securityUtils.getCurrentUser();
     }
+
     @AddProductToFavorites
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> addProductToFavorites(@PathVariable Long productId) {

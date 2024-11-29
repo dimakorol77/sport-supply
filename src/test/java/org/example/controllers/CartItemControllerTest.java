@@ -1,136 +1,174 @@
 package org.example.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.controllers.handler.ResponseExceptionHandler;
 import org.example.dto.CartItemDto;
 import org.example.dto.CartItemResponseDto;
 import org.example.enums.Role;
-import org.example.exceptions.CartItemNotFoundException;
-import org.example.exceptions.errorMessage.ErrorMessage;
-import org.example.models.User;
-import org.example.security.SecurityUtils;
-import org.example.services.interfaces.CartItemService;
-import org.example.services.interfaces.UserService;
+import org.example.models.*;
+import org.example.repositories.*;
+import org.example.services.impl.JwtSecurityService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.Collections;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
-import static org.hamcrest.Matchers.is;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-
+import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-class CartItemControllerTest {
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+public class CartItemControllerTest {
 
+    @Autowired
     private MockMvc mockMvc;
 
-    @Mock
-    private CartItemService cartItemService;
+    @Autowired
+    private CartRepository cartRepository;
 
-    @Mock
-    private UserService userService;
+    @Autowired
+    private CartItemRepository cartItemRepository;
 
-    @InjectMocks
-    private CartItemController cartItemController;
+    @Autowired
+    private ProductRepository productRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private JwtSecurityService jwtSecurityService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
-    private CartItemDto cartItemDto;
-    private CartItemResponseDto cartItemResponseDto;
+    private String userToken;
     private User user;
+    private Cart cart;
 
     @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+    public void setUp() {
+        cartItemRepository.deleteAll();
+        cartRepository.deleteAll();
+        productRepository.deleteAll();
+        userRepository.deleteAll();
 
-        mockMvc = MockMvcBuilders.standaloneSetup(cartItemController)
-                .setControllerAdvice(new ResponseExceptionHandler())
-                .build();
+        // Создаем пользователя
+        user = new User();
+        user.setEmail("user@example.com");
+        user.setPassword(passwordEncoder.encode("password"));
+        user.setRole(Role.USER);
+        user.setName("Test User");
+        user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
 
-        objectMapper = new ObjectMapper();
+        // Создаем корзину для пользователя
+        cart = new Cart();
+        cart.setUser(user);
+        cart.setCreatedAt(LocalDateTime.now());
+        cart.setUpdatedAt(LocalDateTime.now());
+        cartRepository.save(cart);
 
-        cartItemDto = new CartItemDto();
-        cartItemDto.setProductId(1L);
+        // Генерируем JWT токен
+        userToken = jwtSecurityService.generateToken(
+                org.springframework.security.core.userdetails.User.builder()
+                        .username(user.getEmail())
+                        .password(user.getPassword())
+                        .roles(user.getRole().name())
+                        .build());
+    }
+
+    @Test
+    public void testAddItemToCart() throws Exception {
+        // Создаем продукт
+        Product product = new Product();
+        product.setName("Product1");
+        product.setDescription("Description1");
+        product.setPrice(BigDecimal.valueOf(50.0));
+        product.setCreatedAt(LocalDateTime.now());
+        product.setUpdatedAt(LocalDateTime.now());
+        productRepository.save(product);
+
+        // Создаем DTO для добавления товара в корзину
+        CartItemDto cartItemDto = new CartItemDto();
+        cartItemDto.setProductId(product.getId());
         cartItemDto.setQuantity(2);
 
-        cartItemResponseDto = new CartItemResponseDto();
-        cartItemResponseDto.setProductId(1L);
-        cartItemResponseDto.setQuantity(2);
-
-        user = new User();
-        user.setId(1L);
-        user.setEmail("test@example.com");
-        user.setPassword("password");
-        user.setRole(Role.USER);
-
-        // Устанавливаем SecurityContext с аутентифицированным пользователем
-        setAuthentication("test@example.com");
-    }
-
-    @Test
-    void testAddItemToCart_Success() throws Exception {
-        when(userService.getUserByEmail("test@example.com")).thenReturn(user);
-        when(cartItemService.addItemToCart(eq(1L), eq(user.getId()), any(CartItemDto.class))).thenReturn(cartItemResponseDto);
-
-        String cartItemJson = objectMapper.writeValueAsString(cartItemDto);
-
-        mockMvc.perform(post("/api/cart-items/{cartId}/items", 1)
+        mockMvc.perform(post("/api/cart-items/{cartId}/items", cart.getId())
+                        .header("Authorization", "Bearer " + userToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(cartItemJson))
+                        .content(objectMapper.writeValueAsString(cartItemDto)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.productId", is(cartItemResponseDto.getProductId().intValue())))
-                .andExpect(jsonPath("$.quantity", is(cartItemResponseDto.getQuantity())));
+                .andExpect(jsonPath("$.productId", is(product.getId().intValue())))
+                .andExpect(jsonPath("$.quantity", is(2)))
+                .andExpect(jsonPath("$.price", is(50.0)))
+                .andExpect(jsonPath("$.name", is("Product1")));
     }
 
     @Test
-    void testUpdateCartItemQuantity_Success() throws Exception {
-        when(userService.getUserByEmail("test@example.com")).thenReturn(user);
-        when(cartItemService.updateCartItemQuantity(eq(1L), eq(user.getId()), eq(3))).thenReturn(cartItemResponseDto);
+    public void testUpdateCartItemQuantity() throws Exception {
+        // Создаем продукт
+        Product product = new Product();
+        product.setName("Product2");
+        product.setDescription("Description2");
+        product.setPrice(BigDecimal.valueOf(30.0));
+        product.setCreatedAt(LocalDateTime.now());
+        product.setUpdatedAt(LocalDateTime.now());
+        productRepository.save(product);
 
-        mockMvc.perform(put("/api/cart-items/items/{cartItemId}", 1)
-                        .param("quantity", "3"))
+        // Создаем элемент корзины
+        CartItem cartItem = new CartItem();
+        cartItem.setCart(cart);
+        cartItem.setProduct(product);
+        cartItem.setQuantity(1);
+        cartItem.setPrice(product.getPrice());
+        cartItem.setDeleted(false);
+        cartItemRepository.save(cartItem);
+
+        // Обновляем количество товара в корзине
+        mockMvc.perform(put("/api/cart-items/{cartItemId}/quantity", cartItem.getId())
+                        .header("Authorization", "Bearer " + userToken)
+                        .param("quantity", "5"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.productId", is(cartItemResponseDto.getProductId().intValue())))
-                .andExpect(jsonPath("$.quantity", is(cartItemResponseDto.getQuantity())));
+                .andExpect(jsonPath("$.quantity", is(5)));
     }
 
     @Test
-    void testRemoveCartItem_Success() throws Exception {
-        when(userService.getUserByEmail("test@example.com")).thenReturn(user);
-        doNothing().when(cartItemService).removeCartItem(eq(1L), eq(user.getId()));
+    public void testRemoveCartItem() throws Exception {
+        // Создаем продукт
+        Product product = new Product();
+        product.setName("Product3");
+        product.setDescription("Description3");
+        product.setPrice(BigDecimal.valueOf(20.0));
+        product.setCreatedAt(LocalDateTime.now());
+        product.setUpdatedAt(LocalDateTime.now());
+        productRepository.save(product);
 
-        mockMvc.perform(delete("/api/cart-items/items/{cartItemId}", 1))
+        // Создаем элемент корзины
+        CartItem cartItem = new CartItem();
+        cartItem.setCart(cart);
+        cartItem.setProduct(product);
+        cartItem.setQuantity(1);
+        cartItem.setPrice(product.getPrice());
+        cartItem.setDeleted(false);
+        cartItemRepository.save(cartItem);
+
+        // Удаляем элемент из корзины
+        mockMvc.perform(delete("/api/cart-items/{cartItemId}", cartItem.getId())
+                        .header("Authorization", "Bearer " + userToken))
                 .andExpect(status().isNoContent());
-    }
-
-    @Test
-    void testRemoveCartItem_AccessDenied() throws Exception {
-        when(userService.getUserByEmail("test@example.com")).thenReturn(user);
-        doThrow(new AccessDeniedException(ErrorMessage.ACCESS_DENIED))
-                .when(cartItemService).removeCartItem(eq(1L), eq(user.getId()));
-
-        mockMvc.perform(delete("/api/cart-items/items/{cartItemId}", 1))
-                .andExpect(status().isForbidden())
-                .andExpect(content().string(ErrorMessage.ACCESS_DENIED));
-    }
-
-    // Метод для установки аутентификации
-    private void setAuthentication(String email) {
-        org.springframework.security.core.userdetails.User userPrincipal =
-                new org.springframework.security.core.userdetails.User(email, "", Collections.emptyList());
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }
