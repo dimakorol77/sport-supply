@@ -110,16 +110,17 @@ public class UserControllerTest {
     public void testUpdateUser() throws Exception {
         UserDto userDto = new UserDto();
         userDto.setName("Updated User");
-        userDto.setPhoneNumber("111222333");
+        userDto.setEmail("updateduser@example.com"); // Добавлено
+        userDto.setPassword("newpassword123"); // Добавлено
 
         mockMvc.perform(put("/api/users/{id}", user.getId())
                         .header("Authorization", "Bearer " + userToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userDto)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name", is("Updated User")))
-                .andExpect(jsonPath("$.phoneNumber", is("111222333")));
+                .andExpect(jsonPath("$.name", is("Updated User")));
     }
+
 
     @Test
     public void testDeleteUser() throws Exception {

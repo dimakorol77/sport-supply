@@ -36,7 +36,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartDto createCart(Long userId) {
-        if (cartRepository.existsByUserId(userId)) {
+        if (cartRepository.existsByUser_Id(userId)) {
             throw new CartAlreadyExistsException(ErrorMessage.CART_ALREADY_EXISTS);
         }
 

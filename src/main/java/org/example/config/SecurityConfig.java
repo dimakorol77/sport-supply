@@ -37,6 +37,35 @@ public class SecurityConfig {
                                 "/swagger-ui.html"
                         ).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/categories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/categories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/categories/**").hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.GET, "/api/brands/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/brands/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/brands/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/brands/**").hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.GET, "/api/discounts/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/discounts/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/discounts/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/discounts/**").hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.GET, "/images/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/images/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/images/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/images/**").hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.GET, "/api/orders/all").hasRole("ADMIN") // Доступ к getAllOrders только для ADMIN
+                        .requestMatchers(HttpMethod.GET, "/api/orders/user").authenticated() // Доступ к getOrdersByUserId для аутентифицированных пользователей
+                        .requestMatchers(HttpMethod.PUT, "/api/orders/{orderId}/status").hasRole("ADMIN") // Доступ к updateOrderStatus только для ADMIN
+                        .requestMatchers(HttpMethod.GET, "/api/orders/{orderId}").authenticated() // Доступ к getOrderById для аутентифицированных пользователей
+                        .requestMatchers(HttpMethod.DELETE, "/api/orders/{orderId}/cancel").authenticated() // Доступ к cancelOrder для аутентифицированных пользователей
+                        .requestMatchers(HttpMethod.GET, "/api/orders/status").hasRole("ADMIN") // Доступ к getOrdersByStatus только для ADMIN
+                        .requestMatchers(HttpMethod.GET, "/api/orders/createdAfter").hasRole("ADMIN") // Доступ к getOrdersCreatedAfter только для ADMIN
+                        .requestMatchers(HttpMethod.GET, "/api/orders/deliveryMethod").hasRole("ADMIN") // Доступ к getOrdersByDeliveryMethod только для ADMIN
+
                         // Открытый доступ к просмотру продуктов
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                         

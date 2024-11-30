@@ -17,11 +17,9 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/discounts")
-@PreAuthorize("hasRole('ADMIN')")
 public class DiscountController {
 
     private final DiscountService discountService;
-
 
     public DiscountController(DiscountService discountService) {
         this.discountService = discountService;
@@ -43,6 +41,7 @@ public class DiscountController {
 
 
     @CreateDiscount
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DiscountDto> createDiscount(@Valid @RequestBody DiscountDto discountDto) {
         DiscountDto created = discountService.createDiscount(discountDto);
         return ResponseEntity.status(201).body(created);
@@ -50,21 +49,18 @@ public class DiscountController {
 
 
     @UpdateDiscount
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DiscountDto> updateDiscount(
             @PathVariable Long id,
             @Validated @RequestBody DiscountDto discountDto) {
 
-        // Обновляем Discount через сервис
         DiscountDto updatedDiscount = discountService.updateDiscount(id, discountDto);
-
-        // Возвращаем результат с HTTP-статусом 200 (OK)
         return ResponseEntity.ok(updatedDiscount);
     }
 
 
-
-
     @DeleteDiscount
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteDiscount(@PathVariable Long id) {
         discountService.deleteDiscount(id);
         return ResponseEntity.noContent().build();

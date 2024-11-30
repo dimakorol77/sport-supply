@@ -128,14 +128,17 @@ public class OrderItemServiceImpl implements OrderItemService {
 
         Order order = orderItem.getOrder();
 
-
         checkOrderOwnership(order, currentUser);
 
-        orderItemRepository.delete(orderItem);
-
+        order.getOrderItems().remove(orderItem);
 
         updateOrderTotalAmount(order);
+
+        orderItemRepository.delete(orderItem);
     }
+
+
+
     private Product getProductById(Long productId) {
         return productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(ErrorMessage.PRODUCT_NOT_FOUND));

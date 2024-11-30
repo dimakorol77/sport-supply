@@ -21,9 +21,12 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -196,4 +199,61 @@ public class OrderControllerTest {
                 .andExpect(jsonPath("$.id", is(order.getId().intValue())))
                 .andExpect(jsonPath("$.totalAmount", is(100.0)));
     }
+    @Test
+    @Transactional
+    public void testGetOrdersByStatus() throws Exception {
+        Order order = orderRepository.findById(this.order.getId()).orElseThrow();
+        order.setStatus(OrderStatus.SHIPPED);
+
+
+        if (order.getOrderItems() == null) {
+            order.setOrderItems(new ArrayList<>());
+        }
+
+
+        order.getOrderItems().clear();
+        OrderItem item = new OrderItem();
+        item.setOrder(order);
+        item.setProductName("Test Product");
+        item.setPrice(BigDecimal.valueOf(50.0));
+        item.setQuantity(2);
+        order.getOrderItems().add(item);
+
+        orderRepository.save(order);
+
+        mockMvc.perform(get("/api/orders/status")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .param("status", "SHIPPED"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id", is(order.getId().intValue())))
+                .andExpect(jsonPath("$[0].status", is("SHIPPED")));
+    }
+
+
+    @Test
+    public void testGetOrdersCreatedAfter() throws Exception {
+        LocalDateTime filterDate = LocalDateTime.now().minusDays(1);
+        String formattedDate = filterDate.format(DateTimeFormatter.ISO_DATE_TIME);
+
+
+        mockMvc.perform(get("/api/orders/created-after")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .param("date", formattedDate)) // Дата в формате ISO 8601
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id", is(order.getId().intValue())))
+                .andExpect(jsonPath("$[0].createdAt", notNullValue()));
+    }
+
+
+
+    @Test
+    public void testGetOrdersByDeliveryMethod() throws Exception {
+        mockMvc.perform(get("/api/orders/delivery-method")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .param("deliveryMethod", "PICKUP"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id", is(order.getId().intValue())))
+                .andExpect(jsonPath("$[0].deliveryMethod", is("PICKUP")));
+    }
+
 }

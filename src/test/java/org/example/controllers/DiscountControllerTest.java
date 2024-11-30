@@ -55,7 +55,9 @@ public class DiscountControllerTest {
     private ObjectMapper objectMapper;
 
     private String adminToken;
+    private String userToken; // Добавлен токен для пользователя без роли ADMIN
     private User adminUser;
+    private User regularUser;
     private Product product;
 
     @BeforeEach
@@ -64,6 +66,7 @@ public class DiscountControllerTest {
         productRepository.deleteAll();
         userRepository.deleteAll();
 
+        // Создаем администратора
         adminUser = new User();
         adminUser.setEmail("admin@example.com");
         adminUser.setPassword(passwordEncoder.encode("adminpass"));
@@ -73,6 +76,33 @@ public class DiscountControllerTest {
         adminUser.setUpdatedAt(LocalDateTime.now());
         userRepository.save(adminUser);
 
+        adminToken = jwtSecurityService.generateToken(
+                org.springframework.security.core.userdetails.User.builder()
+                        .username(adminUser.getEmail())
+                        .password(adminUser.getPassword())
+                        .roles(adminUser.getRole().name())
+                        .build()
+        );
+
+        // Создаем обычного пользователя
+        regularUser = new User();
+        regularUser.setEmail("user@example.com");
+        regularUser.setPassword(passwordEncoder.encode("userpass"));
+        regularUser.setRole(Role.USER);
+        regularUser.setName("Regular User");
+        regularUser.setCreatedAt(LocalDateTime.now());
+        regularUser.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(regularUser);
+
+        userToken = jwtSecurityService.generateToken(
+                org.springframework.security.core.userdetails.User.builder()
+                        .username(regularUser.getEmail())
+                        .password(regularUser.getPassword())
+                        .roles(regularUser.getRole().name())
+                        .build()
+        );
+
+
         product = new Product();
         product.setName("Product1");
         product.setDescription("Description1");
@@ -80,51 +110,43 @@ public class DiscountControllerTest {
         product.setCreatedAt(LocalDateTime.now());
         product.setUpdatedAt(LocalDateTime.now());
         productRepository.save(product);
-
-        adminToken = jwtSecurityService.generateToken(
-                org.springframework.security.core.userdetails.User.builder()
-                        .username(adminUser.getEmail())
-                        .password(adminUser.getPassword())
-                        .roles(adminUser.getRole().name())
-                        .build());
     }
 
     @Test
-    public void testGetAllDiscounts() throws Exception {
-        Discount discount1 = new Discount();
-        discount1.setProduct(product);
-        discount1.setDiscountPrice(BigDecimal.valueOf(10.0));
-        discount1.setStartDate(LocalDateTime.now().minusDays(1));
-        discount1.setEndDate(LocalDateTime.now().plusDays(1));
-        discount1.setCreatedAt(LocalDateTime.now());
-        discount1.setUpdatedAt(LocalDateTime.now());
-        discountRepository.save(discount1);
+    public void testGetAllDiscounts_WithoutAuth() throws Exception {
+        Discount discount = new Discount();
+        discount.setProduct(product);
+        discount.setDiscountPrice(BigDecimal.valueOf(10.0));
+        discount.setStartDate(LocalDateTime.now().minusDays(1));
+        discount.setEndDate(LocalDateTime.now().plusDays(1));
+        discount.setCreatedAt(LocalDateTime.now());
+        discount.setUpdatedAt(LocalDateTime.now());
+        discountRepository.save(discount);
 
+        // GET запрос без авторизации
         mockMvc.perform(get("/api/discounts"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)));
     }
 
     @Test
-    public void testCreateDiscount_Success() throws Exception {
+    public void testCreateDiscount_Unauthorized() throws Exception {
         DiscountDto discountDto = new DiscountDto();
         discountDto.setProductId(product.getId());
         discountDto.setDiscountPrice(BigDecimal.valueOf(10.0));
         discountDto.setStartDate(LocalDateTime.now().minusDays(1));
         discountDto.setEndDate(LocalDateTime.now().plusDays(1));
 
+        // POST запрос от пользователя без роли ADMIN
         mockMvc.perform(post("/api/discounts")
-                        .header("Authorization", "Bearer " + adminToken)
+                        .header("Authorization", "Bearer " + userToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(discountDto)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id", notNullValue()))
-                .andExpect(jsonPath("$.productId", is(product.getId().intValue())))
-                .andExpect(jsonPath("$.discountPrice", is(10.0)));
+                .andExpect(status().isForbidden());
     }
 
     @Test
-    public void testUpdateDiscount_Success() throws Exception {
+    public void testUpdateDiscount_Unauthorized() throws Exception {
         Discount discount = new Discount();
         discount.setProduct(product);
         discount.setDiscountPrice(BigDecimal.valueOf(10.0));
@@ -140,6 +162,67 @@ public class DiscountControllerTest {
         discountDto.setStartDate(LocalDateTime.now());
         discountDto.setEndDate(LocalDateTime.now().plusDays(2));
 
+        // PUT запрос от пользователя без роли ADMIN
+        mockMvc.perform(put("/api/discounts/{id}", discount.getId())
+                        .header("Authorization", "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(discountDto)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    public void testDeleteDiscount_Unauthorized() throws Exception {
+        Discount discount = new Discount();
+        discount.setProduct(product);
+        discount.setDiscountPrice(BigDecimal.valueOf(10.0));
+        discount.setStartDate(LocalDateTime.now().minusDays(1));
+        discount.setEndDate(LocalDateTime.now().plusDays(1));
+        discount.setCreatedAt(LocalDateTime.now());
+        discount.setUpdatedAt(LocalDateTime.now());
+        discount = discountRepository.save(discount);
+
+        // DELETE запрос от пользователя без роли ADMIN
+        mockMvc.perform(delete("/api/discounts/{id}", discount.getId())
+                        .header("Authorization", "Bearer " + userToken))
+                .andExpect(status().isForbidden());
+    }
+    @Test
+    public void testCreateDiscount_AdminAuthorized() throws Exception {
+        DiscountDto discountDto = new DiscountDto();
+        discountDto.setProductId(product.getId());
+        discountDto.setDiscountPrice(BigDecimal.valueOf(10.0));
+        discountDto.setStartDate(LocalDateTime.now().minusDays(1));
+        discountDto.setEndDate(LocalDateTime.now().plusDays(1));
+
+        // POST запрос от администратора
+        mockMvc.perform(post("/api/discounts")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(discountDto)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id", notNullValue()))
+                .andExpect(jsonPath("$.productId", is(product.getId().intValue())))
+                .andExpect(jsonPath("$.discountPrice", is(10.0)));
+    }
+
+    @Test
+    public void testUpdateDiscount_AdminAuthorized() throws Exception {
+        Discount discount = new Discount();
+        discount.setProduct(product);
+        discount.setDiscountPrice(BigDecimal.valueOf(10.0));
+        discount.setStartDate(LocalDateTime.now().minusDays(1));
+        discount.setEndDate(LocalDateTime.now().plusDays(1));
+        discount.setCreatedAt(LocalDateTime.now());
+        discount.setUpdatedAt(LocalDateTime.now());
+        discount = discountRepository.save(discount);
+
+        DiscountDto discountDto = new DiscountDto();
+        discountDto.setProductId(product.getId());
+        discountDto.setDiscountPrice(BigDecimal.valueOf(15.0));
+        discountDto.setStartDate(LocalDateTime.now());
+        discountDto.setEndDate(LocalDateTime.now().plusDays(2));
+
+        // PUT запрос от администратора
         mockMvc.perform(put("/api/discounts/{id}", discount.getId())
                         .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -150,7 +233,7 @@ public class DiscountControllerTest {
     }
 
     @Test
-    public void testDeleteDiscount_Success() throws Exception {
+    public void testDeleteDiscount_AdminAuthorized() throws Exception {
         Discount discount = new Discount();
         discount.setProduct(product);
         discount.setDiscountPrice(BigDecimal.valueOf(10.0));
@@ -160,8 +243,10 @@ public class DiscountControllerTest {
         discount.setUpdatedAt(LocalDateTime.now());
         discount = discountRepository.save(discount);
 
+        // DELETE запрос от администратора
         mockMvc.perform(delete("/api/discounts/{id}", discount.getId())
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isNoContent());
     }
+
 }

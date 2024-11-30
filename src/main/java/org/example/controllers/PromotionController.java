@@ -79,8 +79,9 @@ public class PromotionController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> removeProductFromPromotion(@PathVariable Long promotionId, @PathVariable Long productId) {
         promotionService.removeProductFromPromotion(promotionId, productId);
-        return ResponseEntity.noContent().build(); // Возвращает 204 No Content
+        return ResponseEntity.noContent().build();
     }
+
 
 
     // Доступ для всех пользователей (анонимных или аутентифицированных)

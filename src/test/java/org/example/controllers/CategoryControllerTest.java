@@ -51,18 +51,23 @@ public class CategoryControllerTest {
     private String adminToken;
     private User adminUser;
 
+
     @BeforeEach
     public void setUp() {
-        userRepository.deleteAll();
         categoryRepository.deleteAll();
+        userRepository.deleteAll();
 
+        // Создание администратора
         adminUser = new User();
         adminUser.setEmail("admin@example.com");
-        adminUser.setPassword(passwordEncoder.encode("password123"));
+        adminUser.setPassword(passwordEncoder.encode("adminpass"));
         adminUser.setRole(Role.ADMIN);
         adminUser.setName("Admin User");
+        adminUser.setCreatedAt(LocalDateTime.now());
+        adminUser.setUpdatedAt(LocalDateTime.now());
         userRepository.save(adminUser);
 
+        // Генерация токена для администратора
         adminToken = jwtSecurityService.generateToken(
                 org.springframework.security.core.userdetails.User.builder()
                         .username(adminUser.getEmail())
@@ -73,35 +78,34 @@ public class CategoryControllerTest {
     }
 
 
+
     @Test
     public void testGetAllCategories() throws Exception {
-        // Создание и сохранение категорий
         Category category1 = new Category();
         category1.setName("Category1");
         category1.setDescription("Description1");
-        category1.setCreatedAt(LocalDateTime.now()); // Заполняем created_at
+        category1.setCreatedAt(LocalDateTime.now());
         category1.setUpdatedAt(LocalDateTime.now());
         categoryRepository.save(category1);
 
         Category category2 = new Category();
         category2.setName("Category2");
         category2.setDescription("Description2");
-        category2.setCreatedAt(LocalDateTime.now()); // Заполняем created_at
+        category2.setCreatedAt(LocalDateTime.now());
         category2.setUpdatedAt(LocalDateTime.now());
         categoryRepository.save(category2);
 
-        // Выполнение GET-запроса без токена
+        // Выполнение GET-запроса без авторизации
         mockMvc.perform(get("/api/categories"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)));
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].name", is("Category1")))
+                .andExpect(jsonPath("$[1].name", is("Category2")));
     }
-
-
-
-
 
     @Test
     public void testGetCategoryById() throws Exception {
+        // Создание категории
         Category category = new Category();
         category.setName("Category1");
         category.setDescription("Description1");
@@ -109,6 +113,7 @@ public class CategoryControllerTest {
         category.setUpdatedAt(LocalDateTime.now());
         category = categoryRepository.save(category);
 
+        // Выполнение GET-запроса без авторизации
         mockMvc.perform(get("/api/categories/{id}", category.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(category.getId().intValue())))
@@ -123,7 +128,7 @@ public class CategoryControllerTest {
         categoryDto.setDescription("NewDescription");
 
         mockMvc.perform(post("/api/categories")
-                        .header("Authorization", "Bearer " + adminToken)
+                        .header("Authorization", "Bearer " + adminToken) // Админ-токен обязателен
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(categoryDto)))
                 .andExpect(status().isCreated())
@@ -146,7 +151,7 @@ public class CategoryControllerTest {
         categoryDto.setDescription("UpdatedDescription");
 
         mockMvc.perform(put("/api/categories/{id}", category.getId())
-                        .header("Authorization", "Bearer " + adminToken)
+                        .header("Authorization", "Bearer " + adminToken) // Админ-токен обязателен
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(categoryDto)))
                 .andExpect(status().isOk())
@@ -165,7 +170,7 @@ public class CategoryControllerTest {
         category = categoryRepository.save(category);
 
         mockMvc.perform(delete("/api/categories/{id}", category.getId())
-                        .header("Authorization", "Bearer " + adminToken))
+                        .header("Authorization", "Bearer " + adminToken)) // Админ-токен обязателен
                 .andExpect(status().isNoContent());
     }
 }

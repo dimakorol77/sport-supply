@@ -27,6 +27,7 @@ import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -155,8 +156,8 @@ public class PromotionControllerTest {
     public void testAddProductToPromotion() throws Exception {
         mockMvc.perform(post("/api/promotions/{promotionId}/products/{productId}", promotion.getId(), product.getId())
                         .header("Authorization", "Bearer " + adminToken))
-                .andExpect(status().isCreated()) // Здесь ожидается 201 (Created)
-                .andExpect(jsonPath("$.size()").doesNotExist()); // Убедиться, что тело ответа пустое
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.size()").doesNotExist());
 
         List<Promotion> promotions = promotionRepository.findAll();
         assertThat(promotions.get(0).getProductPromotions(), hasSize(1));
@@ -165,15 +166,20 @@ public class PromotionControllerTest {
 
     @Test
     public void testRemoveProductFromPromotion() throws Exception {
-        // First, add the product to the promotion
+
         mockMvc.perform(post("/api/promotions/{promotionId}/products/{productId}", promotion.getId(), product.getId())
                         .header("Authorization", "Bearer " + adminToken))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated()); // Здесь ожидаем 201 Created
 
-        // Then, remove the product from the promotion
+
         mockMvc.perform(delete("/api/promotions/{promotionId}/products/{productId}", promotion.getId(), product.getId())
                         .header("Authorization", "Bearer " + adminToken))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isNoContent()); // Здесь ожидаем 204 No Content
+
+
+        List<Promotion> promotions = promotionRepository.findAll();
+        assertTrue(promotions.get(0).getProductPromotions().isEmpty());
     }
+
 }
 

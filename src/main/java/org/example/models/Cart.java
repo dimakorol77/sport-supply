@@ -16,28 +16,24 @@ import java.util.List;
 public class Cart {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-
-
-    @OneToOne(cascade = CascadeType.MERGE)
-    @MapsId
-    @JoinColumn(name = "user_id")
+    @OneToOne
+    @JoinColumn(name = "user_id", unique = true)
     private User user;
 
-
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL)
-
     private List<CartItem> cartItems = new ArrayList<>();
 
     @Column(name = "total_price", nullable = false)
     private BigDecimal totalPrice = BigDecimal.ZERO;
 
 }
+

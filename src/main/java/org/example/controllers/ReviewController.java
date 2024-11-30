@@ -25,14 +25,9 @@ public class ReviewController {
     private final ReviewService reviewService;
     private final SecurityUtils securityUtils;
 
-
     public ReviewController(ReviewService reviewService, SecurityUtils securityUtils) {
         this.reviewService = reviewService;
         this.securityUtils = securityUtils;
-    }
-
-    private User getCurrentUser() {
-        return securityUtils.getCurrentUser();
     }
 
     @GetAllReviews
@@ -42,16 +37,16 @@ public class ReviewController {
         return ResponseEntity.ok(reviews);
     }
 
-
     @GetReviewById
     public ResponseEntity<ReviewDto> getReviewById(@PathVariable Long id) {
         ReviewDto review = reviewService.getReviewById(id);
         return ResponseEntity.ok(review);
     }
 
-
     @CreateReview
     public ResponseEntity<ReviewDto> createReview(@Valid @RequestBody ReviewDto reviewDto) {
+        User currentUser = securityUtils.getCurrentUser();
+        reviewDto.setUserId(currentUser.getId()); // Устанавливаем userId из текущего пользователя
         ReviewDto created = reviewService.createReview(reviewDto);
         return ResponseEntity.status(201).body(created);
     }
@@ -63,13 +58,11 @@ public class ReviewController {
         return ResponseEntity.ok(updated);
     }
 
-
     @DeleteReview
     public ResponseEntity<Void> deleteReview(@PathVariable Long id) {
         reviewService.deleteReview(id);
         return ResponseEntity.noContent().build();
     }
-
 
     @GetReviewsByProductId
     public ResponseEntity<List<ReviewDto>> getReviewsByProductId(@PathVariable Long productId) {
@@ -77,11 +70,11 @@ public class ReviewController {
         return ResponseEntity.ok(reviews);
     }
 
-
     @GetReviewsByUserId
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<ReviewDto>> getReviewsByUserId(@PathVariable Long userId) {
-        List<ReviewDto> reviews = reviewService.getReviewsByUserId(userId);
+        User currentUser = securityUtils.getCurrentUser();
+        List<ReviewDto> reviews = reviewService.getReviewsByUserId(userId, currentUser);
         return ResponseEntity.ok(reviews);
     }
 }
+

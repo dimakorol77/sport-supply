@@ -15,11 +15,9 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/brands")
-@PreAuthorize("hasRole('ADMIN')")
 public class BrandController {
 
     private final BrandService brandService;
-
 
     public BrandController(BrandService brandService) {
         this.brandService = brandService;
@@ -32,7 +30,6 @@ public class BrandController {
         return ResponseEntity.ok(brands);
     }
 
-
     @GetBrandById
     public ResponseEntity<BrandDto> getBrandById(@PathVariable Long id) {
         BrandDto brand = brandService.getBrandById(id);
@@ -40,6 +37,7 @@ public class BrandController {
     }
 
 
+    @PreAuthorize("hasRole('ADMIN')")
     @CreateBrand
     public ResponseEntity<BrandDto> createBrand(
             @Validated(BrandDto.OnCreate.class) @RequestBody BrandDto brandDto) {
@@ -47,6 +45,7 @@ public class BrandController {
         return ResponseEntity.status(201).body(created);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @UpdateBrand
     public ResponseEntity<BrandDto> updateBrand(
             @PathVariable Long id,
@@ -55,8 +54,7 @@ public class BrandController {
         return ResponseEntity.ok(updated);
     }
 
-
-
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteBrand
     public ResponseEntity<Void> deleteBrand(@PathVariable Long id) {
         brandService.deleteBrand(id);

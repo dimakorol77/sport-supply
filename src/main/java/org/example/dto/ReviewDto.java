@@ -10,7 +10,7 @@ import jakarta.validation.constraints.Size;
 public class ReviewDto {
     private Long id;
 
-    @NotNull(message = "User ID required")
+
     private Long userId;
 
     @NotNull(message = "Product ID required")

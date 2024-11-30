@@ -122,8 +122,9 @@ public class ReviewControllerTest {
         mockMvc.perform(get("/api/reviews")
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].comment", is("Good product")));
+                .andExpect(jsonPath("$[0].userComment", is("Good product")));
     }
+
 
     @Test
     public void testCreateReview() throws Exception {
@@ -137,24 +138,27 @@ public class ReviewControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(reviewDto)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.comment", is("Excellent!")))
+                .andExpect(jsonPath("$.userComment", is("Excellent!")))
                 .andExpect(jsonPath("$.rating", is(5)));
     }
 
     @Test
     public void testUpdateReview() throws Exception {
         ReviewDto reviewDto = new ReviewDto();
+        reviewDto.setProductId(product.getId());
         reviewDto.setRating(3);
-        reviewDto.setUserComment("Average product");
+        reviewDto.setUserComment("Updated comment");
 
         mockMvc.perform(put("/api/reviews/{id}", review.getId())
                         .header("Authorization", "Bearer " + userToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(reviewDto)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.comment", is("Average product")))
+                .andExpect(jsonPath("$.userComment", is("Updated comment")))
                 .andExpect(jsonPath("$.rating", is(3)));
     }
+
+
 
     @Test
     public void testDeleteReview() throws Exception {
@@ -165,16 +169,20 @@ public class ReviewControllerTest {
 
     @Test
     public void testGetReviewsByProductId() throws Exception {
-        mockMvc.perform(get("/api/reviews/product/{productId}", product.getId()))
+        mockMvc.perform(get("/api/reviews/product/{productId}", product.getId())
+                        .header("Authorization", "Bearer " + userToken)) // Используем userToken
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].comment", is("Good product")));
+                .andExpect(jsonPath("$[0].userComment", is("Good product")));
     }
+
+
 
     @Test
     public void testGetReviewsByUserId() throws Exception {
         mockMvc.perform(get("/api/reviews/user/{userId}", user.getId())
                         .header("Authorization", "Bearer " + userToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].comment", is("Good product")));
+                .andExpect(jsonPath("$[0].userComment", is("Good product"))); // Исправлено на userComment
     }
+
 }

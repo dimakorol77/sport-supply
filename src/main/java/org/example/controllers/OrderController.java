@@ -88,10 +88,12 @@ public class OrderController {
 
     @GetOrdersCreatedAfter
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<OrderDto>> getOrdersCreatedAfter(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date) {
+    public ResponseEntity<List<OrderDto>> getOrdersCreatedAfter(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date) {
         List<OrderDto> orderDtos = orderService.getOrdersCreatedAfter(date);
         return ResponseEntity.ok(orderDtos);
     }
+
 
     @GetOrdersByDeliveryMethod
     @PreAuthorize("hasRole('ADMIN')")

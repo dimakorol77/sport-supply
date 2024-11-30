@@ -21,9 +21,10 @@ VALUES ('Product 1', 'Description for Product 1', 10.99, 1, 1, 'WHEY', 'Vitamin 
        ('Product 2', 'Description for Product 2', 15.49, 2, 2, 'CASEIN', 'Vitamin B', 'POWDER', NOW(), NOW());
 
 -- Заполнение таблицы carts
-INSERT INTO carts (id, created_at, updated_at, total_price, user_id)
-VALUES (1, NOW(), NOW(), 25.99, 1),
-       (2, NOW(), NOW(), 15.49, 2);
+INSERT INTO carts (user_id, created_at, updated_at, total_price)
+VALUES
+    (1, NOW(), NOW(), 25.99),
+    (2, NOW(), NOW(), 15.49);
 
 -- Заполнение таблицы cart_items
 INSERT INTO cart_items (cart_id, product_id, quantity, price, discount_price, deleted)

@@ -107,7 +107,7 @@ public class CartItemControllerTest {
         cartItemDto.setProductId(product.getId());
         cartItemDto.setQuantity(2);
 
-        mockMvc.perform(post("/api/cart-items/{cartId}/items", cart.getId())
+        mockMvc.perform(post("/api/cart-items//{cartId}/items", cart.getId())
                         .header("Authorization", "Bearer " + userToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(cartItemDto)))
@@ -139,7 +139,7 @@ public class CartItemControllerTest {
         cartItemRepository.save(cartItem);
 
         // Обновляем количество товара в корзине
-        mockMvc.perform(put("/api/cart-items/{cartItemId}/quantity", cartItem.getId())
+        mockMvc.perform(put("/api/cart-items/items/{cartItemId}", cartItem.getId())
                         .header("Authorization", "Bearer " + userToken)
                         .param("quantity", "5"))
                 .andExpect(status().isOk())
@@ -167,8 +167,32 @@ public class CartItemControllerTest {
         cartItemRepository.save(cartItem);
 
         // Удаляем элемент из корзины
-        mockMvc.perform(delete("/api/cart-items/{cartItemId}", cartItem.getId())
+        mockMvc.perform(delete("/api/cart-items/items/{cartItemId}", cartItem.getId())
                         .header("Authorization", "Bearer " + userToken))
                 .andExpect(status().isNoContent());
     }
+    @Test
+    public void testAddItemToNonExistingCart() throws Exception {
+        // Создаем продукт
+        Product product = new Product();
+        product.setName("Product4");
+        product.setDescription("Description4");
+        product.setPrice(BigDecimal.valueOf(60.0));
+        product.setCreatedAt(LocalDateTime.now());
+        product.setUpdatedAt(LocalDateTime.now());
+        productRepository.save(product);
+
+        // Создаем DTO для добавления товара в корзину
+        CartItemDto cartItemDto = new CartItemDto();
+        cartItemDto.setProductId(product.getId());
+        cartItemDto.setQuantity(1);
+
+        // Пытаемся добавить товар в несуществующую корзину
+        mockMvc.perform(post("/api/cart-items/{cartId}/items", 9999L) // Несуществующий cartId
+                        .header("Authorization", "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cartItemDto)))
+                .andExpect(status().isNotFound());
+    }
+
 }

@@ -152,6 +152,26 @@ public class ImageControllerTest {
                 .andExpect(jsonPath("$[0].altText", is("Test Image")));
     }
 
+    @Test
+    public void testGetImagesByProductIdForGuest() throws Exception {
+        // Создание тестового изображения
+        Image image = new Image();
+        image.setProduct(product);
+        image.setUrl("/uploads/images/test.jpg");
+        image.setAltText("Test Image");
+        image.setCreatedAt(LocalDateTime.now());
+        image.setUpdatedAt(LocalDateTime.now());
+        imageRepository.save(image);
+
+        // Выполнение запроса без авторизации
+        mockMvc.perform(get("/images/product/{productId}", product.getId())) // Без токена
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].url", is("/uploads/images/test.jpg")))
+                .andExpect(jsonPath("$[0].altText", is("Test Image")));
+    }
+
+
 
 
     @Test

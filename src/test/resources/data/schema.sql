@@ -47,15 +47,14 @@ CREATE TABLE products
     FOREIGN KEY (brand_id) REFERENCES brands (id) ON DELETE SET NULL
 );
 
-CREATE TABLE carts
-(
-    id          BIGINT PRIMARY KEY,
-    created_at  TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  TIMESTAMP               DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    total_price DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
-    user_id     BIGINT         NOT NULL UNIQUE,
-    FOREIGN KEY (id) REFERENCES users (id) ON DELETE CASCADE
+CREATE TABLE carts (
+                       user_id BIGINT PRIMARY KEY,
+                       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                       total_price DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+                       FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
+
 
 CREATE TABLE cart_items
 (

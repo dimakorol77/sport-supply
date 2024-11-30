@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test") // Указывает, что используется application-test.properties
+@ActiveProfiles("test")
 public class BrandControllerTest {
 
     @Autowired
@@ -56,6 +56,7 @@ public class BrandControllerTest {
         brandRepository.deleteAll();
         userRepository.deleteAll();
 
+        // Создаем администратора
         adminUser = new User();
         adminUser.setEmail("admin@example.com");
         adminUser.setPassword(passwordEncoder.encode("adminpass"));
@@ -65,6 +66,7 @@ public class BrandControllerTest {
         adminUser.setUpdatedAt(LocalDateTime.now());
         userRepository.save(adminUser);
 
+        // Генерация токена администратора
         adminToken = jwtSecurityService.generateToken(
                 org.springframework.security.core.userdetails.User.builder()
                         .username(adminUser.getEmail())
@@ -75,25 +77,6 @@ public class BrandControllerTest {
 
     @Test
     public void testGetAllBrands() throws Exception {
-        // Создаем уникального администратора
-        User adminUser = new User();
-        adminUser.setEmail("admin123@example.com"); // Уникальный email
-        adminUser.setPassword(passwordEncoder.encode("adminpassword"));
-        adminUser.setName("Admin User");
-        adminUser.setRole(Role.ADMIN);
-        adminUser.setCreatedAt(LocalDateTime.now());
-        adminUser.setUpdatedAt(LocalDateTime.now());
-        userRepository.save(adminUser);
-
-        // Генерация JWT токена
-        String token = jwtSecurityService.generateToken(
-                org.springframework.security.core.userdetails.User.builder()
-                        .username(adminUser.getEmail())
-                        .password(adminUser.getPassword())
-                        .roles(adminUser.getRole().name())
-                        .build()
-        );
-
         // Создаем бренды
         Brand brand1 = new Brand();
         brand1.setName("Brand1");
@@ -109,37 +92,17 @@ public class BrandControllerTest {
         brand2.setUpdatedAt(LocalDateTime.now());
         brandRepository.save(brand2);
 
-        // Выполняем GET запрос
-        mockMvc.perform(get("/api/brands")
-                        .header("Authorization", "Bearer " + token))
+        // Выполняем GET запрос без авторизации (для гостей)
+        mockMvc.perform(get("/api/brands"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)));
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].name", is("Brand1")))
+                .andExpect(jsonPath("$[1].name", is("Brand2")));
     }
-
-
 
     @Test
     public void testGetBrandById() throws Exception {
-        // Создание уникального пользователя-администратора
-        User adminUser = new User();
-        adminUser.setEmail("admin" + System.currentTimeMillis() + "@example.com");
-        adminUser.setPassword(passwordEncoder.encode("adminpassword"));
-        adminUser.setName("Admin User");
-        adminUser.setRole(Role.ADMIN);
-        adminUser.setCreatedAt(LocalDateTime.now());
-        adminUser.setUpdatedAt(LocalDateTime.now());
-        userRepository.save(adminUser);
-
-        // Генерация JWT токена
-        String token = jwtSecurityService.generateToken(
-                org.springframework.security.core.userdetails.User.builder()
-                        .username(adminUser.getEmail())
-                        .password(adminUser.getPassword())
-                        .roles(adminUser.getRole().name())
-                        .build()
-        );
-
-        // Создание бренда
+        // Создаем бренд
         Brand brand = new Brand();
         brand.setName("Brand1");
         brand.setDescription("Description1");
@@ -147,23 +110,22 @@ public class BrandControllerTest {
         brand.setUpdatedAt(LocalDateTime.now());
         brand = brandRepository.save(brand);
 
-        // Выполнение GET-запроса с токеном
-        mockMvc.perform(get("/api/brands/{id}", brand.getId())
-                        .header("Authorization", "Bearer " + token))
+        // Выполняем GET запрос без авторизации (для гостей)
+        mockMvc.perform(get("/api/brands/{id}", brand.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(brand.getId().intValue())))
                 .andExpect(jsonPath("$.name", is("Brand1")))
                 .andExpect(jsonPath("$.description", is("Description1")));
     }
 
-
-
     @Test
     public void testCreateBrand_Success() throws Exception {
+        // Создаем DTO для бренда
         BrandDto brandDto = new BrandDto();
         brandDto.setName("NewBrand");
         brandDto.setDescription("NewDescription");
 
+        // Выполняем POST запрос с токеном администратора
         mockMvc.perform(post("/api/brands")
                         .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -175,11 +137,13 @@ public class BrandControllerTest {
     }
 
     @Test
-    public void testCreateBrand_Unauthorized() throws Exception {
+    public void testCreateBrand_Forbidden() throws Exception {
+        // Создаем DTO для бренда
         BrandDto brandDto = new BrandDto();
         brandDto.setName("NewBrand");
         brandDto.setDescription("NewDescription");
 
+        // Выполняем POST запрос без токена
         mockMvc.perform(post("/api/brands")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(brandDto)))
@@ -188,6 +152,7 @@ public class BrandControllerTest {
 
     @Test
     public void testUpdateBrand_Success() throws Exception {
+        // Создаем бренд
         Brand brand = new Brand();
         brand.setName("Brand1");
         brand.setDescription("Description1");
@@ -195,10 +160,12 @@ public class BrandControllerTest {
         brand.setUpdatedAt(LocalDateTime.now());
         brand = brandRepository.save(brand);
 
+        // Создаем DTO для обновления бренда
         BrandDto brandDto = new BrandDto();
         brandDto.setName("UpdatedBrand");
         brandDto.setDescription("UpdatedDescription");
 
+        // Выполняем PUT запрос с токеном администратора
         mockMvc.perform(put("/api/brands/{id}", brand.getId())
                         .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -211,6 +178,7 @@ public class BrandControllerTest {
 
     @Test
     public void testDeleteBrand_Success() throws Exception {
+        // Создаем бренд
         Brand brand = new Brand();
         brand.setName("BrandToDelete");
         brand.setDescription("Description");
@@ -218,8 +186,24 @@ public class BrandControllerTest {
         brand.setUpdatedAt(LocalDateTime.now());
         brand = brandRepository.save(brand);
 
+        // Выполняем DELETE запрос с токеном администратора
         mockMvc.perform(delete("/api/brands/{id}", brand.getId())
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    public void testDeleteBrand_Forbidden() throws Exception {
+        // Создаем бренд
+        Brand brand = new Brand();
+        brand.setName("BrandToDelete");
+        brand.setDescription("Description");
+        brand.setCreatedAt(LocalDateTime.now());
+        brand.setUpdatedAt(LocalDateTime.now());
+        brand = brandRepository.save(brand);
+
+        // Выполняем DELETE запрос без токена
+        mockMvc.perform(delete("/api/brands/{id}", brand.getId()))
+                .andExpect(status().isForbidden());
     }
 }

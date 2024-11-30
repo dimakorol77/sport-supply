@@ -24,7 +24,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/order-items")
 @Validated
-@PreAuthorize("hasRole('ADMIN')")
 public class OrderItemController {
     private final OrderItemService orderItemService;
 
