@@ -6,33 +6,41 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.AssertTrue;
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
 public class DiscountDto {
+    @Schema(description = "ID скидки. Передается только в URL", accessMode = Schema.AccessMode.READ_ONLY)
     private Long id;
 
-    @NotNull(message = "ID продукта обязателен")
+    @NotNull(groups = OnCreate.class, message = "Product ID required")
     private Long productId;
 
-    @NotNull(message = "Цена со скидкой обязательна")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Цена со скидкой должна быть больше нуля")
+    @NotNull(groups = {OnCreate.class, OnUpdate.class}, message = "Discount price required")
+    @DecimalMin(value = "0.0", inclusive = false, message = "Discount price must be greater than zero")
     private BigDecimal discountPrice;
 
-    @NotNull(message = "Дата начала обязательна")
-    @PastOrPresent(message = "Дата начала не может быть в будущем")
+    @NotNull(groups = {OnCreate.class, OnUpdate.class}, message = "Start date required")
+    @PastOrPresent(groups = OnCreate.class, message = "Start date cannot be in the future")
     private LocalDateTime startDate;
 
-    @NotNull(message = "Дата окончания обязательна")
-    @Future(message = "Дата окончания должна быть в будущем")
+    @NotNull(groups = {OnCreate.class, OnUpdate.class}, message = "End date required")
+    @Future(groups = {OnCreate.class, OnUpdate.class}, message = "The end date must be in the future")
     private LocalDateTime endDate;
 
-    @AssertTrue(message = "Дата окончания должна быть после даты начала")
+    @AssertTrue(message = "The end date must be after the start date")
     private boolean isEndDateAfterStartDate() {
         if (startDate == null || endDate == null) {
-            return true; // Проверку @NotNull выполняют другие аннотации
+            return true;
         }
         return endDate.isAfter(startDate);
     }
+
+    // Группы для валидации
+    public interface OnCreate {}
+    public interface OnUpdate {}
 }
+

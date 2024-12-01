@@ -1,6 +1,9 @@
 package org.example.services.interfaces;
 
 import org.example.dto.PromotionDto;
+
+
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface PromotionService {
@@ -12,4 +15,5 @@ public interface PromotionService {
     void addProductToPromotion(Long promotionId, Long productId);
     void removeProductFromPromotion(Long promotionId, Long productId);
     List<PromotionDto> getPromotionsForProduct(Long productId);
+    BigDecimal getPromotionDiscountForProduct(Long productId);
 }

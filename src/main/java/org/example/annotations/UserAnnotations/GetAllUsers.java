@@ -19,7 +19,8 @@ import java.lang.annotation.Target;
         summary = "Получение всех пользователей",
         description = "Возвращает список всех пользователей",
         tags = {"Пользователи"},
-        responses = @ApiResponse(responseCode = "200", description = "Пользователи найдены")
+        responses = {@ApiResponse(responseCode = "200", description = "Пользователи найдены"),
+                @ApiResponse(responseCode = "403", description = "У вас нет доступа")}
 )
 public @interface GetAllUsers {
 }

@@ -8,6 +8,8 @@ import org.example.annotations.BrandAnnotations.CreateBrand;
 import org.example.annotations.BrandAnnotations.UpdateBrand;
 import org.example.annotations.BrandAnnotations.DeleteBrand;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -17,40 +19,42 @@ public class BrandController {
 
     private final BrandService brandService;
 
-    // Конструкторная инъекция
     public BrandController(BrandService brandService) {
         this.brandService = brandService;
     }
 
-    // Получить все бренды
+
     @GetAllBrands
     public ResponseEntity<List<BrandDto>> getAllBrands() {
         List<BrandDto> brands = brandService.getAllBrands();
         return ResponseEntity.ok(brands);
     }
 
-    // Получить бренд по ID
     @GetBrandById
     public ResponseEntity<BrandDto> getBrandById(@PathVariable Long id) {
         BrandDto brand = brandService.getBrandById(id);
         return ResponseEntity.ok(brand);
     }
 
-    // Создать новый бренд
+
+    @PreAuthorize("hasRole('ADMIN')")
     @CreateBrand
-    public ResponseEntity<BrandDto> createBrand(@RequestBody BrandDto brandDto) {
+    public ResponseEntity<BrandDto> createBrand(
+            @Validated(BrandDto.OnCreate.class) @RequestBody BrandDto brandDto) {
         BrandDto created = brandService.createBrand(brandDto);
         return ResponseEntity.status(201).body(created);
     }
 
-    // Обновить бренд
+    @PreAuthorize("hasRole('ADMIN')")
     @UpdateBrand
-    public ResponseEntity<BrandDto> updateBrand(@PathVariable Long id, @RequestBody BrandDto brandDto) {
+    public ResponseEntity<BrandDto> updateBrand(
+            @PathVariable Long id,
+            @Validated(BrandDto.OnUpdate.class) @RequestBody BrandDto brandDto) {
         BrandDto updated = brandService.updateBrand(id, brandDto);
         return ResponseEntity.ok(updated);
     }
 
-    // Удалить бренд
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteBrand
     public ResponseEntity<Void> deleteBrand(@PathVariable Long id) {
         brandService.deleteBrand(id);

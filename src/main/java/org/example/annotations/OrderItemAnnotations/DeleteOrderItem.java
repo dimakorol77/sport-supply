@@ -20,7 +20,8 @@ import java.lang.annotation.Target;
         tags = {"Элементы заказа"},
         responses = {
                 @ApiResponse(responseCode = "204", description = "Элемент заказа успешно удален"),
-                @ApiResponse(responseCode = "404", description = "Элемент заказа не найден")
+                @ApiResponse(responseCode = "404", description = "Элемент заказа не найден"),
+                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
         }
 )
 public @interface DeleteOrderItem {

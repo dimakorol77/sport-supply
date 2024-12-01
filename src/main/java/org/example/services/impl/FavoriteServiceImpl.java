@@ -1,21 +1,24 @@
 package org.example.services.impl;
 
 import org.example.dto.ProductDto;
-import org.example.exception.FavoriteAlreadyExistsException;
-import org.example.exception.FavoriteNotFoundException;
-import org.example.exception.ProductNotFoundException;
-import org.example.exception.UserNotFoundException;
-import org.example.exception.errorMessage.ErrorMessage;
+import org.example.enums.Role;
+import org.example.exceptions.FavoriteAlreadyExistsException;
+import org.example.exceptions.FavoriteNotFoundException;
+import org.example.exceptions.ProductNotFoundException;
+
+import org.example.exceptions.errorMessage.ErrorMessage;
 import org.example.mappers.ProductMapper;
 import org.example.models.Favorite;
 import org.example.models.Product;
 import org.example.models.User;
 import org.example.repositories.FavoriteRepository;
 import org.example.repositories.ProductRepository;
-import org.example.repositories.UserRepository;
+
+import org.example.security.SecurityUtils;
 import org.example.services.interfaces.FavoriteService;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,32 +27,36 @@ import java.util.stream.Collectors;
 @Service
 public class FavoriteServiceImpl implements FavoriteService {
     private final FavoriteRepository favoriteRepository;
-    private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
+    private final SecurityUtils securityUtils;
 
-    @Autowired
     public FavoriteServiceImpl(FavoriteRepository favoriteRepository,
-                               UserRepository userRepository,
                                ProductRepository productRepository,
-                               ProductMapper productMapper) {
+                               ProductMapper productMapper,
+                               SecurityUtils securityUtils) {
         this.favoriteRepository = favoriteRepository;
-        this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.productMapper = productMapper;
+        this.securityUtils = securityUtils;
+    }
+
+    private User getCurrentUser() {
+        return securityUtils.getCurrentUser();
     }
 
     @Override
     public void addProductToFavorites(Long userId, Long productId) {
+        User user = getCurrentUser();
         if (favoriteRepository.existsByUserIdAndProductId(userId, productId)) {
             throw new FavoriteAlreadyExistsException(ErrorMessage.FAVORITE_ALREADY_EXISTS);
         }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(ErrorMessage.USER_NOT_FOUND));
+
 
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(ErrorMessage.PRODUCT_NOT_FOUND));
+
 
         Favorite favorite = new Favorite();
         favorite.setUser(user);
@@ -61,7 +68,12 @@ public class FavoriteServiceImpl implements FavoriteService {
 
     @Override
     public List<ProductDto> getUserFavorites(Long userId) {
-        List<Favorite> favorites = favoriteRepository.findByUserId(userId);
+        User currentUser = getCurrentUser();
+
+        if (currentUser.getRole() == Role.USER && !currentUser.getId().equals(userId)) {
+            throw new AccessDeniedException(ErrorMessage.ACCESS_DENIED);
+        }
+        List<Favorite> favorites = favoriteRepository.findByUserId(currentUser.getId());
 
         return favorites.stream()
                 .map(favorite -> productMapper.toDto(favorite.getProduct()))
@@ -70,8 +82,12 @@ public class FavoriteServiceImpl implements FavoriteService {
 
     @Override
     public void removeProductFromFavorites(Long userId, Long productId) {
-        Favorite favorite = favoriteRepository.findByUserIdAndProductId(userId, productId)
+        User user = getCurrentUser();
+
+        Favorite favorite = favoriteRepository.findByUserIdAndProductId(user.getId(), productId)
                 .orElseThrow(() -> new FavoriteNotFoundException(ErrorMessage.FAVORITE_NOT_FOUND));
+
         favoriteRepository.delete(favorite);
+
     }
 }

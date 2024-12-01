@@ -9,8 +9,7 @@ import java.math.BigDecimal;
 @Data
 @AllArgsConstructor
 public class OrderResponseDto {
-    //ответ при создании заказа
     private Long id;
-    private BigDecimal totalAmount;  // Общая сумма
+    private BigDecimal totalAmount;
     private OrderStatus status;
 }

@@ -33,10 +33,11 @@ import java.lang.annotation.Target;
         },
         responses = {
                 @ApiResponse(responseCode = "200", description = "Список заказов получен"),
-                @ApiResponse(responseCode = "400", description = "Некорректная дата")
+                @ApiResponse(responseCode = "400", description = "Некорректная дата"),
+                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
         }
 )
-@SecurityRequirement(name = "safety requirements")
+
 public @interface GetOrdersCreatedAfter {
     @AliasFor(annotation = RequestMapping.class, attribute = "path")
     String[] path() default {"/created-after"};

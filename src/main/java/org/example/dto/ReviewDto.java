@@ -10,17 +10,17 @@ import jakarta.validation.constraints.Size;
 public class ReviewDto {
     private Long id;
 
-    @NotNull(message = "ID пользователя обязателен")
+
     private Long userId;
 
-    @NotNull(message = "ID продукта обязателен")
+    @NotNull(message = "Product ID required")
     private Long productId;
 
-    @NotNull(message = "Рейтинг обязателен")
-    @Min(value = 1, message = "Рейтинг должен быть не менее 1")
-    @Max(value = 5, message = "Рейтинг не должен превышать 5")
+    @NotNull(message = "Rating is required")
+    @Min(value = 1, message = "The rating must be at least 1")
+    @Max(value = 5, message = "The rating should not exceed 5")
     private Integer rating;
 
-    @Size(max = 1000, message = "Комментарий не должен превышать 1000 символов")
+    @Size(max = 1000, message = "The comment must not exceed 1000 characters")
     private String userComment;
 }

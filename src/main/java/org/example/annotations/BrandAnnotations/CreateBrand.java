@@ -22,6 +22,5 @@ import java.lang.annotation.*;
         }
 )
 public @interface CreateBrand {
-    @AliasFor(annotation = RequestMapping.class, attribute = "path")
-    String[] path() default {"/"};
 }
+

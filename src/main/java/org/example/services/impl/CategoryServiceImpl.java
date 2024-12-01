@@ -1,9 +1,9 @@
 package org.example.services.impl;
 
 import org.example.dto.CategoryDto;
-import org.example.exception.CategoryAlreadyExistsException;
-import org.example.exception.CategoryNotFoundException;
-import org.example.exception.errorMessage.ErrorMessage;
+import org.example.exceptions.CategoryAlreadyExistsException;
+import org.example.exceptions.CategoryNotFoundException;
+import org.example.exceptions.errorMessage.ErrorMessage;
 import org.example.mappers.CategoryMapper;
 import org.example.models.Category;
 import org.example.repositories.CategoryRepository;
@@ -44,27 +44,49 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryDto createCategory(CategoryDto categoryDto) {
-        // Предполагаем, что категория уникальна по названию
         categoryRepository.findByName(categoryDto.getName()).ifPresent(category -> {
             throw new CategoryAlreadyExistsException(ErrorMessage.CATEGORY_ALREADY_EXISTS);
         });
 
         Category category = categoryMapper.toEntity(categoryDto);
+
+
+        if (categoryDto.getParentCategoryId() != null) {
+            Category parentCategory = categoryRepository.findById(categoryDto.getParentCategoryId())
+                    .orElseThrow(() -> new CategoryNotFoundException(ErrorMessage.PARENT_CATEGORY_NOT_FOUND));
+            category.setParentCategory(parentCategory);
+        }
+
         category.setCreatedAt(LocalDateTime.now());
         Category savedCategory = categoryRepository.save(category);
         return categoryMapper.toDto(savedCategory);
     }
+
+
 
     @Override
     public CategoryDto updateCategory(Long id, CategoryDto categoryDto) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new CategoryNotFoundException(ErrorMessage.CATEGORY_NOT_FOUND));
 
+
+        if (categoryDto.getParentCategoryId() != null && categoryDto.getParentCategoryId() == 0) {
+            category.setParentCategory(null);
+        } else if (categoryDto.getParentCategoryId() != null) {
+
+            Category parentCategory = categoryRepository.findById(categoryDto.getParentCategoryId())
+                    .orElseThrow(() -> new CategoryNotFoundException(ErrorMessage.PARENT_CATEGORY_NOT_FOUND));
+            category.setParentCategory(parentCategory);
+        }
+
+
         categoryMapper.updateEntityFromDto(categoryDto, category);
         category.setUpdatedAt(LocalDateTime.now());
         Category updatedCategory = categoryRepository.save(category);
+
         return categoryMapper.toDto(updatedCategory);
     }
+
 
     @Override
     public void deleteCategory(Long id) {

@@ -21,7 +21,8 @@ import java.lang.annotation.Target;
         responses = {
                 @ApiResponse(responseCode = "200", description = "Элемент заказа успешно обновлен"),
                 @ApiResponse(responseCode = "400", description = "Ошибка в данных запроса"),
-                @ApiResponse(responseCode = "404", description = "Элемент заказа не найден")
+                @ApiResponse(responseCode = "404", description = "Элемент заказа не найден"),
+                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
         }
 )
 public @interface UpdateOrderItem {

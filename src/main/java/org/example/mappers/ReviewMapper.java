@@ -48,19 +48,13 @@ public class ReviewMapper {
         }
         review.setRating(dto.getRating());
         review.setUserComment(dto.getUserComment());
-        if (dto.getUserId() != null) {
-            User user = new User();
-            user.setId(dto.getUserId());
-            review.setUser(user);
-        } else {
-            review.setUser(null);
-        }
+
+        // Обновляем только product, так как user менять не нужно
         if (dto.getProductId() != null) {
             Product product = new Product();
             product.setId(dto.getProductId());
             review.setProduct(product);
-        } else {
-            review.setProduct(null);
         }
     }
-}
+    }
+

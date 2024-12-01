@@ -8,6 +8,8 @@ import org.example.annotations.CategoryAnnotations.CreateCategory;
 import org.example.annotations.CategoryAnnotations.UpdateCategory;
 import org.example.annotations.CategoryAnnotations.DeleteCategory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -17,40 +19,44 @@ public class CategoryController {
 
     private final CategoryService categoryService;
 
-    // Конструкторная инъекция
     public CategoryController(CategoryService categoryService) {
         this.categoryService = categoryService;
     }
 
-    // Получить все категории
     @GetAllCategories
     public ResponseEntity<List<CategoryDto>> getAllCategories() {
         List<CategoryDto> categories = categoryService.getAllCategories();
         return ResponseEntity.ok(categories);
     }
 
-    // Получить категорию по ID
+
     @GetCategoryById
     public ResponseEntity<CategoryDto> getCategoryById(@PathVariable Long id) {
         CategoryDto category = categoryService.getCategoryById(id);
         return ResponseEntity.ok(category);
     }
 
-    // Создать новую категорию
+
+    @PreAuthorize("hasRole('ADMIN')")
     @CreateCategory
-    public ResponseEntity<CategoryDto> createCategory(@RequestBody CategoryDto categoryDto) {
+    public ResponseEntity<CategoryDto> createCategory(
+            @Validated(CategoryDto.OnCreate.class) @RequestBody CategoryDto categoryDto) {
         CategoryDto created = categoryService.createCategory(categoryDto);
         return ResponseEntity.status(201).body(created);
     }
 
-    // Обновить категорию
+
+    @PreAuthorize("hasRole('ADMIN')")
     @UpdateCategory
-    public ResponseEntity<CategoryDto> updateCategory(@PathVariable Long id, @RequestBody CategoryDto categoryDto) {
+    public ResponseEntity<CategoryDto> updateCategory(
+            @PathVariable Long id,
+            @Validated(CategoryDto.OnUpdate.class) @RequestBody CategoryDto categoryDto) {
         CategoryDto updated = categoryService.updateCategory(id, categoryDto);
         return ResponseEntity.ok(updated);
     }
 
-    // Удалить категорию
+
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteCategory
     public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
         categoryService.deleteCategory(id);

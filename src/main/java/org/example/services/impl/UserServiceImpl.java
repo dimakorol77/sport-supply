@@ -1,16 +1,22 @@
 package org.example.services.impl;
 
+import jakarta.transaction.Transactional;
 import org.example.dto.*;
 import org.example.enums.Role;
-import org.example.exception.IdNotFoundException;
-import org.example.exception.UserAlreadyExistsException;
-import org.example.exception.errorMessage.ErrorMessage;
+import org.example.exceptions.IdNotFoundException;
+import org.example.exceptions.UserAlreadyExistsException;
+import org.example.exceptions.UserNotFoundException;
+import org.example.exceptions.errorMessage.ErrorMessage;
 import org.example.mappers.UserMapper;
 import org.example.models.User;
 import org.example.repositories.UserRepository;
+import org.example.security.SecurityUtils;
+import org.example.services.interfaces.CartService;
 import org.example.services.interfaces.UserService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import org.springframework.security.access.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -21,77 +27,108 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final CartService cartService;
+    private final PasswordEncoder passwordEncoder;
+    private final SecurityUtils securityUtils;
 
-    // Используем конструкторную инъекцию
-    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper) {
+    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper, CartService cartService, PasswordEncoder passwordEncoder,  SecurityUtils securityUtils) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
+        this.cartService = cartService;
+        this.passwordEncoder = passwordEncoder;
+        this.securityUtils = securityUtils;
     }
-
-    // Получить всех пользователей
+    private User getCurrentUser() {
+        return securityUtils.getCurrentUser();
+    }
     @Override
     public List<UserListDto> getAllUsers() {
         return userRepository.findAll().stream()
-                .map(userMapper::toUserListDto) // Использование правильного метода маппера
+                .map(userMapper::toUserListDto)
                 .collect(Collectors.toList());
     }
 
-    // Получить пользователя по ID
     @Override
-    public Optional<User> getUserById(Long id) {
-        Optional<User> userOpt = userRepository.findById(id);
-        if (userOpt.isEmpty()) {
-            throw new IdNotFoundException(ErrorMessage.ID_NOT_FOUND);
+    public UserListDto getUserDetailsById(Long id) {
+        User currentUser = securityUtils.getCurrentUser();
+
+        if (!id.equals(currentUser.getId()) && !currentUser.getRole().equals(Role.ADMIN)) {
+            throw new AccessDeniedException(ErrorMessage.ACCESS_DENIED);
         }
-        return userOpt;
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IdNotFoundException(ErrorMessage.ID_NOT_FOUND));
+
+        return userMapper.toUserListDto(user);
     }
 
-    // Получить детализированные данные пользователя по ID
     @Override
-    public Optional<UserListDto> getUserDetailsById(Long id) {
-        Optional<User> userOpt = userRepository.findById(id);
-        if (userOpt.isEmpty()) {
-            throw new IdNotFoundException(ErrorMessage.ID_NOT_FOUND);
-        }
-        return userOpt.map(userMapper::toUserListDto); // Использование правильного метода маппера
-    }
-
-    // Создать нового пользователя
-    @Override
-    public UserAfterCreationDto createUser(UserCreateDto userCreateDto) {
-        if (userRepository.existsByEmail(userCreateDto.getEmail())) {
+    @Transactional
+    public UserAfterCreationDto createUser(UserDto userDto) {
+        if (userRepository.existsByEmail(userDto.getEmail())) {
             throw new UserAlreadyExistsException(ErrorMessage.USER_ALREADY_EXISTS);
         }
-        User user = userMapper.toEntity(userCreateDto); // Использование метода для преобразования из DTO в сущность
-        user.setRole(Role.USER); // Роль по умолчанию
+        User user = userMapper.toEntity(userDto);
+        user.setRole(Role.USER);
+        user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         User createdUser = userRepository.save(user);
 
-        return userMapper.toUserAfterCreationDto(createdUser); // Преобразование сущности в DTO
+        cartService.createCart(createdUser.getId());
+
+        return userMapper.toUserAfterCreationDto(createdUser);
     }
 
-    // Обновить пользователя
     @Override
-    public Optional<UserAfterUpdateDto> updateUser(Long id, UserUpdateDto userUpdateDto) {
-        return userRepository.findById(id).map(user -> {
-            userMapper.updateEntityFromDto(userUpdateDto, user); // Обновляем сущность с помощью маппера
-            user.setUpdatedAt(LocalDateTime.now());
-            User updatedUser = userRepository.save(user);
+    public UserAfterUpdateDto updateUser(Long id, UserDto userDto) {
+        User currentUser = securityUtils.getCurrentUser();
 
-            return userMapper.toUserAfterUpdateDto(updatedUser); // Преобразование сущности в DTO
-        });
+
+        if (!id.equals(currentUser.getId()) && !currentUser.getRole().equals(Role.ADMIN)) {
+            throw new AccessDeniedException(ErrorMessage.ACCESS_DENIED);
+        }
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IdNotFoundException(ErrorMessage.ID_NOT_FOUND));
+
+        userMapper.updateEntityFromDto(userDto, user);
+
+        if (userDto.getPassword() != null && !userDto.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+        }
+
+        user.setUpdatedAt(LocalDateTime.now());
+        User updatedUser = userRepository.save(user);
+
+        return userMapper.toUserAfterUpdateDto(updatedUser);
     }
 
-    // Проверка, существует ли пользователь по ID
     @Override
-    public boolean existsById(Long id) {
-        return userRepository.existsById(id);
-    }
-    // Удалить пользователя
-    @Override
+    @Transactional
     public void deleteUser(Long id) {
+        User currentUser = securityUtils.getCurrentUser();
+
+
+        if (!id.equals(currentUser.getId()) && !currentUser.getRole().equals(Role.ADMIN)) {
+            throw new AccessDeniedException(ErrorMessage.ACCESS_DENIED);
+        }
+
         if (!existsById(id)) {
             throw new IdNotFoundException(ErrorMessage.ID_NOT_FOUND);
         }
         userRepository.deleteById(id);
     }
+
+    @Override
+    public boolean existsById(Long id) {
+        return userRepository.existsById(id);
+    }
+
+    @Override
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException(ErrorMessage.USER_NOT_FOUND));
+    }
+
 }

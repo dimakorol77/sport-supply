@@ -1,8 +1,8 @@
 package org.example.services.impl;
 
 import org.example.dto.DiscountDto;
-import org.example.exception.DiscountNotFoundException;
-import org.example.exception.errorMessage.ErrorMessage;
+import org.example.exceptions.DiscountNotFoundException;
+import org.example.exceptions.errorMessage.ErrorMessage;
 import org.example.mappers.DiscountMapper;
 import org.example.models.Discount;
 import org.example.repositories.DiscountRepository;
@@ -72,7 +72,7 @@ public class DiscountServiceImpl implements DiscountService {
     @Override
     public List<DiscountDto> getActiveDiscountsForProduct(Long productId) {
         LocalDateTime now = LocalDateTime.now();
-        List<Discount> discounts = discountRepository.findByProductIdAndStartDateBeforeAndEndDateAfter(productId, now, now);
+        List<Discount> discounts = discountRepository.findByProductIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(productId, now, now);
         return discounts.stream()
                 .map(discountMapper::toDto)
                 .collect(Collectors.toList());
@@ -81,7 +81,7 @@ public class DiscountServiceImpl implements DiscountService {
     @Override
     public Optional<DiscountDto> getCurrentDiscountForProduct(Long productId) {
         LocalDateTime now = LocalDateTime.now();
-        return discountRepository.findFirstByProductIdAndStartDateBeforeAndEndDateAfterOrderByDiscountPriceDesc(productId, now, now)
+        return discountRepository.findFirstByProductIdAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByDiscountPriceDesc(productId, now, now)
                 .map(discountMapper::toDto);
     }
 }

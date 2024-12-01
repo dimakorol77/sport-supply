@@ -20,10 +20,11 @@ import java.lang.annotation.Target;
         tags = {"Избранное"},
         responses = {
                 @ApiResponse(responseCode = "204", description = "Товар удален из избранного"),
-                @ApiResponse(responseCode = "404", description = "Товар не найден в избранном")
+                @ApiResponse(responseCode = "404", description = "Товар не найден в избранном"),
+                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
         }
 )
 public @interface RemoveProductFromFavorites {
     @AliasFor(annotation = RequestMapping.class, attribute = "path")
-    String[] path() default {"/{userId}/remove/{productId}"};
+    String[] path() default {"/remove/{productId}"};
 }

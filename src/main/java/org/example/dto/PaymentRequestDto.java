@@ -13,5 +13,4 @@ public class PaymentRequestDto {
     @DecimalMin(value = "0.0", inclusive = false, message = "Amount must be positive")
     private BigDecimal amount;
 
-    //private PaymentStatus status;
 }

@@ -11,14 +11,16 @@ import org.example.dto.*;
 import org.example.enums.DeliveryMethod;
 import org.example.enums.OrderStatus;
 import org.example.mappers.OrderMapper;
+import org.example.models.User;
+import org.example.security.SecurityUtils;
 import org.example.services.interfaces.CartService;
 import org.example.services.interfaces.OrderService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 
 
@@ -27,34 +29,33 @@ import java.util.List;
 @Validated
 public class OrderController {
     private final OrderService orderService;
-    private final CartService cartService;
-    private final OrderMapper orderMapper;
+    private final SecurityUtils securityUtils;
 
-    // Используем конструкторную инъекцию
-    public OrderController(OrderService orderService, CartService cartService, OrderMapper orderMapper) {
+    public OrderController(OrderService orderService, SecurityUtils securityUtils) {
         this.orderService = orderService;
-        this.cartService = cartService;
-        this.orderMapper = orderMapper;  // Инициализируем маппер
+        this.securityUtils = securityUtils;
+    }
+    private User getCurrentUser() {
+        return securityUtils.getCurrentUser();
     }
 
-    // Получение всех заказов
     @GetAllOrders
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<OrderDto>> getAllOrders() {
         List<OrderDto> orderDtos = orderService.getAllOrders();
         return ResponseEntity.ok(orderDtos);
     }
 
-    // Получение заказов по ID пользователя
+
     @GetOrdersByUserId
-    public ResponseEntity<List<OrderDto>> getOrdersByUserId(@PathVariable Long userId) {
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<OrderDto>> getOrdersByUserId(@RequestParam(required = false) Long userId) {
         List<OrderDto> orderDtos = orderService.getOrdersByUserId(userId);
-        if (orderDtos.isEmpty()) {
-            return ResponseEntity.ok(Collections.emptyList());
-        }
         return ResponseEntity.ok(orderDtos);
     }
 
     @UpdateOrderStatus
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<OrderResponseDto> updateOrderStatus(@PathVariable Long orderId, @RequestParam OrderStatus status) {
         OrderDto updatedOrderDto = orderService.updateOrderStatus(orderId, status);
         OrderResponseDto responseDto = new OrderResponseDto(updatedOrderDto.getId(), updatedOrderDto.getTotalAmount(), updatedOrderDto.getStatus());
@@ -62,34 +63,40 @@ public class OrderController {
     }
 
     @GetOrderById
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<OrderDto> getOrderById(@PathVariable Long orderId) {
-        OrderDto orderDto = orderService.getOrderById(orderId);
+        User currentUser = getCurrentUser();
+        OrderDto orderDto = orderService.getOrderByIdAndCheckOwnership(orderId, currentUser.getId());
         return ResponseEntity.ok(orderDto);
     }
 
-    // Отмена заказа
     @CancelOrder
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> cancelOrder(@PathVariable Long orderId) {
-        orderService.cancelOrder(orderId);
-        return ResponseEntity.ok().build();
+        User currentUser = getCurrentUser();
+        orderService.cancelOrderAndCheckOwnership(orderId, currentUser.getId());
+        return ResponseEntity.noContent().build(); // Изменено с ResponseEntity.ok() на ResponseEntity.noContent()
     }
 
-    // Получение заказов по статусу
+
     @GetOrdersByStatus
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<OrderDto>> getOrdersByStatus(@RequestParam OrderStatus status) {
         List<OrderDto> orderDtos = orderService.getOrdersByStatus(status);
         return ResponseEntity.ok(orderDtos);
     }
 
-    // Получение заказов, созданных после определенной даты
     @GetOrdersCreatedAfter
-    public ResponseEntity<List<OrderDto>> getOrdersCreatedAfter(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<OrderDto>> getOrdersCreatedAfter(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date) {
         List<OrderDto> orderDtos = orderService.getOrdersCreatedAfter(date);
         return ResponseEntity.ok(orderDtos);
     }
 
-    // Получение заказов по методу доставки
+
     @GetOrdersByDeliveryMethod
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<OrderDto>> getOrdersByDeliveryMethod(@RequestParam DeliveryMethod deliveryMethod) {
         List<OrderDto> orderDtos = orderService.getOrdersByDeliveryMethod(deliveryMethod);
         return ResponseEntity.ok(orderDtos);

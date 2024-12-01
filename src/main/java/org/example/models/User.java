@@ -1,9 +1,7 @@
 package org.example.models;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.example.enums.Role;
 
 import java.time.LocalDateTime;
@@ -13,6 +11,7 @@ import java.util.List;
 @Entity
 @Table(name = "users")
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
@@ -37,31 +36,28 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    // Связь с избранными товарами
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Favorite> favorites = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Order> orders= new ArrayList<>();
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private Cart cart;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Review> reviews= new ArrayList<>();
+
     @PrePersist
     public void prePersist() {
-        this.createdAt = LocalDateTime.now(); // Устанавливаем текущую дату и время при создании
-        this.updatedAt = LocalDateTime.now(); // Устанавливаем текущую дату и время при создании
+        this.createdAt = LocalDateTime.now(); // Устанавливаем текущее время при создании
+        this.updatedAt = LocalDateTime.now();
     }
 
     @PreUpdate
     public void preUpdate() {
-        this.updatedAt = LocalDateTime.now(); // Устанавливаем текущую дату и время при обновлении
+        this.updatedAt = LocalDateTime.now(); // Обновляем время при изменении
     }
-
-
-    @OneToMany(mappedBy = "user")
-    private List<Order> orders;
-
-    @OneToOne(mappedBy = "user")
-    private Cart cart;
-
-    @OneToMany(mappedBy = "user")
-    private List<Review> reviews;
-
-
 }
 

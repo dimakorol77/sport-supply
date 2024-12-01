@@ -11,8 +11,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserAfterUpdateDto {
-    //информация о пользователе после обновления
-    private Long id; //подумать+телефон обновляли
+
+    private Long id;
     private String email;
     private String name;
     private LocalDateTime updatedAt;

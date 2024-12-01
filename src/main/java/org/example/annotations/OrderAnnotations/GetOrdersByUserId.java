@@ -20,10 +20,11 @@ import java.lang.annotation.Target;
         tags = {"Заказы"},
         responses = {
                 @ApiResponse(responseCode = "200", description = "Заказы найдены"),
-                @ApiResponse(responseCode = "404", description = "Пользователь не найден")
+                @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
+                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
         }
 )
 public @interface GetOrdersByUserId {
     @AliasFor(annotation = RequestMapping.class, attribute = "path")
-    String[] path() default {"/user/{userId}"};
+    String[] path() default {"/user"};
 }

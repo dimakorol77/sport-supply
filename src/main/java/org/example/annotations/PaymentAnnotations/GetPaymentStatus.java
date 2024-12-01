@@ -20,7 +20,8 @@ import java.lang.annotation.Target;
         tags = {"Платежи"},
         responses = {
                 @ApiResponse(responseCode = "200", description = "Статус платежа найден"),
-                @ApiResponse(responseCode = "404", description = "Платеж не найден")
+                @ApiResponse(responseCode = "404", description = "Платеж не найден"),
+                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
         }
 )
 public @interface GetPaymentStatus {

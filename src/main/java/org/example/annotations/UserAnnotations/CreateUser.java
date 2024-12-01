@@ -18,7 +18,8 @@ import java.lang.annotation.Target;
         tags = {"Пользователи"},
         responses = {
                 @ApiResponse(responseCode = "201", description = "Пользователь успешно создан"),
-                @ApiResponse(responseCode = "400", description = "Некорректные данные")
+                @ApiResponse(responseCode = "400", description = "Некорректные данные"),
+                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
         }
 )
 public @interface CreateUser {

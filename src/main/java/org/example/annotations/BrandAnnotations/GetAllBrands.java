@@ -1,7 +1,5 @@
 package org.example.annotations.BrandAnnotations;
 
-
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +20,4 @@ import java.lang.annotation.*;
         }
 )
 public @interface GetAllBrands {
-    @AliasFor(annotation = RequestMapping.class, attribute = "path")
-    String[] path() default {"/"};
 }

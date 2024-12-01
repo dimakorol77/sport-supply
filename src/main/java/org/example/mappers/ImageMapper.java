@@ -28,7 +28,7 @@ public class ImageMapper {
         Image image = new Image();
         image.setUrl(dto.getUrl());
         image.setAltText(dto.getAltText());
-        // Установка продукта производится в сервисе
+
         image.setCreatedAt(dto.getCreatedAt());
         image.setUpdatedAt(dto.getUpdatedAt());
         return image;

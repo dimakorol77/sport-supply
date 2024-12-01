@@ -22,6 +22,5 @@ import java.lang.annotation.*;
         }
 )
 public @interface GetAllProducts {
-    @AliasFor(annotation = RequestMapping.class, attribute = "path")
-    String[] path() default {"/"};
+
 }

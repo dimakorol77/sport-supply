@@ -1,39 +1,45 @@
 package org.example.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.*;
 import lombok.Data;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.DecimalMin;
+
 import java.math.BigDecimal;
 
 @Data
 public class ProductDto {
+
+    @Schema(description = "ID продукта. Передавать только при обновлении", accessMode = Schema.AccessMode.READ_ONLY)
     private Long id;
 
-    @NotBlank(message = "Название продукта не может быть пустым")
-    @Size(max = 200, message = "Название продукта не должно превышать 200 символов")
+
+    @NotBlank(message = "Product name cannot be empty")
+    @Size(max = 200, message = "The product name must not exceed 200 characters")
     private String name;
 
-    @Size(max = 1000, message = "Описание не должно превышать 1000 символов")
+    @Size(max = 1000, message = "Description should not exceed 1000 characters")
     private String description;
 
-    @NotNull(message = "Цена обязательна")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Цена должна быть больше нуля")
+    @NotNull(message = "Price is required")
+    @DecimalMin(value = "0.0", inclusive = false, message = "Price must be greater than zero")
     private BigDecimal price;
 
-    @NotNull(message = "ID категории обязателен")
+    @NotNull(message = "Category ID is required")
     private Long categoryId;
 
-    @NotNull(message = "ID бренда обязателен")
+    @NotNull(message = "Brand ID is required")
     private Long brandId;
 
-    @Size(max = 50, message = "Тип белка не должен превышать 50 символов")
+    @Size(max = 50, message = "Protein type must not exceed 50 characters")
     private String proteinType;
 
-    @Size(max = 100, message = "Группа витаминов не должна превышать 100 символов")
+    @Size(max = 100, message = "A group of vitamins should not exceed 100 characters")
     private String vitaminGroup;
 
-    @Size(max = 50, message = "Форма не должна превышать 50 символов")
+    @Size(max = 50, message = "The form must not exceed 50 characters")
     private String form;
+
+    // Группы для валидации
+    public interface OnCreate {}
+    public interface OnUpdate {}
 }
