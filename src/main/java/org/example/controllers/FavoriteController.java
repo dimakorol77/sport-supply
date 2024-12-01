@@ -2,6 +2,7 @@ package org.example.controllers;
 
 import org.example.annotations.FavoriteAnnotations.AddProductToFavorites;
 import org.example.annotations.FavoriteAnnotations.GetUserFavorites;
+import org.example.annotations.FavoriteAnnotations.GetUserFavoritesByAdmin;
 import org.example.annotations.FavoriteAnnotations.RemoveProductFromFavorites;
 import org.example.dto.ProductDto;
 import org.example.models.User;
@@ -45,6 +46,12 @@ public class FavoriteController {
     public ResponseEntity<List<ProductDto>> getUserFavorites() {
         User user = getCurrentUser();
         List<ProductDto> favorites = favoriteService.getUserFavorites(user.getId());
+        return ResponseEntity.ok(favorites);
+    }
+    @GetUserFavoritesByAdmin
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<ProductDto>> getUserFavoritesByAdmin(@PathVariable Long userId) {
+        List<ProductDto> favorites = favoriteService.getUserFavorites(userId);
         return ResponseEntity.ok(favorites);
     }
 

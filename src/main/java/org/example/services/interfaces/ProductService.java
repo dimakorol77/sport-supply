@@ -12,6 +12,5 @@ public interface ProductService {
     ProductDto createProduct(ProductDto productDto);
     ProductDto updateProduct(Long id, ProductDto productDto);
     void deleteProduct(Long id);
-    List<DiscountDto> getActiveDiscounts(Long productId);
     List<ProductDto> filterAndSortProducts(BigDecimal minPrice, BigDecimal maxPrice, Long categoryId, Boolean hasDiscount, String sortBy, Boolean asc);
 }

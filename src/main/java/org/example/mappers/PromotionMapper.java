@@ -12,6 +12,7 @@ public class PromotionMapper {
             return null;
         }
         PromotionDto dto = new PromotionDto();
+        dto.setId(promotion.getId());
         dto.setName(promotion.getName());
         dto.setDescription(promotion.getDescription());
         dto.setStartDate(promotion.getStartDate());

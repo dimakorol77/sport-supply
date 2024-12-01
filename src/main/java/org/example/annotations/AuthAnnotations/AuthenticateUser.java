@@ -15,12 +15,12 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.POST)
 @Operation(
-        summary = "Аутентификация пользователя",
-        description = "Аутентифицирует пользователя и возвращает JWT токен",
-        tags = {"Аутентификация"},
+        summary = "User authentication",
+        description = "Authenticates the user and returns a JWT token",
+        tags = {"Authentication"},
         responses = {
-                @ApiResponse(responseCode = "200", description = "Пользователь успешно аутентифицирован"),
-                @ApiResponse(responseCode = "401", description = "Неверные учетные данные")
+                @ApiResponse(responseCode = "200", description = "User successfully authenticated"),
+                @ApiResponse(responseCode = "401", description = "Invalid credentials")
         }
 )
 public @interface AuthenticateUser {

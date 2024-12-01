@@ -22,7 +22,7 @@ public class PromotionController {
         this.promotionService = promotionService;
     }
 
-    // Доступ для всех пользователей (анонимных или аутентифицированных)
+
     @GetAllPromotions
     @PreAuthorize("permitAll()")
     public ResponseEntity<List<PromotionDto>> getAllPromotions() {
@@ -30,7 +30,7 @@ public class PromotionController {
         return ResponseEntity.ok(promotions);
     }
 
-    // Доступ для всех пользователей (анонимных или аутентифицированных)
+
     @GetPromotionById
     @PreAuthorize("permitAll()")
     public ResponseEntity<PromotionDto> getPromotionById(@PathVariable Long id) {
@@ -38,7 +38,7 @@ public class PromotionController {
         return ResponseEntity.ok(promotion);
     }
 
-    // Доступ только для администратора
+
     @CreatePromotion
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PromotionDto> createPromotion(
@@ -47,7 +47,7 @@ public class PromotionController {
         return ResponseEntity.status(201).body(createdPromotion);
     }
 
-    // Доступ только для администратора
+
     @UpdatePromotion
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PromotionDto> updatePromotion(
@@ -58,7 +58,7 @@ public class PromotionController {
         return ResponseEntity.ok(updatedPromotion);
     }
 
-    // Доступ только для администратора
+
     @DeletePromotion
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deletePromotion(@PathVariable Long id) {
@@ -66,7 +66,7 @@ public class PromotionController {
         return ResponseEntity.noContent().build();
     }
 
-    // Доступ только для администратора
+
     @AddProductToPromotion
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> addProductToPromotion(@PathVariable Long promotionId, @PathVariable Long productId) {
@@ -74,7 +74,7 @@ public class PromotionController {
         return ResponseEntity.status(201).build();
     }
 
-    // Доступ только для администратора
+
     @RemoveProductFromPromotion
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> removeProductFromPromotion(@PathVariable Long promotionId, @PathVariable Long productId) {
@@ -84,7 +84,7 @@ public class PromotionController {
 
 
 
-    // Доступ для всех пользователей (анонимных или аутентифицированных)
+
     @GetPromotionsForProduct
     @PreAuthorize("permitAll()")
     public ResponseEntity<List<PromotionDto>> getPromotionsForProduct(@PathVariable Long productId) {

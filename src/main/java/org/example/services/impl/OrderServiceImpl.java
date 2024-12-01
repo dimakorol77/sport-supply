@@ -30,27 +30,21 @@ import java.util.stream.Collectors;
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
-    private final ProductRepository productRepository;
+
     private final OrderMapper orderMapper;
-    private final CartRepository cartRepository;
+
     private final OrderStatusHistoryRepository orderStatusHistoryRepository;
-    private final PaymentService paymentService;
+
     private final SecurityUtils securityUtils;
 
 
     public OrderServiceImpl(OrderRepository orderRepository,
-                            ProductRepository productRepository,
                             OrderMapper orderMapper,
                             OrderStatusHistoryRepository orderStatusHistoryRepository,
-                            CartRepository cartRepository,
-                            PaymentService paymentService,
                             SecurityUtils securityUtils) {
         this.orderRepository = orderRepository;
-        this.productRepository = productRepository;
         this.orderMapper = orderMapper;
         this.orderStatusHistoryRepository = orderStatusHistoryRepository;
-        this.cartRepository = cartRepository;
-        this.paymentService = paymentService;
         this.securityUtils = securityUtils;
     }
 

@@ -76,6 +76,8 @@ public class OrderItemControllerTest {
         userRepository.deleteAll();
         categoryRepository.deleteAll();
 
+        userRepository.findByEmail("user@example.com").ifPresent(userRepository::delete);
+        userRepository.findByEmail("admin@example.com").ifPresent(userRepository::delete);
 
         orderOwner = new User();
         orderOwner.setEmail("owner@example.com");

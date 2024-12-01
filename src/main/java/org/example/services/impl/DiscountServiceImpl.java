@@ -72,7 +72,7 @@ public class DiscountServiceImpl implements DiscountService {
     @Override
     public List<DiscountDto> getActiveDiscountsForProduct(Long productId) {
         LocalDateTime now = LocalDateTime.now();
-        List<Discount> discounts = discountRepository.findByProductIdAndStartDateBeforeAndEndDateAfter(productId, now, now);
+        List<Discount> discounts = discountRepository.findByProductIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(productId, now, now);
         return discounts.stream()
                 .map(discountMapper::toDto)
                 .collect(Collectors.toList());
@@ -81,7 +81,7 @@ public class DiscountServiceImpl implements DiscountService {
     @Override
     public Optional<DiscountDto> getCurrentDiscountForProduct(Long productId) {
         LocalDateTime now = LocalDateTime.now();
-        return discountRepository.findFirstByProductIdAndStartDateBeforeAndEndDateAfterOrderByDiscountPriceDesc(productId, now, now)
+        return discountRepository.findFirstByProductIdAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByDiscountPriceDesc(productId, now, now)
                 .map(discountMapper::toDto);
     }
 }

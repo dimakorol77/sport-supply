@@ -97,14 +97,6 @@ public class ProductServiceImpl implements ProductService {
         productRepository.deleteById(id);
     }
 
-    @Override
-    public List<DiscountDto> getActiveDiscounts(Long productId) {
-        LocalDateTime now = LocalDateTime.now();
-        List<Discount> discounts = discountRepository.findByProductIdAndStartDateBeforeAndEndDateAfter(productId, now, now);
-        return discounts.stream()
-                .map(discountMapper::toDto)
-                .collect(Collectors.toList());
-    }
 
 
     @Override

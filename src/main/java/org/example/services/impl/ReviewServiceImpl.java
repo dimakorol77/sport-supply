@@ -10,7 +10,6 @@ import org.example.models.User;
 import org.example.repositories.ReviewRepository;
 import org.example.security.SecurityUtils;
 import org.example.services.interfaces.ReviewService;
-import org.example.services.interfaces.UserService;
 import org.springframework.stereotype.Service;
 import org.springframework.security.access.AccessDeniedException;
 

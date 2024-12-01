@@ -74,6 +74,9 @@ public class OrderControllerTest {
         orderRepository.deleteAll();
         userRepository.deleteAll();
 
+        userRepository.findByEmail("user@example.com").ifPresent(userRepository::delete);
+        userRepository.findByEmail("admin@example.com").ifPresent(userRepository::delete);
+
         user = new User();
         user.setEmail("user@example.com");
         user.setPassword(passwordEncoder.encode("userpass"));

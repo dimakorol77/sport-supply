@@ -68,15 +68,18 @@ public class CartItemServiceImpl  implements CartItemService {
                 .orElseThrow(() -> new ProductNotFoundException(ErrorMessage.PRODUCT_NOT_FOUND));
 
 
-        Optional<DiscountDto> optionalDiscount = discountService.getCurrentDiscountForProduct(product.getId());
-        BigDecimal discountPrice = optionalDiscount.map(DiscountDto::getDiscountPrice).orElse(BigDecimal.ZERO);
+        // Получение текущей скидки
+        BigDecimal discountPrice = discountService.getCurrentDiscountForProduct(product.getId())
+                .map(DiscountDto::getDiscountPrice)
+                .orElse(BigDecimal.ZERO);
 
+        // Получение текущих акций
+        BigDecimal promotionDiscount = promotionService.getPromotionDiscountForProduct(product.getId());
 
-        BigDecimal promotionDiscount = getPromotionDiscountForProduct(product);
-
-
+        // Расчет финальной цены
         BigDecimal finalPrice = calculateFinalPrice(product.getPrice(), discountPrice, promotionDiscount);
 
+        // Работа с CartItem
         CartItem cartItem = cartItemRepository.findByCartAndProduct(cart, product)
                 .orElseGet(() -> {
                     CartItem newItem = new CartItem();
@@ -89,12 +92,10 @@ public class CartItemServiceImpl  implements CartItemService {
         if (cartItem.getId() != null && cartItem.isDeleted()) {
             cartItem.setDeleted(false);
             cartItem.setQuantity(cartItemDto.getQuantity());
-        } else if (cartItem.getId() != null) {
-            cartItem.setQuantity(cartItem.getQuantity() + cartItemDto.getQuantity());
         } else {
-            cartItem.setQuantity(cartItemDto.getQuantity());
+            int existingQuantity = cartItem.getQuantity() != null ? cartItem.getQuantity() : 0;
+            cartItem.setQuantity(existingQuantity + cartItemDto.getQuantity());
         }
-
         cartItem.setPrice(finalPrice);
         cartItem.setDiscountPrice(discountPrice);
 
@@ -109,59 +110,16 @@ public class CartItemServiceImpl  implements CartItemService {
     private BigDecimal calculateFinalPrice(BigDecimal itemPrice, BigDecimal discountPrice, BigDecimal promotionDiscount) {
         BigDecimal discountedPrice = itemPrice.subtract(discountPrice);
 
-
         if (promotionDiscount.compareTo(BigDecimal.ONE) <= 0) {
-
             discountedPrice = discountedPrice.subtract(discountedPrice.multiply(promotionDiscount));
         } else {
-
             discountedPrice = discountedPrice.subtract(promotionDiscount);
         }
 
         return discountedPrice.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : discountedPrice;
+
     }
 
-
-    private BigDecimal getPromotionDiscountForProduct(Product product) {
-        List<PromotionDto> promotions = promotionService.getPromotionsForProduct(product.getId());
-
-        BigDecimal totalPromotionDiscount = BigDecimal.ZERO;
-
-        for (PromotionDto promotion : promotions) {
-            BigDecimal promotionDiscount = extractDiscountFromPromotion(promotion);
-
-            if (promotionDiscount != null) {
-                totalPromotionDiscount = totalPromotionDiscount.add(promotionDiscount);
-            }
-        }
-
-        return totalPromotionDiscount;
-    }
-    private BigDecimal extractDiscountFromPromotion(PromotionDto promotion) {
-        // Предполагаем, что информация о скидке хранится в поле description в формате "Скидка 10%"
-        String description = promotion.getDescription();
-        if (description != null && !description.isEmpty()) {
-            // Используем регулярное выражение для поиска скидки в процентах
-            Pattern pattern = Pattern.compile("(\\d+)%");
-            Matcher matcher = pattern.matcher(description);
-            if (matcher.find()) {
-                String percentageStr = matcher.group(1);
-                BigDecimal percentage = new BigDecimal(percentageStr).divide(BigDecimal.valueOf(100));
-                return percentage;
-            } else {
-                // Можно также обрабатывать фиксированные скидки, если они указаны в описании
-                // Например, "Скидка 500 рублей"
-                pattern = Pattern.compile("(\\d+)\\s*руб");
-                matcher = pattern.matcher(description);
-                if (matcher.find()) {
-                    String amountStr = matcher.group(1);
-                    BigDecimal amount = new BigDecimal(amountStr);
-                    return amount;
-                }
-            }
-        }
-        return null;
-    }
 
     @Override
     public CartItemResponseDto updateCartItemQuantity(Long cartItemId, Long userId, Integer quantity) {
@@ -180,20 +138,21 @@ public class CartItemServiceImpl  implements CartItemService {
         cartItem.setQuantity(quantity);
 
         Product product = cartItem.getProduct();
-        Optional<DiscountDto> optionalDiscount = discountService.getCurrentDiscountForProduct(product.getId());
-        BigDecimal discountPrice = optionalDiscount.map(DiscountDto::getDiscountPrice).orElse(BigDecimal.ZERO);
+        // Получение текущей скидки
+        BigDecimal discountPrice = discountService.getCurrentDiscountForProduct(product.getId())
+                .map(DiscountDto::getDiscountPrice)
+                .orElse(BigDecimal.ZERO);
 
+        // Получение текущих акций
+        BigDecimal promotionDiscount = promotionService.getPromotionDiscountForProduct(product.getId());
 
-        BigDecimal promotionDiscount = getPromotionDiscountForProduct(product);
-
-
+        // Расчет финальной цены
         BigDecimal finalPrice = calculateFinalPrice(product.getPrice(), discountPrice, promotionDiscount);
 
         cartItem.setPrice(finalPrice);
         cartItem.setDiscountPrice(discountPrice);
 
         cartItemRepository.save(cartItem);
-
 
         updateTotalPrice(cartItem.getCart());
 
@@ -222,7 +181,11 @@ public class CartItemServiceImpl  implements CartItemService {
     private void updateTotalPrice(Cart cart) {
         BigDecimal newTotalPrice = cart.getCartItems().stream()
                 .filter(cartItem -> !cartItem.isDeleted())
-                .map(cartItem -> cartItem.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())))
+                .map(cartItem -> {
+                    BigDecimal itemTotalPrice = cartItem.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+                    BigDecimal itemDiscount = cartItem.getDiscountPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+                    return itemTotalPrice.subtract(itemDiscount);
+                })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         cart.setTotalPrice(newTotalPrice.max(BigDecimal.ZERO));

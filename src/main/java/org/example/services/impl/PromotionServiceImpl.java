@@ -1,5 +1,7 @@
 package org.example.services.impl;
 
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 import org.example.dto.PromotionDto;
 import org.example.exceptions.*;
 import org.example.exceptions.errorMessage.ErrorMessage;
@@ -16,8 +18,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 @Service
@@ -118,11 +122,47 @@ public class PromotionServiceImpl implements PromotionService {
     public List<PromotionDto> getPromotionsForProduct(Long productId) {
         LocalDateTime now = LocalDateTime.now();
         List<ProductPromotion> productPromotions = productPromotionRepository.findByProductId(productId);
+
         return productPromotions.stream()
                 .map(ProductPromotion::getPromotion)
-                .filter(promotion -> promotion.getStartDate().isBefore(now) && promotion.getEndDate().isAfter(now))
+                .filter(promotion -> promotion.getStartDate() != null && promotion.getEndDate() != null &&
+                        !promotion.getStartDate().isAfter(now) &&
+                        !promotion.getEndDate().isBefore(now))
                 .map(promotionMapper::toDto)
                 .collect(Collectors.toList());
+    }
+    @Override
+    public BigDecimal getPromotionDiscountForProduct(Long productId) {
+        LocalDateTime now = LocalDateTime.now();
+        List<ProductPromotion> productPromotions = productPromotionRepository.findByProductId(productId);
+
+        return productPromotions.stream()
+                .map(ProductPromotion::getPromotion)
+                .filter(promotion -> !promotion.getStartDate().isAfter(now) && !promotion.getEndDate().isBefore(now))
+                .map(promotion -> extractDiscountFromPromotion(promotion.getDescription()))
+                .max(BigDecimal::compareTo)
+                .orElse(BigDecimal.ZERO);
+    }
+
+    private BigDecimal extractDiscountFromPromotion(String description) {
+        if (description == null || description.isEmpty()) return BigDecimal.ZERO;
+
+        Pattern percentPattern = Pattern.compile("(\\d+)%");
+        Matcher matcher = percentPattern.matcher(description);
+
+        if (matcher.find()) {
+            String percentage = matcher.group(1);
+            return new BigDecimal(percentage).divide(BigDecimal.valueOf(100));
+        }
+
+        Pattern fixedPattern = Pattern.compile("(\\d+)\\s*руб");
+        matcher = fixedPattern.matcher(description);
+
+        if (matcher.find()) {
+            return new BigDecimal(matcher.group(1));
+        }
+
+        return BigDecimal.ZERO;
     }
 
 

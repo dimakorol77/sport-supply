@@ -12,13 +12,13 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.POST)
 @Operation(
-        summary = "Регистрация пользователя",
-        description = "Регистрирует нового пользователя",
-        tags = {"Аутентификация"},
+        summary = "User registration",
+        description = "Registers a new user",
+        tags = {"Authentication"},
         responses = {
-                @ApiResponse(responseCode = "201", description = "Пользователь успешно зарегистрирован"),
-                @ApiResponse(responseCode = "400", description = "Неверные данные запроса"),
-                @ApiResponse(responseCode = "409", description = "Пользователь уже существует")
+                @ApiResponse(responseCode = "201", description = "User successfully registered"),
+                @ApiResponse(responseCode = "400", description = "Invalid request data"),
+                @ApiResponse(responseCode = "409", description = "User already exists")
         }
 )
 public @interface RegisterUser {

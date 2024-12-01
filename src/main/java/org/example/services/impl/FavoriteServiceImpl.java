@@ -1,10 +1,11 @@
 package org.example.services.impl;
 
 import org.example.dto.ProductDto;
+import org.example.enums.Role;
 import org.example.exceptions.FavoriteAlreadyExistsException;
 import org.example.exceptions.FavoriteNotFoundException;
 import org.example.exceptions.ProductNotFoundException;
-import org.example.exceptions.UserNotFoundException;
+
 import org.example.exceptions.errorMessage.ErrorMessage;
 import org.example.mappers.ProductMapper;
 import org.example.models.Favorite;
@@ -12,12 +13,12 @@ import org.example.models.Product;
 import org.example.models.User;
 import org.example.repositories.FavoriteRepository;
 import org.example.repositories.ProductRepository;
-import org.example.repositories.UserRepository;
+
 import org.example.security.SecurityUtils;
 import org.example.services.interfaces.FavoriteService;
-import org.example.services.interfaces.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -67,8 +68,12 @@ public class FavoriteServiceImpl implements FavoriteService {
 
     @Override
     public List<ProductDto> getUserFavorites(Long userId) {
-        User user = getCurrentUser();
-        List<Favorite> favorites = favoriteRepository.findByUserId(user.getId());
+        User currentUser = getCurrentUser();
+
+        if (currentUser.getRole() == Role.USER && !currentUser.getId().equals(userId)) {
+            throw new AccessDeniedException(ErrorMessage.ACCESS_DENIED);
+        }
+        List<Favorite> favorites = favoriteRepository.findByUserId(currentUser.getId());
 
         return favorites.stream()
                 .map(favorite -> productMapper.toDto(favorite.getProduct()))

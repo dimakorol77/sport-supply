@@ -67,10 +67,13 @@ public class CartServiceImpl implements CartService {
 
         return cart.getCartItems().stream()
                 .filter(cartItem -> !cartItem.isDeleted())
-                .map(cartItem -> cartItem.getPrice() != null
-                        ? cartItem.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()))
-                        : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .map(cartItem -> {
+                    BigDecimal itemTotalPrice = cartItem.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+                    BigDecimal itemDiscount = cartItem.getDiscountPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+                    return itemTotalPrice.subtract(itemDiscount);
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .max(BigDecimal.ZERO);
     }
 
     @Override

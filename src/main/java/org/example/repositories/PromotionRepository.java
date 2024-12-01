@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface PromotionRepository extends JpaRepository<Promotion, Long> {
-  //  List<Promotion> findByStartDateBeforeAndEndDateAfter(LocalDateTime startDate, LocalDateTime endDate);
+
   boolean existsByName(String name);
   @EntityGraph(attributePaths = {"productPromotions"})
   List<Promotion> findAll();

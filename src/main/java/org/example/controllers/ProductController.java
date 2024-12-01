@@ -61,13 +61,6 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetActiveDiscounts
-    @PreAuthorize("permitAll()")
-    public ResponseEntity<List<DiscountDto>> getActiveDiscounts(@PathVariable Long id) {
-        List<DiscountDto> discounts = productService.getActiveDiscounts(id);
-        return ResponseEntity.ok(discounts);
-    }
-
 
     @FilterAndSortProducts
     @PreAuthorize("permitAll()")

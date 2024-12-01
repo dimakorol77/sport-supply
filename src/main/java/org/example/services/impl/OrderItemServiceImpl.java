@@ -18,8 +18,6 @@ import org.example.repositories.OrderRepository;
 import org.example.repositories.ProductRepository;
 import org.example.security.SecurityUtils;
 import org.example.services.interfaces.OrderItemService;
-import org.example.services.interfaces.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
