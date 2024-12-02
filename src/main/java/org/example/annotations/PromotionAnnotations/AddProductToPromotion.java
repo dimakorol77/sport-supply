@@ -14,14 +14,14 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.POST)
 @Operation(
-        summary = "Добавить продукт в акцию",
-        description = "Добавляет продукт в акцию",
-        tags = {"Акции"},
+        summary = "Add a product to a promotion",
+        description = "Adds a product to a promotion",
+        tags = {"Promotions"},
         responses = {
-                @ApiResponse(responseCode = "201", description = "Продукт добавлен в акцию"),
-                @ApiResponse(responseCode = "404", description = "Акция или продукт не найдены"),
-                @ApiResponse(responseCode = "409", description = "Продукт уже находится в акции"),
-                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
+                @ApiResponse(responseCode = "201", description = "Product added to the promotion"),
+                @ApiResponse(responseCode = "404", description = "Promotion or product not found"),
+                @ApiResponse(responseCode = "409", description = "Product is already in the promotion"),
+                @ApiResponse(responseCode = "403", description = "Access denied")
         }
 )
 public @interface AddProductToPromotion {

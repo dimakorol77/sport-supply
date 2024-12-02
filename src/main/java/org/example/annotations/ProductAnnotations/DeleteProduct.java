@@ -14,12 +14,12 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.DELETE)
 @Operation(
-        summary = "Удаление продукта",
-        description = "Удаляет продукт по указанному ID",
-        tags = "Продукты",
+        summary = "Deleting a product",
+        description = "Deletes a product by the specified ID",
+        tags = "Products",
         responses = {
-                @ApiResponse(responseCode = "204", description = "Продукт успешно удален"),
-                @ApiResponse(responseCode = "404", description = "Продукт не найден")
+                @ApiResponse(responseCode = "204", description = "Product successfully deleted"),
+                @ApiResponse(responseCode = "404", description = "Product not found")
         }
 )
 public @interface DeleteProduct {

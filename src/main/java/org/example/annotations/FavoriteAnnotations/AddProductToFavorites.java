@@ -15,14 +15,14 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.POST)
 @Operation(
-        summary = "Добавление товара в избранное",
-        description = "Добавляет товар в избранное пользователя",
-        tags = {"Избранное"},
+        summary = "Add an item to favorites",
+        description = "Adds an item to the user's favorites",
+        tags = {"Favorites"},
         responses = {
-                @ApiResponse(responseCode = "201", description = "Товар добавлен в избранное"),
-                @ApiResponse(responseCode = "404", description = "Пользователь или товар не найдены"),
-                @ApiResponse(responseCode = "409", description = "Товар уже в избранном"),
-                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
+                @ApiResponse(responseCode = "201", description = "Item added to favorites"),
+                @ApiResponse(responseCode = "404", description = "User or item not found"),
+                @ApiResponse(responseCode = "409", description = "Item is already in favorites"),
+                @ApiResponse(responseCode = "403", description = "Access denied")
         }
 )
 public @interface AddProductToFavorites {

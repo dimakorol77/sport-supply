@@ -14,11 +14,11 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.GET)
 @Operation(
-        summary = "Получение всех акций",
-        description = "Возвращает список всех акций",
-        tags = "Акции",
+        summary = "Getting all promotions",
+        description = "Returns a list of all promotions",
+        tags = "Promotions",
         responses = {
-                @ApiResponse(responseCode = "200", description = "Акции найдены")
+                @ApiResponse(responseCode = "200", description = "Promotions found")
         }
 )
 public @interface GetAllPromotions {

@@ -17,13 +17,13 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.GET)
 @Operation(
-        summary = "Получение детализированных данных пользователя по ID",
-        description = "Возвращает детализированную информацию (не все поля) о пользователе с указанным ID",
-        tags = {"Пользователи"},
+        summary = "Getting user data by ID",
+        description = "Returns information  about the user with the specified ID",
+        tags = {"Users"},
         responses = {
-                @ApiResponse(responseCode = "200", description = "Пользователь найден"),
-                @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
-                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
+                @ApiResponse(responseCode = "200", description = "User found"),
+                @ApiResponse(responseCode = "404", description = "User not found"),
+                @ApiResponse(responseCode = "403", description = "Access denied")
         }
 )
 public @interface GetUserDetailsById {

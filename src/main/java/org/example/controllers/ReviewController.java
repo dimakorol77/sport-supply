@@ -46,7 +46,7 @@ public class ReviewController {
     @CreateReview
     public ResponseEntity<ReviewDto> createReview(@Valid @RequestBody ReviewDto reviewDto) {
         User currentUser = securityUtils.getCurrentUser();
-        reviewDto.setUserId(currentUser.getId()); // Устанавливаем userId из текущего пользователя
+        reviewDto.setUserId(currentUser.getId());
         ReviewDto created = reviewService.createReview(reviewDto);
         return ResponseEntity.status(201).body(created);
     }

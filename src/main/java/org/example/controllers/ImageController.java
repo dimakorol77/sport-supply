@@ -48,7 +48,6 @@ public class ImageController {
     }
 
     @GetImagesByProductId
-    // Доступен для всех пользователей
     public ResponseEntity<List<ImageDto>> getImagesByProductId(@PathVariable Long productId) {
         List<ImageDto> images = imageService.getImagesByProductId(productId);
         return ResponseEntity.ok(images);

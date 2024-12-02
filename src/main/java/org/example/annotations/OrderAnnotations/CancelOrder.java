@@ -14,16 +14,16 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@RequestMapping(method = RequestMethod.DELETE) // Изменено с POST на DELETE
+@RequestMapping(method = RequestMethod.DELETE)
 @Operation(
-        summary = "Отмена заказа",
-        description = "Отменяет заказ по его ID",
-        tags = "Заказы",
+        summary = "Cancel an order",
+        description = "Cancels an order by its ID",
+        tags = "Orders",
         responses = {
-                @ApiResponse(responseCode = "204", description = "Заказ отменен"),
-                @ApiResponse(responseCode = "400", description = "Заказ не может быть отменен"),
-                @ApiResponse(responseCode = "404", description = "Заказ не найден"),
-                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
+                @ApiResponse(responseCode = "204", description = "Order canceled"),
+                @ApiResponse(responseCode = "400", description = "Order cannot be canceled"),
+                @ApiResponse(responseCode = "404", description = "Order not found"),
+                @ApiResponse(responseCode = "403", description = "Access denied")
         }
 )
 public @interface CancelOrder {

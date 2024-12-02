@@ -14,12 +14,12 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.POST)
 @Operation(
-        summary = "Создание нового пользователя",
-        tags = {"Пользователи"},
+        summary = "Creating a new user",
+        tags = {"Users"},
         responses = {
-                @ApiResponse(responseCode = "201", description = "Пользователь успешно создан"),
-                @ApiResponse(responseCode = "400", description = "Некорректные данные"),
-                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
+                @ApiResponse(responseCode = "201", description = "User successfully created"),
+                @ApiResponse(responseCode = "400", description = "Invalid data"),
+                @ApiResponse(responseCode = "403", description = "Access denied")
         }
 )
 public @interface CreateUser {

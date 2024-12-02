@@ -11,13 +11,13 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.DELETE)
 @Operation(
-        summary = "Удаление товара из корзины",
-        description = "Удаляет товар из корзины",
-        tags = "Корзина",
+        summary = "Removing an item from the cart",
+        description = "Removes an item from the cart",
+        tags = "Cart",
         responses = {
-                @ApiResponse(responseCode = "204", description = "Товар удален из корзины"),
-                @ApiResponse(responseCode = "404", description = "Товар в корзине не найден"),
-                @ApiResponse(responseCode = "403", description = "У вас нет доступа")}
+                @ApiResponse(responseCode = "204", description = "Product removed from cart"),
+                @ApiResponse(responseCode = "404", description = "Product not found in cart"),
+                @ApiResponse(responseCode = "403", description = "You don't have access")}
 )
 public @interface RemoveCartItem {
     @AliasFor(annotation = RequestMapping.class, attribute = "path")

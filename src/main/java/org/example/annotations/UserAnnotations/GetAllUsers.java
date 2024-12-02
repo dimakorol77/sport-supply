@@ -16,11 +16,13 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.GET)
 @Operation(
-        summary = "Получение всех пользователей",
-        description = "Возвращает список всех пользователей",
-        tags = {"Пользователи"},
-        responses = {@ApiResponse(responseCode = "200", description = "Пользователи найдены"),
-                @ApiResponse(responseCode = "403", description = "У вас нет доступа")}
+        summary = "Getting all users",
+        description = "Returns a list of all users",
+        tags = {"Users"},
+        responses = {
+                @ApiResponse(responseCode = "200", description = "Users found"),
+                @ApiResponse(responseCode = "403", description = "Access denied")
+        }
 )
 public @interface GetAllUsers {
 }

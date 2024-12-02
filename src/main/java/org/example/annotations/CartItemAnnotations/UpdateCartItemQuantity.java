@@ -11,13 +11,13 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.PUT)
 @Operation(
-        summary = "Обновление количества товара в корзине",
-        description = "Обновляет количество товара в корзине",
-        tags = "Корзина",
+        summary = "Updating the quantity of goods in the cart",
+        description = "Updates the quantity of goods in the cart",
+        tags = "Cart",
         responses = {
-                @ApiResponse(responseCode = "200", description = "Количество товара обновлено"),
-                @ApiResponse(responseCode = "404", description = "Товар в корзине не найден"),
-                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
+                @ApiResponse(responseCode = "200", description = "Product quantity updated"),
+                @ApiResponse(responseCode = "404", description = "Product not found in cart"),
+                @ApiResponse(responseCode = "403", description = "You don't have access")
         }
 )
 public @interface UpdateCartItemQuantity {

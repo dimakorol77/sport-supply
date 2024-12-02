@@ -11,14 +11,14 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.POST)
 @Operation(
-        summary = "Конвертация корзины в заказ",
-        description = "Конвертирует корзину в заказ и обновляет товары в корзине",
-        tags = "Корзина",
+        summary = "Converting a cart into an order",
+        description = "Converts the cart into an order and updates the items in the cart",
+        tags = "Cart",
         responses = {
-                @ApiResponse(responseCode = "201", description = "Заказ успешно создан"),
-                @ApiResponse(responseCode = "400", description = "Корзина пуста или неверные данные запроса"),
-                @ApiResponse(responseCode = "404", description = "Корзина не найдена"),
-                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
+                @ApiResponse(responseCode = "201", description = "Order created successfully"),
+                @ApiResponse(responseCode = "400", description = "Cart is empty or request data is incorrect"),
+                @ApiResponse(responseCode = "404", description = "Cart not found"),
+                @ApiResponse(responseCode = "403", description = "You don't have access")
         }
 )
 public @interface ConvertCartToOrder {

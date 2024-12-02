@@ -12,12 +12,12 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.POST)
 @Operation(
-        summary = "Создание новой категории",
-        description = "Создает новую категорию",
-        tags = "Категории",
+        summary = "Create a new category",
+        description = "Creates a new category",
+        tags = "Categories",
         responses = {
-                @ApiResponse(responseCode = "201", description = "Категория успешно создана"),
-                @ApiResponse(responseCode = "400", description = "Некорректные данные")
+                @ApiResponse(responseCode = "201", description = "Category successfully created"),
+                @ApiResponse(responseCode = "400", description = "Incorrect data")
         }
 )
 public @interface CreateCategory {

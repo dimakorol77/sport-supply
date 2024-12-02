@@ -15,13 +15,13 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.DELETE)
 @Operation(
-        summary = "Удаление товара из избранного",
-        description = "Удаляет товар из избранного пользователя",
-        tags = {"Избранное"},
+        summary = "Remove an item from favorites",
+        description = "Removes an item from the user's favorites",
+        tags = {"Favorites"},
         responses = {
-                @ApiResponse(responseCode = "204", description = "Товар удален из избранного"),
-                @ApiResponse(responseCode = "404", description = "Товар не найден в избранном"),
-                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
+                @ApiResponse(responseCode = "204", description = "Item removed from favorites"),
+                @ApiResponse(responseCode = "404", description = "Item not found in favorites"),
+                @ApiResponse(responseCode = "403", description = "Access denied")
         }
 )
 public @interface RemoveProductFromFavorites {

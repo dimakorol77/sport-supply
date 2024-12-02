@@ -14,12 +14,12 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.POST)
 @Operation(
-        summary = "Создание новой скидки",
-        description = "Создает новую скидку",
-        tags = "Скидки",
+        summary = "Creating a new discount",
+        description = "Creates a new discount",
+        tags = "Discounts",
         responses = {
-                @ApiResponse(responseCode = "201", description = "Скидка успешно создана"),
-                @ApiResponse(responseCode = "400", description = "Некорректные данные")
+                @ApiResponse(responseCode = "201", description = "Discount successfully created"),
+                @ApiResponse(responseCode = "400", description = "Incorrect data")
         }
 )
 public @interface CreateDiscount {

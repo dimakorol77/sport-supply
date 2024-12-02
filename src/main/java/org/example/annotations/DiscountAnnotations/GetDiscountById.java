@@ -12,12 +12,12 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.GET)
 @Operation(
-        summary = "Получение скидки по ID",
-        description = "Возвращает скидку с указанным ID",
-        tags = "Скидки",
+        summary = "Getting a discount by ID",
+        description = "Returns the discount with the specified ID",
+        tags = "Discounts",
         responses = {
-                @ApiResponse(responseCode = "200", description = "Скидка найдена"),
-                @ApiResponse(responseCode = "404", description = "Скидка не найдена")
+                @ApiResponse(responseCode = "200", description = "Discount found"),
+                @ApiResponse(responseCode = "404", description = "Discount not found")
         }
 )
 public @interface GetDiscountById {

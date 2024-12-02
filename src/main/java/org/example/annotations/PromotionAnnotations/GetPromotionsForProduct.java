@@ -15,13 +15,13 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.GET)
 @Operation(
-        summary = "Получить акции для продукта",
-        description = "Возвращает список акций, связанных с продуктом",
-        tags = {"Акции"},
+        summary = "Getting promotions for a product",
+        description = "Returns a list of promotions associated with the product",
+        tags = {"Promotions"},
         responses = {
-                @ApiResponse(responseCode = "200", description = "Акции получены"),
-                @ApiResponse(responseCode = "404", description = "Продукт не найден"),
-                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
+                @ApiResponse(responseCode = "200", description = "Promotions retrieved"),
+                @ApiResponse(responseCode = "404", description = "Product not found"),
+                @ApiResponse(responseCode = "403", description = "Access denied")
         }
 )
 public @interface GetPromotionsForProduct {

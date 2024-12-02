@@ -15,13 +15,13 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.DELETE)
 @Operation(
-        summary = "Удаление элемента заказа",
-        description = "Удаляет указанный элемент заказа",
-        tags = {"Элементы заказа"},
+        summary = "Deleting an order item",
+        description = "Deletes the specified order item",
+        tags = {"Order Items"},
         responses = {
-                @ApiResponse(responseCode = "204", description = "Элемент заказа успешно удален"),
-                @ApiResponse(responseCode = "404", description = "Элемент заказа не найден"),
-                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
+                @ApiResponse(responseCode = "204", description = "Order item successfully deleted"),
+                @ApiResponse(responseCode = "404", description = "Order item not found"),
+                @ApiResponse(responseCode = "403", description = "Access denied")
         }
 )
 public @interface DeleteOrderItem {

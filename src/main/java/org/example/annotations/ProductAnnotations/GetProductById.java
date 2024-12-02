@@ -14,12 +14,12 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.GET)
 @Operation(
-        summary = "Получение продукта по ID",
-        description = "Возвращает продукт с указанным ID",
-        tags = "Продукты",
+        summary = "Getting a product by ID",
+        description = "Returns the product with the specified ID",
+        tags = "Products",
         responses = {
-                @ApiResponse(responseCode = "200", description = "Продукт найден"),
-                @ApiResponse(responseCode = "404", description = "Продукт не найден")
+                @ApiResponse(responseCode = "200", description = "Product found"),
+                @ApiResponse(responseCode = "404", description = "Product not found")
         }
 )
 public @interface GetProductById {

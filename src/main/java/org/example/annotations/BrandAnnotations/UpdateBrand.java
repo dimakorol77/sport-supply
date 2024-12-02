@@ -12,13 +12,13 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.PUT)
 @Operation(
-        summary = "Обновление бренда",
-        description = "Обновляет данные бренда по указанному ID",
-        tags = "Бренды",
+        summary = "Brand update",
+        description = "Updates brand data for the specified ID",
+        tags = "Brands",
         responses = {
-                @ApiResponse(responseCode = "200", description = "Бренд успешно обновлен"),
-                @ApiResponse(responseCode = "404", description = "Бренд не найден"),
-                @ApiResponse(responseCode = "400", description = "Некорректные данные")
+                @ApiResponse(responseCode = "200", description = "The brand has been successfully updated"),
+                @ApiResponse(responseCode = "404", description = "Brand not found"),
+                @ApiResponse(responseCode = "400", description = "Incorrect data")
         }
 )
 public @interface UpdateBrand {

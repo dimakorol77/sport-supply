@@ -31,10 +31,10 @@ public class OrderDto {
 
     private List<OrderItemDto> orderItems;
 
-    private OrderStatus status;  // Статус заказа
+    private OrderStatus status;
 
-    private LocalDateTime createdAt;  // Дата создания заказа
+    private LocalDateTime createdAt;
 
-    private LocalDateTime updatedAt;  // Дата обновления заказа
+    private LocalDateTime updatedAt;
 }
 

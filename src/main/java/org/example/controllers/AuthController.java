@@ -53,7 +53,7 @@ public class AuthController {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String jwt = jwtSecurityService.generateToken((org.springframework.security.core.userdetails.User) authentication.getPrincipal());
 
-            // Генерация refresh-токена
+
             String refreshToken = jwtSecurityService.generateRefreshToken(new HashMap<>(), (org.springframework.security.core.userdetails.User) authentication.getPrincipal());
 
             AuthenticationResponseDto responseDto = new AuthenticationResponseDto(jwt, refreshToken);
