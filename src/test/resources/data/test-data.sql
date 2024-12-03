@@ -1,7 +1,11 @@
 -- Заполнение таблицы users
+-- INSERT INTO users (email, password, name, phone_number, role, created_at, updated_at)
+-- VALUES ('user1@example.com', 'password1', 'User One', '1234567890', 'USER', NOW(), NOW()),
+--        ('user2@example.com', 'password2', 'User Two', '0987654321', 'ADMIN', NOW(), NOW());
 INSERT INTO users (email, password, name, phone_number, role, created_at, updated_at)
-VALUES ('user1@example.com', 'password1', 'User One', '1234567890', 'USER', NOW(), NOW()),
-       ('user2@example.com', 'password2', 'User Two', '0987654321', 'ADMIN', NOW(), NOW());
+VALUES
+    ('user1@example.com', '$2b$12$PMQgpDT6iezdwEebvrtk/ugJ/OSmVMlqOe5yVm01sBmilDNGOY2aa', 'User One', '1234567890', 'USER', NOW(), NOW()),
+    ('user2@example.com', '$2b$12$Y86WOXIOUv9jjMKUCHCS6OC1X0fE.p0M.tzQdwA9p43hLtIhbpqU2', 'User Two', '0987654321', 'ADMIN', NOW(), NOW());
 
 -- Заполнение таблицы brands
 INSERT INTO brands (name, description, created_at, updated_at)

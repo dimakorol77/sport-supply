@@ -39,7 +39,7 @@ public class DiscountDto {
         return endDate.isAfter(startDate);
     }
 
-    // Группы для валидации
+
     public interface OnCreate {}
     public interface OnUpdate {}
 }

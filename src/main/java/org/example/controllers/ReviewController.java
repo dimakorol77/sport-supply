@@ -13,6 +13,7 @@ import org.example.annotations.ReviewAnnotations.GetReviewsByProductId;
 import org.example.annotations.ReviewAnnotations.GetReviewsByUserId;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -44,7 +45,8 @@ public class ReviewController {
     }
 
     @CreateReview
-    public ResponseEntity<ReviewDto> createReview(@Valid @RequestBody ReviewDto reviewDto) {
+    public ResponseEntity<ReviewDto> createReview(
+            @Validated(ReviewDto.OnCreate.class) @RequestBody ReviewDto reviewDto) {
         User currentUser = securityUtils.getCurrentUser();
         reviewDto.setUserId(currentUser.getId());
         ReviewDto created = reviewService.createReview(reviewDto);
@@ -52,11 +54,16 @@ public class ReviewController {
     }
 
 
+
+
     @UpdateReview
-    public ResponseEntity<ReviewDto> updateReview(@PathVariable Long id, @Valid @RequestBody ReviewDto reviewDto) {
+    public ResponseEntity<ReviewDto> updateReview(
+            @PathVariable Long id,
+            @Validated(ReviewDto.OnUpdate.class) @RequestBody ReviewDto reviewDto) {
         ReviewDto updated = reviewService.updateReview(id, reviewDto);
         return ResponseEntity.ok(updated);
     }
+
 
     @DeleteReview
     public ResponseEntity<Void> deleteReview(@PathVariable Long id) {

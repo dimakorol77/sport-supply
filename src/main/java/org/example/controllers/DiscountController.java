@@ -42,21 +42,23 @@ public class DiscountController {
 
     @CreateDiscount
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<DiscountDto> createDiscount(@Valid @RequestBody DiscountDto discountDto) {
+    public ResponseEntity<DiscountDto> createDiscount(
+            @Validated(DiscountDto.OnCreate.class) @RequestBody DiscountDto discountDto) {
         DiscountDto created = discountService.createDiscount(discountDto);
         return ResponseEntity.status(201).body(created);
     }
+
 
 
     @UpdateDiscount
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DiscountDto> updateDiscount(
             @PathVariable Long id,
-            @Validated @RequestBody DiscountDto discountDto) {
-
+            @Validated(DiscountDto.OnUpdate.class) @RequestBody DiscountDto discountDto) {
         DiscountDto updatedDiscount = discountService.updateDiscount(id, discountDto);
         return ResponseEntity.ok(updatedDiscount);
     }
+
 
 
     @DeleteDiscount
