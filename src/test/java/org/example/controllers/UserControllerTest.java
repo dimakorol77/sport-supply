@@ -1,6 +1,7 @@
 package org.example.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import org.example.dto.UserDto;
 import org.example.dto.UserAfterUpdateDto;
 import org.example.enums.Role;
@@ -28,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Transactional
 public class UserControllerTest {
 
     @Autowired

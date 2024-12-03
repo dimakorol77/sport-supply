@@ -78,10 +78,8 @@ public class ReviewServiceImpl implements ReviewService {
             throw new AccessDeniedException(ErrorMessage.ACCESS_DENIED);
         }
 
-        // Используем маппер для обновления полей отзыва
         reviewMapper.updateEntityFromDto(reviewDto, review);
 
-        // Устанавливаем время обновления
         review.setUpdatedAt(LocalDateTime.now());
 
         Review updatedReview = reviewRepository.save(review);
@@ -111,7 +109,9 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public List<ReviewDto> getReviewsByUserId(Long userId, User currentUser) {
+    public List<ReviewDto> getReviewsByUserId(Long userId) {
+        User currentUser = getCurrentUser();
+
         if (!userId.equals(currentUser.getId()) && !currentUser.getRole().equals(Role.ADMIN)) {
             throw new AccessDeniedException(ErrorMessage.ACCESS_DENIED);
         }

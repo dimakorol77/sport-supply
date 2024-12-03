@@ -20,46 +20,37 @@ import java.util.List;
 @RequestMapping("/api/favorites")
 public class FavoriteController {
     private final FavoriteService favoriteService;
-    private final SecurityUtils securityUtils;
-
 
     @Autowired
-    public FavoriteController(FavoriteService favoriteService, SecurityUtils securityUtils) {
+    public FavoriteController(FavoriteService favoriteService) {
         this.favoriteService = favoriteService;
-        this.securityUtils = securityUtils;
-    }
 
-    private User getCurrentUser() {
-        return securityUtils.getCurrentUser();
     }
 
     @AddProductToFavorites
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> addProductToFavorites(@PathVariable Long productId) {
-        User user = getCurrentUser();
-        favoriteService.addProductToFavorites(user.getId(), productId);
+        favoriteService.addProductToFavorites(productId);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @GetUserFavorites
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<ProductDto>> getUserFavorites() {
-        User user = getCurrentUser();
-        List<ProductDto> favorites = favoriteService.getUserFavorites(user.getId());
+        List<ProductDto> favorites = favoriteService.getUserFavorites();
         return ResponseEntity.ok(favorites);
     }
     @GetUserFavoritesByAdmin
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<ProductDto>> getUserFavoritesByAdmin(@PathVariable Long userId) {
-        List<ProductDto> favorites = favoriteService.getUserFavorites(userId);
+        List<ProductDto> favorites = favoriteService.getUserFavoritesByAdmin(userId);
         return ResponseEntity.ok(favorites);
     }
 
     @RemoveProductFromFavorites
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> removeProductFromFavorites(@PathVariable Long productId) {
-        User user = getCurrentUser();
-        favoriteService.removeProductFromFavorites(user.getId(), productId);
+        favoriteService.removeProductFromFavorites(productId);
         return ResponseEntity.noContent().build();
     }
 }

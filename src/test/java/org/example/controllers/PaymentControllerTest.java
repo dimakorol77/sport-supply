@@ -1,6 +1,7 @@
 package org.example.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import org.example.dto.PaymentRequestDto;
 import org.example.enums.DeliveryMethod;
 import org.example.enums.OrderStatus;
@@ -35,6 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Transactional
 public class PaymentControllerTest {
 
     @Autowired

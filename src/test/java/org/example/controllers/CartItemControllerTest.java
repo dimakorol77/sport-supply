@@ -1,6 +1,7 @@
 package org.example.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import org.example.dto.CartItemDto;
 import org.example.dto.CartItemResponseDto;
 import org.example.enums.Role;
@@ -28,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Transactional
 public class CartItemControllerTest {
 
     @Autowired

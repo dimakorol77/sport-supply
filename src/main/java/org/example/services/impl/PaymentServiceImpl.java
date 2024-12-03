@@ -58,11 +58,12 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public PaymentResponseDto createPayment(PaymentRequestDto paymentRequestDto, Long userId) {
+    public PaymentResponseDto createPayment(PaymentRequestDto paymentRequestDto) {
+        User currentUser = getCurrentUser();
+
         Order order = orderRepository.findById(paymentRequestDto.getOrderId())
                 .orElseThrow(() -> new OrderNotFoundException(ErrorMessage.ORDER_NOT_FOUND));
 
-        User currentUser = getCurrentUser();
         checkOrderOwnership(order, currentUser);
 
         Optional<Payment> existingPayment = paymentRepository.findByOrderId(order.getId());
@@ -78,11 +79,12 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public PaymentResponseDto getPaymentStatus(Long paymentId, Long userId) {
+    public PaymentResponseDto getPaymentStatus(Long paymentId) {
+        User currentUser = getCurrentUser();
+
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new PaymentNotFoundException(ErrorMessage.PAYMENT_NOT_FOUND));
 
-        User currentUser = getCurrentUser();
         checkOrderOwnership(payment.getOrder(), currentUser);
 
         return paymentMapper.toResponseDto(payment);
@@ -100,17 +102,6 @@ public class PaymentServiceImpl implements PaymentService {
         updateOrderStatusBasedOnPayment(payment);
     }
 
-    @Override
-    public void updatePaymentStatusByOrder(Long orderId, PaymentStatus status) {
-        Payment payment = paymentRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new PaymentNotFoundException(ErrorMessage.PAYMENT_NOT_FOUND));
-
-        payment.setStatus(status);
-        payment.setUpdatedAt(LocalDateTime.now());
-        paymentRepository.save(payment);
-
-        updateOrderStatusBasedOnPayment(payment);
-    }
 
     private void updateOrderStatusBasedOnPayment(Payment payment) {
         Order order = payment.getOrder();

@@ -20,12 +20,10 @@ public class JwtSecurityService {
     private static final String SECRET_KEY = "KxJf8Rkv9UiO8n2z2pIcjQoLvt9W28S9b8F32Keh7Hc=";
 
 
-
     private SecretKey getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
         return Keys.hmacShaKeyFor(keyBytes);
     }
-
 
     public String generateToken(UserDetails userDetails) {
         return Jwts.builder()
@@ -36,7 +34,7 @@ public class JwtSecurityService {
                 .compact();
     }
 
-    // Метод для генерации refresh-токена с дополнительными полями
+
     public String generateRefreshToken(Map<String, Object> claims, UserDetails userDetails) {
         return Jwts.builder()
                 .setClaims(claims)
@@ -58,7 +56,6 @@ public class JwtSecurityService {
         return claimsResolver.apply(claims);
     }
 
-
     private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
@@ -66,7 +63,6 @@ public class JwtSecurityService {
                 .parseClaimsJws(token)
                 .getBody();
     }
-
 
     public boolean validateToken(String token, UserDetails userDetails) {
         final String username = extractUsername(token);

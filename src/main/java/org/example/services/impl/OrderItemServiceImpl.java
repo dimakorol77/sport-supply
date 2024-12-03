@@ -55,20 +55,11 @@ public class OrderItemServiceImpl implements OrderItemService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException(ErrorMessage.ORDER_NOT_FOUND));
         checkOrderOwnership(order, currentUser);
-
-
         Product product = getProductById(orderItemCreateDto.getProductId());
-
-
         OrderItem orderItem = orderItemMapper.toEntity(orderItemCreateDto, product);
         orderItem.setOrder(order);
-
-
         orderItem = orderItemRepository.save(orderItem);
-
-
         updateOrderTotalAmount(order);
-
         return orderItemMapper.toDto(orderItem);
     }
 
@@ -78,7 +69,6 @@ public class OrderItemServiceImpl implements OrderItemService {
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException(ErrorMessage.ORDER_NOT_FOUND));
-
         checkOrderOwnership(order, currentUser);
         return orderItemRepository.findByOrderId(orderId).stream()
                 .map(orderItemMapper::toDto)
@@ -91,19 +81,10 @@ public class OrderItemServiceImpl implements OrderItemService {
         OrderItem orderItem = orderItemRepository.findById(orderItemId)
                 .orElseThrow(() -> new OrderItemNotFoundException(ErrorMessage.ORDER_ITEM_NOT_FOUND));
         Order order = orderItem.getOrder();
-
         checkOrderOwnership(order, currentUser);
-
-
         Product product = getProductById(orderItemCreateDto.getProductId());
-
-
         orderItemMapper.updateEntityFromCreateDto(orderItemCreateDto, orderItem, product);
-
-
         orderItem = orderItemRepository.save(orderItem);
-
-
         updateOrderTotalAmount(orderItem.getOrder());
 
         return orderItemMapper.toDto(orderItem);
@@ -125,13 +106,9 @@ public class OrderItemServiceImpl implements OrderItemService {
                 .orElseThrow(() -> new OrderItemNotFoundException(ErrorMessage.ORDER_ITEM_NOT_FOUND));
 
         Order order = orderItem.getOrder();
-
         checkOrderOwnership(order, currentUser);
-
         order.getOrderItems().remove(orderItem);
-
         updateOrderTotalAmount(order);
-
         orderItemRepository.delete(orderItem);
     }
 

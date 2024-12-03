@@ -33,27 +33,22 @@ import java.math.BigDecimal;
 @PreAuthorize("isAuthenticated()")
 public class CartController {
     private final CartService cartService;
-    private final SecurityUtils securityUtils;
+
 
     @Autowired
-    public CartController(CartService cartService,  SecurityUtils securityUtils) {
+    public CartController(CartService cartService) {
         this.cartService = cartService;
-        this.securityUtils = securityUtils;
+
     }
 
-    private User getCurrentUser() {
-        return securityUtils.getCurrentUser();
-    }
 
     @CalculateTotalPrice
     public BigDecimal calculateTotalPrice(@PathVariable Long cartId) {
-        User user = getCurrentUser();
-        return cartService.calculateTotalPrice(cartId, user.getId());
+        return cartService.calculateTotalPrice(cartId);
     }
     @ClearCart
     public ResponseEntity<Void> clearCart(@PathVariable Long cartId) {
-        User user = getCurrentUser();
-        cartService.clearCart(cartId, user.getId(), false);
+        cartService.clearCart(cartId, false);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
@@ -61,8 +56,7 @@ public class CartController {
     public ResponseEntity<OrderResponseDto> convertCartToOrder(
             @PathVariable Long cartId,
             @RequestBody @Valid OrderCreateDto orderCreateDto) {
-        User user = getCurrentUser();
-        OrderDto orderDto = cartService.convertCartToOrder(cartId, user.getId(), orderCreateDto);
+        OrderDto orderDto = cartService.convertCartToOrder(cartId, orderCreateDto);
         OrderResponseDto responseDto = new OrderResponseDto(
                 orderDto.getId(),
                 orderDto.getTotalAmount(),

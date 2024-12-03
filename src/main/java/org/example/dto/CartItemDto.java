@@ -17,5 +17,4 @@ public class CartItemDto {
     @Positive(message = ErrorMessage.CART_ITEM_QUANTITY_POSITIVE)
     private Integer quantity;
 
-
 }

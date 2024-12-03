@@ -6,8 +6,8 @@ import org.example.enums.PaymentStatus;
 import org.example.models.Payment;
 
 public interface PaymentService {
-    PaymentResponseDto createPayment(PaymentRequestDto paymentRequestDto, Long userId);
-    PaymentResponseDto getPaymentStatus(Long paymentId, Long userId);
+    PaymentResponseDto createPayment(PaymentRequestDto paymentRequestDto);
+    PaymentResponseDto getPaymentStatus(Long paymentId);
     void updatePaymentStatus(Long paymentId, PaymentStatus status);
-    void updatePaymentStatusByOrder(Long orderId, PaymentStatus status);
+
 }

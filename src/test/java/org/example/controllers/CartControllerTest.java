@@ -1,6 +1,7 @@
 package org.example.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import org.example.dto.OrderCreateDto;
 import org.example.enums.DeliveryMethod;
 import org.example.enums.Role;
@@ -25,6 +26,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -35,6 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Transactional
 public class CartControllerTest {
 
     @Autowired
@@ -136,7 +139,15 @@ public void setUp() {
         cartItem.setQuantity(1);
         cartItem.setPrice(product.getPrice());
         cartItem.setDeleted(false);
-        cartItemRepository.save(cartItem);
+        cartItem = cartItemRepository.save(cartItem);
+
+        // Инициализируем коллекцию cartItems, если она null
+        if (cart.getCartItems() == null) {
+            cart.setCartItems(new ArrayList<>());
+        }
+
+        // Добавляем cartItem в коллекцию cartItems корзины
+        cart.getCartItems().add(cartItem);
 
         // Обновляем общую стоимость корзины
         cart.setTotalPrice(product.getPrice());
@@ -156,7 +167,6 @@ public void setUp() {
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.totalAmount").value(100.0))
                 .andExpect(jsonPath("$.status").value("CREATED"));
-
     }
 
 

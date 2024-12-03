@@ -19,7 +19,6 @@ public class UserMapper {
         return dto;
     }
 
-
     public UserAfterCreationDto toUserAfterCreationDto(User user) {
         if (user == null) {
             return null;
@@ -34,7 +33,6 @@ public class UserMapper {
         return dto;
     }
 
-
     public UserAfterUpdateDto toUserAfterUpdateDto(User user) {
         if (user == null) {
             return null;
@@ -47,14 +45,12 @@ public class UserMapper {
         return dto;
     }
 
-
     public User toEntity(UserDto dto) {
         User user = new User();
         copyProperties(dto, user);
         user.setPassword(dto.getPassword());
         return user;
     }
-
 
     public void updateEntityFromDto(UserDto dto, User user) {
         copyProperties(dto, user);

@@ -8,8 +8,8 @@ import java.math.BigDecimal;
 
 public interface CartService {
     CartDto createCart(Long userId);
-    BigDecimal calculateTotalPrice(Long cartId, Long userId);
-    void clearCart(Long cartId, Long userId, boolean skipAccessCheck);
-    OrderDto convertCartToOrder(Long cartId, Long userId, OrderCreateDto orderCreateDto);
+    BigDecimal calculateTotalPrice(Long cartId);
+    void clearCart(Long cartId, boolean skipAccessCheck);
+    OrderDto convertCartToOrder(Long cartId, OrderCreateDto orderCreateDto);
 
 }
