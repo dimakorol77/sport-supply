@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface ImageService {
     ImageDto uploadImage(Long productId, MultipartFile file);
-    ImageDto uploadImageByUrl(Long productId, String imageUrl); // Новый метод
+    ImageDto uploadImageByUrl(Long productId, String imageUrl);
     List<ImageDto> getImagesByProductId(Long productId);
     void deleteImage(Long imageId);
 }

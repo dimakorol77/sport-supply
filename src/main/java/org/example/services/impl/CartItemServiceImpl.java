@@ -12,9 +12,11 @@ import org.example.mappers.CartItemMapper;
 import org.example.models.Cart;
 import org.example.models.CartItem;
 import org.example.models.Product;
+import org.example.models.User;
 import org.example.repositories.CartItemRepository;
 import org.example.repositories.CartRepository;
 import org.example.repositories.ProductRepository;
+import org.example.security.SecurityUtils;
 import org.example.services.interfaces.CartItemService;
 import org.example.services.interfaces.DiscountService;
 import org.example.services.interfaces.ProductService;
@@ -36,23 +38,29 @@ public class CartItemServiceImpl  implements CartItemService {
     private final CartItemMapper cartItemMapper;
     private final DiscountService discountService;
     private final PromotionService promotionService;
-    private final ProductService productService;
+    private final SecurityUtils securityUtils;
 
     @Autowired
     public CartItemServiceImpl(CartItemRepository cartItemRepository, CartRepository cartRepository,
                                ProductRepository productRepository, CartItemMapper cartItemMapper,
-                               DiscountService discountService, PromotionService promotionService, ProductService productService) {
+                               DiscountService discountService, PromotionService promotionService,
+                               SecurityUtils securityUtils) {
         this.cartItemRepository = cartItemRepository;
         this.cartRepository = cartRepository;
         this.productRepository = productRepository;
         this.cartItemMapper = cartItemMapper;
         this.discountService = discountService;
         this.promotionService = promotionService;
-        this.productService = productService;
+        this.securityUtils = securityUtils;
+    }
+
+    private User getCurrentUser() {
+        return securityUtils.getCurrentUser();
     }
 
     @Override
-    public CartItemResponseDto addItemToCart(Long cartId, Long userId, CartItemDto cartItemDto) {
+    public CartItemResponseDto addItemToCart(Long cartId, CartItemDto cartItemDto) {
+        User user = getCurrentUser();
         Optional.ofNullable(cartItemDto.getQuantity())
                 .filter(quantity -> quantity > 0)
                 .orElseThrow(() -> new InvalidQuantityException(ErrorMessage.INVALID_QUANTITY));
@@ -60,26 +68,20 @@ public class CartItemServiceImpl  implements CartItemService {
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new CartNotFoundException(ErrorMessage.CART_NOT_FOUND));
 
-        if (!cart.getUser().getId().equals(userId)) {
+        if (!cart.getUser().getId().equals(user.getId())) {
             throw new org.springframework.security.access.AccessDeniedException(ErrorMessage.ACCESS_DENIED);
         }
-
         Product product = productRepository.findById(cartItemDto.getProductId())
                 .orElseThrow(() -> new ProductNotFoundException(ErrorMessage.PRODUCT_NOT_FOUND));
 
-
-        // Получение текущей скидки
         BigDecimal discountPrice = discountService.getCurrentDiscountForProduct(product.getId())
                 .map(DiscountDto::getDiscountPrice)
                 .orElse(BigDecimal.ZERO);
 
-        // Получение текущих акций
         BigDecimal promotionDiscount = promotionService.getPromotionDiscountForProduct(product.getId());
 
-        // Расчет финальной цены
         BigDecimal finalPrice = calculateFinalPrice(product.getPrice(), discountPrice, promotionDiscount);
 
-        // Работа с CartItem
         CartItem cartItem = cartItemRepository.findByCartAndProduct(cart, product)
                 .orElseGet(() -> {
                     CartItem newItem = new CartItem();
@@ -117,17 +119,17 @@ public class CartItemServiceImpl  implements CartItemService {
         }
 
         return discountedPrice.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : discountedPrice;
-
     }
 
 
     @Override
-    public CartItemResponseDto updateCartItemQuantity(Long cartItemId, Long userId, Integer quantity) {
+    public CartItemResponseDto updateCartItemQuantity(Long cartItemId, Integer quantity) {
+        User user = getCurrentUser();
+
         CartItem cartItem = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new CartItemNotFoundException(ErrorMessage.CART_ITEM_NOT_FOUND));
 
-
-        if (!cartItem.getCart().getUser().getId().equals(userId)) {
+        if (!cartItem.getCart().getUser().getId().equals(user.getId())) {
             throw new org.springframework.security.access.AccessDeniedException(ErrorMessage.ACCESS_DENIED);
         }
 
@@ -138,45 +140,36 @@ public class CartItemServiceImpl  implements CartItemService {
         cartItem.setQuantity(quantity);
 
         Product product = cartItem.getProduct();
-        // Получение текущей скидки
+
         BigDecimal discountPrice = discountService.getCurrentDiscountForProduct(product.getId())
                 .map(DiscountDto::getDiscountPrice)
                 .orElse(BigDecimal.ZERO);
-
-        // Получение текущих акций
         BigDecimal promotionDiscount = promotionService.getPromotionDiscountForProduct(product.getId());
-
-        // Расчет финальной цены
         BigDecimal finalPrice = calculateFinalPrice(product.getPrice(), discountPrice, promotionDiscount);
-
         cartItem.setPrice(finalPrice);
         cartItem.setDiscountPrice(discountPrice);
-
         cartItemRepository.save(cartItem);
-
         updateTotalPrice(cartItem.getCart());
-
         return cartItemMapper.toResponseDto(cartItem);
     }
 
 
     @Override
-    public void removeCartItem(Long cartItemId, Long userId) {
+    public void removeCartItem(Long cartItemId) {
+        User user = getCurrentUser();
+
         CartItem cartItem = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new CartItemNotFoundException(ErrorMessage.CART_ITEM_NOT_FOUND));
 
-
-        if (!cartItem.getCart().getUser().getId().equals(userId)) {
+        if (!cartItem.getCart().getUser().getId().equals(user.getId())) {
             throw new org.springframework.security.access.AccessDeniedException(ErrorMessage.ACCESS_DENIED);
         }
 
         cartItem.setDeleted(true);
         cartItemRepository.save(cartItem);
 
-
         updateTotalPrice(cartItem.getCart());
     }
-
 
     private void updateTotalPrice(Cart cart) {
         BigDecimal newTotalPrice = cart.getCartItems().stream()
@@ -192,4 +185,5 @@ public class CartItemServiceImpl  implements CartItemService {
         cart.setUpdatedAt(LocalDateTime.now());
         cartRepository.save(cart);
     }
+
 }

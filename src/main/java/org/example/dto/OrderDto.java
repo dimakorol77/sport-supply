@@ -30,11 +30,8 @@ public class OrderDto {
     private Long userId;
 
     private List<OrderItemDto> orderItems;
-
     private OrderStatus status;
-
     private LocalDateTime createdAt;
-
     private LocalDateTime updatedAt;
 }
 

@@ -1,5 +1,6 @@
 package org.example.services.impl;
 
+import org.example.security.SecurityUtils;
 import org.springframework.transaction.annotation.Transactional;
 import org.example.dto.CartDto;
 import org.example.dto.OrderCreateDto;
@@ -23,45 +24,52 @@ public class CartServiceImpl implements CartService {
     private final UserRepository userRepository;
     private final CartMapper cartMapper;
     private final OrderService orderService;
+    private final SecurityUtils securityUtils;
 
     @Autowired
     public CartServiceImpl(CartRepository cartRepository, UserRepository userRepository,
-                           OrderService orderService, CartMapper cartMapper) {
+                           OrderService orderService, CartMapper cartMapper,
+                           SecurityUtils securityUtils) {
         this.cartRepository = cartRepository;
         this.userRepository = userRepository;
-
         this.orderService = orderService;
         this.cartMapper = cartMapper;
+        this.securityUtils = securityUtils;
+    }
+
+    private User getCurrentUser() {
+        return securityUtils.getCurrentUser();
     }
 
     @Override
     public CartDto createCart(Long userId) {
-        if (cartRepository.existsByUser_Id(userId)) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
+
+        if (cartRepository.existsByUser_Id(user.getId())) {
             throw new CartAlreadyExistsException(ErrorMessage.CART_ALREADY_EXISTS);
         }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(ErrorMessage.USER_NOT_FOUND));
-
         CartDto cartDto = new CartDto();
-        cartDto.setUserId(userId);
+        cartDto.setUserId(user.getId());
         cartDto.setCreatedAt(LocalDateTime.now());
         cartDto.setTotalPrice(BigDecimal.ZERO);
 
         Cart cart = cartMapper.toEntity(cartDto, user);
         Cart savedCart = cartRepository.save(cart);
 
-
         return cartMapper.toDto(savedCart);
     }
 
     @Override
-    public BigDecimal calculateTotalPrice(Long cartId, Long userId) {
+    public BigDecimal calculateTotalPrice(Long cartId) {
+        User user = getCurrentUser();
+
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new CartNotFoundException(ErrorMessage.CART_NOT_FOUND));
 
-
-        if (!cart.getUser().getId().equals(userId)) {
+        if (!cart.getUser().getId().equals(user.getId())) {
             throw new org.springframework.security.access.AccessDeniedException(ErrorMessage.ACCESS_DENIED);
         }
 
@@ -77,12 +85,13 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public void clearCart(Long cartId, Long userId, boolean skipAccessCheck) {
+    public void clearCart(Long cartId, boolean skipAccessCheck) {
+        User user = getCurrentUser();
+
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new CartNotFoundException(ErrorMessage.CART_NOT_FOUND));
 
-
-        if (!skipAccessCheck && !cart.getUser().getId().equals(userId)) {
+        if (!skipAccessCheck && !cart.getUser().getId().equals(user.getId())) {
             throw new org.springframework.security.access.AccessDeniedException(ErrorMessage.ACCESS_DENIED);
         }
 
@@ -99,15 +108,15 @@ public class CartServiceImpl implements CartService {
 
     @Transactional
     @Override
-    public OrderDto convertCartToOrder(Long cartId, Long userId, OrderCreateDto orderCreateDto) {
+    public OrderDto convertCartToOrder(Long cartId, OrderCreateDto orderCreateDto) {
+        User user = getCurrentUser();
+
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new CartNotFoundException(ErrorMessage.CART_NOT_FOUND));
 
-
-        if (!cart.getUser().getId().equals(userId)) {
+        if (!cart.getUser().getId().equals(user.getId())) {
             throw new org.springframework.security.access.AccessDeniedException(ErrorMessage.ACCESS_DENIED);
         }
-
 
         boolean hasActiveItems = cart.getCartItems().stream()
                 .anyMatch(cartItem -> !cartItem.isDeleted());
@@ -115,13 +124,8 @@ public class CartServiceImpl implements CartService {
         if (!hasActiveItems) {
             throw new CartEmptyException(ErrorMessage.CART_EMPTY);
         }
-
-
         OrderDto orderDto = orderService.createOrderFromCart(cart, orderCreateDto);
-
-
-        clearCart(cartId, userId, true);
-
+        clearCart(cartId,  true);
         return orderDto;
     }
 

@@ -24,11 +24,9 @@ import java.util.List;
 public class ReviewController {
 
     private final ReviewService reviewService;
-    private final SecurityUtils securityUtils;
 
-    public ReviewController(ReviewService reviewService, SecurityUtils securityUtils) {
+    public ReviewController(ReviewService reviewService) {
         this.reviewService = reviewService;
-        this.securityUtils = securityUtils;
     }
 
     @GetAllReviews
@@ -47,14 +45,9 @@ public class ReviewController {
     @CreateReview
     public ResponseEntity<ReviewDto> createReview(
             @Validated(ReviewDto.OnCreate.class) @RequestBody ReviewDto reviewDto) {
-        User currentUser = securityUtils.getCurrentUser();
-        reviewDto.setUserId(currentUser.getId());
         ReviewDto created = reviewService.createReview(reviewDto);
         return ResponseEntity.status(201).body(created);
     }
-
-
-
 
     @UpdateReview
     public ResponseEntity<ReviewDto> updateReview(
@@ -63,7 +56,6 @@ public class ReviewController {
         ReviewDto updated = reviewService.updateReview(id, reviewDto);
         return ResponseEntity.ok(updated);
     }
-
 
     @DeleteReview
     public ResponseEntity<Void> deleteReview(@PathVariable Long id) {
@@ -79,8 +71,7 @@ public class ReviewController {
 
     @GetReviewsByUserId
     public ResponseEntity<List<ReviewDto>> getReviewsByUserId(@PathVariable Long userId) {
-        User currentUser = securityUtils.getCurrentUser();
-        List<ReviewDto> reviews = reviewService.getReviewsByUserId(userId, currentUser);
+        List<ReviewDto> reviews = reviewService.getReviewsByUserId(userId);
         return ResponseEntity.ok(reviews);
     }
 }

@@ -24,29 +24,24 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 public class PaymentController {
     private final PaymentService paymentService;
-    private final SecurityUtils securityUtils;
 
     @Autowired
-    public PaymentController(PaymentService paymentService, SecurityUtils securityUtils) {
+    public PaymentController(PaymentService paymentService) {
         this.paymentService = paymentService;
-        this.securityUtils = securityUtils;
+
     }
-    private User getCurrentUser() {
-        return securityUtils.getCurrentUser();
-    }
+
     @CreatePayment
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PaymentResponseDto> createPayment(@RequestBody @Valid PaymentRequestDto paymentRequestDto) {
-        User currentUser = getCurrentUser();
-        PaymentResponseDto createdPayment = paymentService.createPayment(paymentRequestDto, currentUser.getId());
+        PaymentResponseDto createdPayment = paymentService.createPayment(paymentRequestDto);
         return new ResponseEntity<>(createdPayment, HttpStatus.CREATED);
     }
 
     @GetPaymentStatus
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PaymentResponseDto> getPaymentStatus(@PathVariable Long paymentId) {
-        User currentUser = getCurrentUser();
-        PaymentResponseDto paymentResponseDto = paymentService.getPaymentStatus(paymentId, currentUser.getId());
+        PaymentResponseDto paymentResponseDto = paymentService.getPaymentStatus(paymentId);
         return new ResponseEntity<>(paymentResponseDto, HttpStatus.OK);
     }
 

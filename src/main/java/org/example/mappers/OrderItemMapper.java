@@ -22,18 +22,15 @@ public class OrderItemMapper {
         orderItem.setProductId(product.getId());
         orderItem.setProductName(product.getName());
         orderItem.setProductDescription(product.getDescription());
-        // Проверяем наличие категории
         if (product.getCategory() != null) {
             orderItem.setProductCategoryName(product.getCategory().getName());
         } else {
-            orderItem.setProductCategoryName("Без категории"); // Или какое-то значение по умолчанию
+            orderItem.setProductCategoryName("Uncategorized");
         }
         orderItem.setPrice(orderItemCreateDto.getPrice());
         orderItem.setQuantity(orderItemCreateDto.getQuantity());
         return orderItem;
     }
-
-
 
     public void updateEntityFromCreateDto(OrderItemCreateDto orderItemCreateDto, OrderItem orderItem, Product product) {
         if (orderItemCreateDto == null || orderItem == null || product == null) {
@@ -42,16 +39,13 @@ public class OrderItemMapper {
         orderItem.setProductId(product.getId());
         orderItem.setProductName(product.getName());
         orderItem.setProductDescription(product.getDescription());
-        // Проверяем наличие категории
         if (product.getCategory() != null) {
             orderItem.setProductCategoryName(product.getCategory().getName());
         } else {
-            orderItem.setProductCategoryName("Без категории"); // Или какое-то значение по умолчанию
+            orderItem.setProductCategoryName("Uncategorized");
         }
         orderItem.setPrice(orderItemCreateDto.getPrice());
         orderItem.setQuantity(orderItemCreateDto.getQuantity());
     }
-
-
 
 }

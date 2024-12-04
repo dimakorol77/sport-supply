@@ -16,7 +16,6 @@ public class BrandDto {
 
     @Size(max = 500, message = "Description should not exceed 500 characters")
     private String description;
-
     public interface OnCreate {}
     public interface OnUpdate {}
 

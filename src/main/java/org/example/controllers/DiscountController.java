@@ -25,20 +25,17 @@ public class DiscountController {
         this.discountService = discountService;
     }
 
-
     @GetAllDiscounts
     public ResponseEntity<List<DiscountDto>> getAllDiscounts() {
         List<DiscountDto> discounts = discountService.getAllDiscounts();
         return ResponseEntity.ok(discounts);
     }
 
-
     @GetDiscountById
     public ResponseEntity<DiscountDto> getDiscountById(@PathVariable Long id) {
         DiscountDto discount = discountService.getDiscountById(id);
         return ResponseEntity.ok(discount);
     }
-
 
     @CreateDiscount
     @PreAuthorize("hasRole('ADMIN')")
@@ -47,8 +44,6 @@ public class DiscountController {
         DiscountDto created = discountService.createDiscount(discountDto);
         return ResponseEntity.status(201).body(created);
     }
-
-
 
     @UpdateDiscount
     @PreAuthorize("hasRole('ADMIN')")
@@ -59,15 +54,12 @@ public class DiscountController {
         return ResponseEntity.ok(updatedDiscount);
     }
 
-
-
     @DeleteDiscount
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteDiscount(@PathVariable Long id) {
         discountService.deleteDiscount(id);
         return ResponseEntity.noContent().build();
     }
-
 
     @GetActiveDiscountsForProduct
     public ResponseEntity<List<DiscountDto>> getActiveDiscountsForProduct(@PathVariable Long productId) {

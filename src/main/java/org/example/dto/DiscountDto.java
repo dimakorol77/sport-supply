@@ -39,7 +39,6 @@ public class DiscountDto {
         return endDate.isAfter(startDate);
     }
 
-
     public interface OnCreate {}
     public interface OnUpdate {}
 }

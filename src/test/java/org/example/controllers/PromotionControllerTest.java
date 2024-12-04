@@ -1,6 +1,7 @@
 package org.example.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import org.example.dto.PromotionDto;
 import org.example.enums.Role;
 import org.example.models.Product;
@@ -27,6 +28,7 @@ import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
@@ -35,6 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Transactional
 public class PromotionControllerTest {
 
     @Autowired
@@ -156,29 +159,37 @@ public class PromotionControllerTest {
     public void testAddProductToPromotion() throws Exception {
         mockMvc.perform(post("/api/promotions/{promotionId}/products/{productId}", promotion.getId(), product.getId())
                         .header("Authorization", "Bearer " + adminToken))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.size()").doesNotExist());
+                .andExpect(status().isCreated());
 
-        List<Promotion> promotions = promotionRepository.findAll();
-        assertThat(promotions.get(0).getProductPromotions(), hasSize(1));
+        // Перезагружаем объект Promotion из базы данных
+        Promotion updatedPromotion = promotionRepository.findById(promotion.getId())
+                .orElseThrow(() -> new RuntimeException("Promotion not found"));
+
+        // Проверяем, что коллекция productPromotions не null и содержит 1 элемент
+        assertNotNull(updatedPromotion.getProductPromotions(), "productPromotions should not be null");
+        assertThat(updatedPromotion.getProductPromotions(), hasSize(1));
     }
 
 
     @Test
     public void testRemoveProductFromPromotion() throws Exception {
-
+        // Сначала добавляем продукт к акции
         mockMvc.perform(post("/api/promotions/{promotionId}/products/{productId}", promotion.getId(), product.getId())
                         .header("Authorization", "Bearer " + adminToken))
-                .andExpect(status().isCreated()); // Здесь ожидаем 201 Created
+                .andExpect(status().isCreated());
 
-
+        // Затем удаляем продукт из акции
         mockMvc.perform(delete("/api/promotions/{promotionId}/products/{productId}", promotion.getId(), product.getId())
                         .header("Authorization", "Bearer " + adminToken))
-                .andExpect(status().isNoContent()); // Здесь ожидаем 204 No Content
+                .andExpect(status().isNoContent());
 
+        // Перезагружаем объект Promotion из базы данных
+        Promotion updatedPromotion = promotionRepository.findById(promotion.getId())
+                .orElseThrow(() -> new RuntimeException("Promotion not found"));
 
-        List<Promotion> promotions = promotionRepository.findAll();
-        assertTrue(promotions.get(0).getProductPromotions().isEmpty());
+        // Проверяем, что коллекция productPromotions не null и пуста
+        assertNotNull(updatedPromotion.getProductPromotions(), "productPromotions should not be null");
+        assertTrue(updatedPromotion.getProductPromotions().isEmpty());
     }
 
 }

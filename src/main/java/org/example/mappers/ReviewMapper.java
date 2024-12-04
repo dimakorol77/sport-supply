@@ -49,7 +49,6 @@ public class ReviewMapper {
         review.setRating(dto.getRating());
         review.setUserComment(dto.getUserComment());
 
-        // Обновляем только product, так как user менять не нужно
         if (dto.getProductId() != null) {
             Product product = new Product();
             product.setId(dto.getProductId());
