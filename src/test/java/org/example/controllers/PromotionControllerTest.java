@@ -1,6 +1,7 @@
 package org.example.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import org.example.dto.PromotionDto;
 import org.example.enums.Role;
@@ -75,6 +76,8 @@ public class PromotionControllerTest {
         promotionRepository.deleteAll();
         productRepository.deleteAll();
         userRepository.deleteAll();
+
+
 
         adminUser = new User();
         adminUser.setEmail("admin@example.com");
@@ -155,42 +158,47 @@ public class PromotionControllerTest {
                 .andExpect(status().isNoContent());
     }
 
+    @Autowired
+    private EntityManager entityManager;
+
     @Test
     public void testAddProductToPromotion() throws Exception {
         mockMvc.perform(post("/api/promotions/{promotionId}/products/{productId}", promotion.getId(), product.getId())
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isCreated());
 
-        // Перезагружаем объект Promotion из базы данных
+        entityManager.clear();
+
         Promotion updatedPromotion = promotionRepository.findById(promotion.getId())
                 .orElseThrow(() -> new RuntimeException("Promotion not found"));
 
-        // Проверяем, что коллекция productPromotions не null и содержит 1 элемент
         assertNotNull(updatedPromotion.getProductPromotions(), "productPromotions should not be null");
         assertThat(updatedPromotion.getProductPromotions(), hasSize(1));
     }
 
-
     @Test
     public void testRemoveProductFromPromotion() throws Exception {
-        // Сначала добавляем продукт к акции
+
         mockMvc.perform(post("/api/promotions/{promotionId}/products/{productId}", promotion.getId(), product.getId())
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isCreated());
 
-        // Затем удаляем продукт из акции
+        promotionRepository.flush();
+        entityManager.clear();
+
         mockMvc.perform(delete("/api/promotions/{promotionId}/products/{productId}", promotion.getId(), product.getId())
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isNoContent());
 
-        // Перезагружаем объект Promotion из базы данных
+        promotionRepository.flush();
+        entityManager.clear();
         Promotion updatedPromotion = promotionRepository.findById(promotion.getId())
                 .orElseThrow(() -> new RuntimeException("Promotion not found"));
 
-        // Проверяем, что коллекция productPromotions не null и пуста
         assertNotNull(updatedPromotion.getProductPromotions(), "productPromotions should not be null");
         assertTrue(updatedPromotion.getProductPromotions().isEmpty());
     }
 
-}
 
+
+}
