@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 public class CartDto {
 
     private Long id;
-    @NotNull(message = ErrorMessage.CART_ITEM_USER_REQUIRED) // для userId
+    @NotNull(message = ErrorMessage.CART_ITEM_USER_REQUIRED)
     private Long userId;
     private LocalDateTime createdAt;
     private BigDecimal totalPrice;
