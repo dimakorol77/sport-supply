@@ -1,9 +1,7 @@
 package org.example.models;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.example.enums.PaymentStatus;
 
 import java.math.BigDecimal;
@@ -29,4 +27,5 @@ public class Payment {
     private PaymentStatus status;
 
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

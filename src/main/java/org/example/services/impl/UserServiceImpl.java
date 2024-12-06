@@ -1,12 +1,22 @@
 package org.example.services.impl;
 
+import jakarta.transaction.Transactional;
 import org.example.dto.*;
 import org.example.enums.Role;
+import org.example.exceptions.IdNotFoundException;
+import org.example.exceptions.UserAlreadyExistsException;
+import org.example.exceptions.UserNotFoundException;
+import org.example.exceptions.errorMessage.ErrorMessage;
+import org.example.mappers.UserMapper;
 import org.example.models.User;
 import org.example.repositories.UserRepository;
+import org.example.security.SecurityUtils;
+import org.example.services.interfaces.CartService;
 import org.example.services.interfaces.UserService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import org.springframework.security.access.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -16,95 +26,99 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
+    private final CartService cartService;
+    private final PasswordEncoder passwordEncoder;
+    private final SecurityUtils securityUtils;
 
-    // Используем конструкторную инъекцию
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper, CartService cartService, PasswordEncoder passwordEncoder,  SecurityUtils securityUtils) {
         this.userRepository = userRepository;
+        this.userMapper = userMapper;
+        this.cartService = cartService;
+        this.passwordEncoder = passwordEncoder;
+        this.securityUtils = securityUtils;
     }
-
-    // Получить всех пользователей
+    private User getCurrentUser() {
+        return securityUtils.getCurrentUser();
+    }
     @Override
     public List<UserListDto> getAllUsers() {
         return userRepository.findAll().stream()
-                .map(user -> new UserListDto(user.getId(), user.getName(), user.getEmail(), user.getPhoneNumber()))
+                .map(userMapper::toUserListDto)
                 .collect(Collectors.toList());
     }
 
-    // Получить пользователя по ID
     @Override
-    public Optional<User> getUserById(Long id) {
-        return userRepository.findById(id);
+    public UserListDto getUserDetailsById(Long id) {
+        validateAccess(id);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IdNotFoundException(ErrorMessage.ID_NOT_FOUND));
+        return userMapper.toUserListDto(user);
     }
 
-    // Получить детализированные данные пользователя по ID
     @Override
-    public Optional<UserListDto> getUserDetailsById(Long id) {
-        return userRepository.findById(id).map(user -> new UserListDto(
-                user.getId(),
-                user.getName(),
-                user.getEmail(),
-                user.getPhoneNumber()
-        ));
-    }
-
-    // Создать нового пользователя
-    @Override
-    public UserAfterCreationDto createUser(UserCreateDto userCreateDto) {
-        User user = new User();
-        user.setEmail(userCreateDto.getEmail());
-        user.setPassword(userCreateDto.getPassword());
-        user.setName(userCreateDto.getName());
-        user.setPhoneNumber(userCreateDto.getPhoneNumber());
-
-        if (user.getRole() == null) {
-            user.setRole(Role.USER); // Роль по умолчанию
+    @Transactional
+    public UserAfterCreationDto createUser(UserDto userDto) {
+        if (userRepository.existsByEmail(userDto.getEmail())) {
+            throw new UserAlreadyExistsException(ErrorMessage.USER_ALREADY_EXISTS);
         }
-
+        User user = userMapper.toEntity(userDto);
+        user.setRole(Role.USER);
+        user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         User createdUser = userRepository.save(user);
 
-        return UserAfterCreationDto.builder()
-                .id(createdUser.getId())
-                .email(createdUser.getEmail())
-                .name(createdUser.getName())
-                .phoneNumber(createdUser.getPhoneNumber())
-                .role(createdUser.getRole())
-                .createdAt(createdUser.getCreatedAt())
-                .build();
+        cartService.createCart(createdUser.getId());
+
+        return userMapper.toUserAfterCreationDto(createdUser);
     }
 
-    // Обновить пользователя
     @Override
-    public Optional<UserAfterUpdateDto> updateUser(Long id, UserUpdateDto userUpdateDto) {
-        return userRepository.findById(id).map(user -> {
-            user.setEmail(userUpdateDto.getEmail());
-            user.setName(userUpdateDto.getName());
-            user.setPhoneNumber(userUpdateDto.getPhoneNumber());
+    public UserAfterUpdateDto updateUser(Long id, UserDto userDto) {
+        validateAccess(id);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IdNotFoundException(ErrorMessage.ID_NOT_FOUND));
+        userMapper.updateEntityFromDto(userDto, user);
 
-            if (userUpdateDto.getPassword() != null) {
-                user.setPassword(userUpdateDto.getPassword()); // Обновляем пароль
-            }
-            user.setUpdatedAt(LocalDateTime.now());
+        if (userDto.getPassword() != null && !userDto.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+        }
 
-            User updatedUser = userRepository.save(user);
+        user.setUpdatedAt(LocalDateTime.now());
+        User updatedUser = userRepository.save(user);
 
-            return UserAfterUpdateDto.builder()
-                    .id(updatedUser.getId())
-                    .email(updatedUser.getEmail())
-                    .name(updatedUser.getName())
-                    .updatedAt(updatedUser.getUpdatedAt())
-                    .build();
-        });
+        return userMapper.toUserAfterUpdateDto(updatedUser);
     }
 
-    // Проверка, существует ли пользователь по ID
+    @Override
+    @Transactional
+    public void deleteUser(Long id) {
+        User currentUser = securityUtils.getCurrentUser();
+
+
+        if (!id.equals(currentUser.getId()) && !currentUser.getRole().equals(Role.ADMIN)) {
+            throw new AccessDeniedException(ErrorMessage.ACCESS_DENIED);
+        }
+
+        if (!existsById(id)) {
+            throw new IdNotFoundException(ErrorMessage.ID_NOT_FOUND);
+        }
+        userRepository.deleteById(id);
+    }
+
     @Override
     public boolean existsById(Long id) {
         return userRepository.existsById(id);
     }
 
-    // Удалить пользователя
-    @Override
-    public void deleteUser(Long id) {
-        userRepository.deleteById(id);
+
+    private void validateAccess(Long id) {
+        User currentUser = securityUtils.getCurrentUser();
+        if (!id.equals(currentUser.getId()) && !currentUser.getRole().equals(Role.ADMIN)) {
+            throw new AccessDeniedException(ErrorMessage.ACCESS_DENIED);
+        }
     }
+
+
 }

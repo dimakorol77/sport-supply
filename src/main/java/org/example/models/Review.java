@@ -26,7 +26,8 @@ public class Review {
     private Product product;
 
     private Integer rating;
-    private String comment;
+    @Column(name = "user_comment")
+    private String userComment;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

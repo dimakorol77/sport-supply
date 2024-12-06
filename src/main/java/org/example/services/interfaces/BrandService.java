@@ -1,14 +1,12 @@
 package org.example.services.interfaces;
 
-import org.example.models.Brand;
-
+import org.example.dto.BrandDto;
 import java.util.List;
-import java.util.Optional;
 
 public interface BrandService {
-    List<Brand> getAllBrands();
-    Optional<Brand> getBrandById(Long id);
-    Brand createBrand(Brand brand);
-    Optional<Brand> updateBrand(Long id, Brand updatedBrand);
+    List<BrandDto> getAllBrands();
+    BrandDto getBrandById(Long id);
+    BrandDto createBrand(BrandDto brandDto);
+    BrandDto updateBrand(Long id, BrandDto brandDto);
     void deleteBrand(Long id);
 }

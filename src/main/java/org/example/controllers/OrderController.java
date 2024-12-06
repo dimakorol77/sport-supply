@@ -1,47 +1,95 @@
 package org.example.controllers;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import org.example.models.Order;
-import org.example.services.interfaces.OrderService;
-import org.springframework.web.bind.annotation.*;
 
+
+import org.example.annotations.OrderAnnotations.GetAllOrders;
+import org.example.annotations.OrderAnnotations.GetOrdersByUserId;
+import org.example.annotations.OrderAnnotations.UpdateOrderStatus;
+import org.example.annotations.OrderAnnotations.*;
+
+import org.example.dto.*;
+import org.example.enums.DeliveryMethod;
+import org.example.enums.OrderStatus;
+import org.example.mappers.OrderMapper;
+import org.example.models.User;
+import org.example.security.SecurityUtils;
+import org.example.services.interfaces.CartService;
+import org.example.services.interfaces.OrderService;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+import java.time.LocalDateTime;
 import java.util.List;
+
 
 @RestController
 @RequestMapping("/api/orders")
+@Validated
 public class OrderController {
     private final OrderService orderService;
 
-    // Используем конструкторную инъекцию
     public OrderController(OrderService orderService) {
         this.orderService = orderService;
     }
 
-    // Получение всех заказов
-    @GetMapping
-    @Operation(summary = "Получение всех заказов",
-            description = "Возвращает список всех заказов",
-            tags = "Заказы",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Заказы найдены")
-            }
-    )
-    public List<Order> getAllOrders() {
-        return orderService.getAllOrders();
+    @GetAllOrders
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<OrderDto>> getAllOrders() {
+        List<OrderDto> orderDtos = orderService.getAllOrders();
+        return ResponseEntity.ok(orderDtos);
     }
 
-    // Получение заказов по ID пользователя
-    @GetMapping("/user/{userId}")
-    @Operation(summary = "Получение заказов по ID пользователя",
-            description = "Возвращает список заказов для указанного пользователя",
-            tags = "Заказы",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Заказы найдены"),
-                    @ApiResponse(responseCode = "404", description = "Пользователь не найден")
-            }
-    )
-    public List<Order> getOrdersByUserId(@PathVariable Long userId) {
-        return orderService.getOrdersByUserId(userId);
+    @GetOrdersByUserId
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<OrderDto>> getOrdersByUserId(@RequestParam(required = false) Long userId) {
+        List<OrderDto> orderDtos = orderService.getOrdersByUserId(userId);
+        return ResponseEntity.ok(orderDtos);
+    }
+
+    @UpdateOrderStatus
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<OrderResponseDto> updateOrderStatus(@PathVariable Long orderId, @RequestParam OrderStatus status) {
+        OrderDto updatedOrderDto = orderService.updateOrderStatus(orderId, status);
+        OrderResponseDto responseDto = new OrderResponseDto(updatedOrderDto.getId(), updatedOrderDto.getTotalAmount(), updatedOrderDto.getStatus());
+        return ResponseEntity.ok(responseDto);
+    }
+
+    @GetOrderById
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<OrderDto> getOrderById(@PathVariable Long orderId) {
+        OrderDto orderDto = orderService.getOrderByIdAndCheckOwnership(orderId);
+        return ResponseEntity.ok(orderDto);
+    }
+
+    @CancelOrder
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> cancelOrder(@PathVariable Long orderId) {
+        orderService.cancelOrderAndCheckOwnership(orderId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetOrdersByStatus
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<OrderDto>> getOrdersByStatus(@RequestParam OrderStatus status) {
+        List<OrderDto> orderDtos = orderService.getOrdersByStatus(status);
+        return ResponseEntity.ok(orderDtos);
+    }
+
+    @GetOrdersCreatedAfter
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<OrderDto>> getOrdersCreatedAfter(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date) {
+        List<OrderDto> orderDtos = orderService.getOrdersCreatedAfter(date);
+        return ResponseEntity.ok(orderDtos);
+    }
+
+    @GetOrdersByDeliveryMethod
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<OrderDto>> getOrdersByDeliveryMethod(@RequestParam DeliveryMethod deliveryMethod) {
+        List<OrderDto> orderDtos = orderService.getOrdersByDeliveryMethod(deliveryMethod);
+        return ResponseEntity.ok(orderDtos);
     }
 }
+

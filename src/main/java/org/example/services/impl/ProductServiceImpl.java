@@ -1,96 +1,137 @@
 package org.example.services.impl;
 
+import org.example.dto.DiscountDto;
+import org.example.dto.ProductDto;
+import org.example.dto.PromotionDto;
+import org.example.exceptions.ProductAlreadyExistsException;
+import org.example.exceptions.ProductNotFoundException;
+import org.example.exceptions.errorMessage.ErrorMessage;
+import org.example.mappers.DiscountMapper;
+import org.example.mappers.ProductMapper;
+import org.example.mappers.PromotionMapper;
 import org.example.models.Discount;
 import org.example.models.Product;
 import org.example.models.ProductPromotion;
-import org.example.models.Promotion;
 import org.example.repositories.DiscountRepository;
 import org.example.repositories.ProductPromotionRepository;
 import org.example.repositories.ProductRepository;
-import org.example.repositories.PromotionRepository;
 import org.example.services.interfaces.ProductService;
+import org.example.specifications.ProductSpecification;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
-    private final DiscountRepository discountRepository;
-    private final ProductPromotionRepository productPromotionRepository;
-    private final PromotionRepository promotionRepository;
+    private final ProductMapper productMapper;
 
-    // Используем конструкторную инъекцию
+
+
+    @Autowired
     public ProductServiceImpl(ProductRepository productRepository,
-                              DiscountRepository discountRepository,
-                              ProductPromotionRepository productPromotionRepository,
-                              PromotionRepository promotionRepository) {
+                              ProductMapper productMapper
+                              ) {
         this.productRepository = productRepository;
-        this.discountRepository = discountRepository;
-        this.productPromotionRepository = productPromotionRepository;
-        this.promotionRepository = promotionRepository;
+
+        this.productMapper = productMapper;
+
+
     }
 
-    // Получить все продукты
     @Override
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
+    public List<ProductDto> getAllProducts() {
+        return productRepository.findAll().stream()
+                .map(productMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    // Получить продукт по ID
     @Override
-    public Optional<Product> getProductById(Long id) {
-        return productRepository.findById(id);
+    public ProductDto getProductById(Long id) {
+        return productRepository.findById(id)
+                .map(productMapper::toDto)
+                .orElseThrow(() -> new ProductNotFoundException(ErrorMessage.PRODUCT_NOT_FOUND));
     }
 
-    // Создать новый продукт
     @Override
-    public Product createProduct(Product product) {
-        product.setCreatedAt(LocalDateTime.now());
-        return productRepository.save(product);
-    }
+    public ProductDto createProduct(@Validated(ProductDto.OnCreate.class) ProductDto productDto) {
 
-    // Обновить продукт
-    @Override
-    public Optional<Product> updateProduct(Long id, Product updatedProduct) {
-        return productRepository.findById(id).map(product -> {
-            product.setName(updatedProduct.getName());
-            product.setDescription(updatedProduct.getDescription());
-            product.setPrice(updatedProduct.getPrice());
-            product.setCategory(updatedProduct.getCategory());
-            product.setBrand(updatedProduct.getBrand());
-            product.setProteinType(updatedProduct.getProteinType());
-            product.setVitaminGroup(updatedProduct.getVitaminGroup());
-            product.setForm(updatedProduct.getForm());
-            product.setUpdatedAt(LocalDateTime.now());
-            // Обновление других полей при необходимости
-            return productRepository.save(product);
+        productRepository.findByName(productDto.getName()).ifPresent(product -> {
+            throw new ProductAlreadyExistsException(ErrorMessage.PRODUCT_ALREADY_EXISTS);
         });
+
+        Product product = productMapper.toEntity(productDto);
+        product.setCreatedAt(LocalDateTime.now());
+        Product savedProduct = productRepository.save(product);
+        return productMapper.toDto(savedProduct);
     }
 
-    // Удалить продукт
+    public ProductDto updateProduct(Long id, ProductDto productDto) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException(ErrorMessage.PRODUCT_NOT_FOUND));
+
+        productMapper.updateEntityFromDto(productDto, product);
+        product.setUpdatedAt(LocalDateTime.now());
+        Product updatedProduct = productRepository.save(product);
+        return productMapper.toDto(updatedProduct);
+    }
+
     @Override
     public void deleteProduct(Long id) {
+        if (!productRepository.existsById(id)) {
+            throw new ProductNotFoundException(ErrorMessage.PRODUCT_NOT_FOUND);
+        }
         productRepository.deleteById(id);
     }
 
-    // Получить активные скидки для продукта
+
+
     @Override
-    public List<Discount> getActiveDiscounts(Long productId) {
-        LocalDateTime now = LocalDateTime.now();
-        return discountRepository.findByProductIdAndStartDateBeforeAndEndDateAfter(productId, now, now);
+    public List<ProductDto> filterAndSortProducts(BigDecimal minPrice, BigDecimal maxPrice, Long categoryId, Boolean hasDiscount, String sortBy, Boolean asc) {
+        Specification<Product> spec = Specification.where(null);
+
+        if (categoryId != null) {
+            spec = spec.and(ProductSpecification.hasCategory(categoryId));
+        }
+
+        if (minPrice != null && maxPrice != null) {
+            spec = spec.and(ProductSpecification.hasPriceBetween(minPrice, maxPrice));
+        } else if (minPrice != null) {
+            spec = spec.and(ProductSpecification.hasPriceBetween(minPrice, BigDecimal.valueOf(Double.MAX_VALUE)));
+        } else if (maxPrice != null) {
+            spec = spec.and(ProductSpecification.hasPriceBetween(BigDecimal.ZERO, maxPrice));
+        }
+
+        if (Boolean.TRUE.equals(hasDiscount)) {
+            spec = spec.and(ProductSpecification.hasActiveDiscount());
+        }
+
+        if (!isSortableField(sortBy)) {
+            throw new IllegalArgumentException(ErrorMessage.INVALID_SORT_FIELD + sortBy);
+        }
+
+
+        Sort sort = Sort.by(Boolean.TRUE.equals(asc) ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy);
+        Pageable pageable = PageRequest.of(0, Integer.MAX_VALUE, sort);
+
+
+        List<Product> products = productRepository.findAll(spec, pageable).getContent();
+        return products.stream().map(productMapper::toDto).collect(Collectors.toList());
     }
 
-    // Получить акции для продукта
-    @Override
-    public List<Promotion> getPromotionsForProduct(Long productId) {
-        List<ProductPromotion> productPromotions = productPromotionRepository.findByProductId(productId);
-        return productPromotions.stream()
-                .map(ProductPromotion::getPromotion)
-                .collect(Collectors.toList());
+    private boolean isSortableField(String field) {
+        return field.equals("name") || field.equals("price") || field.equals("createdAt");
     }
+
+
 }

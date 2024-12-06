@@ -1,15 +1,19 @@
 package org.example.services.interfaces;
 
-import org.example.models.Promotion;
+import org.example.dto.PromotionDto;
 
+
+import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
 public interface PromotionService {
-    List<Promotion> getAllPromotions();
-    Optional<Promotion> getPromotionById(Long id);
-    Promotion createPromotion(Promotion promotion);
-    Optional<Promotion> updatePromotion(Long id, Promotion updatedPromotion);
+    List<PromotionDto> getAllPromotions();
+    PromotionDto getPromotionById(Long id);
+    PromotionDto createPromotion(PromotionDto promotionDto);
+    PromotionDto updatePromotion(Long id, PromotionDto promotionDto);
     void deletePromotion(Long id);
-    List<Promotion> getActivePromotions();
+    void addProductToPromotion(Long promotionId, Long productId);
+    void removeProductFromPromotion(Long promotionId, Long productId);
+    List<PromotionDto> getPromotionsForProduct(Long productId);
+    BigDecimal getPromotionDiscountForProduct(Long productId);
 }

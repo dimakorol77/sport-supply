@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserAfterCreationDto {
-    // возврат информации о пользователе после его создания
+
     private Long id;
     private String email;
     private String name;

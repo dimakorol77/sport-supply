@@ -1,5 +1,6 @@
 package org.example.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.enums.Form;
@@ -7,6 +8,7 @@ import org.example.enums.ProteinType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -29,6 +31,7 @@ public class Product {
 
     @ManyToOne
     @JoinColumn(name = "category_id")
+
     private Category category;
 
     @ManyToOne
@@ -60,9 +63,10 @@ public class Product {
     @OneToMany(mappedBy = "product")
     private List<Review> reviews;
 
-    // Добавили поле для отображения избранного
-    @Transient  // Не сохраняется в базе данных напрямую
-    private boolean isFavorite;
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Favorite> favorites = new ArrayList<>();
 
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    private List<ProductPromotion> productPromotions;
 
 }
