@@ -22,14 +22,12 @@ public class PromotionController {
         this.promotionService = promotionService;
     }
 
-
     @GetAllPromotions
     @PreAuthorize("permitAll()")
     public ResponseEntity<List<PromotionDto>> getAllPromotions() {
         List<PromotionDto> promotions = promotionService.getAllPromotions();
         return ResponseEntity.ok(promotions);
     }
-
 
     @GetPromotionById
     @PreAuthorize("permitAll()")
@@ -38,7 +36,6 @@ public class PromotionController {
         return ResponseEntity.ok(promotion);
     }
 
-
     @CreatePromotion
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PromotionDto> createPromotion(
@@ -46,7 +43,6 @@ public class PromotionController {
         PromotionDto createdPromotion = promotionService.createPromotion(promotionDto);
         return ResponseEntity.status(201).body(createdPromotion);
     }
-
 
     @UpdatePromotion
     @PreAuthorize("hasRole('ADMIN')")
@@ -58,14 +54,12 @@ public class PromotionController {
         return ResponseEntity.ok(updatedPromotion);
     }
 
-
     @DeletePromotion
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deletePromotion(@PathVariable Long id) {
         promotionService.deletePromotion(id);
         return ResponseEntity.noContent().build();
     }
-
 
     @AddProductToPromotion
     @PreAuthorize("hasRole('ADMIN')")
@@ -74,16 +68,12 @@ public class PromotionController {
         return ResponseEntity.status(201).build();
     }
 
-
     @RemoveProductFromPromotion
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> removeProductFromPromotion(@PathVariable Long promotionId, @PathVariable Long productId) {
         promotionService.removeProductFromPromotion(promotionId, productId);
         return ResponseEntity.noContent().build();
     }
-
-
-
 
     @GetPromotionsForProduct
     @PreAuthorize("permitAll()")

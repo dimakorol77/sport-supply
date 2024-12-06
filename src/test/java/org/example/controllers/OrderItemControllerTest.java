@@ -2,14 +2,12 @@ package org.example.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.dto.OrderItemCreateDto;
-import org.example.dto.OrderItemDto;
 import org.example.enums.DeliveryMethod;
 import org.example.enums.OrderStatus;
 import org.example.enums.Role;
 import org.example.models.*;
 import org.example.repositories.*;
 import org.example.services.impl.JwtSecurityService;
-import org.hibernate.Hibernate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Transactional
 public class OrderItemControllerTest {
 
     @Autowired

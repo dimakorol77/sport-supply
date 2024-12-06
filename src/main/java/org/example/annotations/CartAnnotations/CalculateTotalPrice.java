@@ -15,13 +15,13 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.GET)
 @Operation(
-        summary = "Подсчет общей стоимости",
-        description = "Возвращает общую стоимость товаров в корзине",
-        tags = "Корзина",
+        summary = "Calculating the total cost",
+        description = "Returns the total cost of items in the cart",
+        tags = "Cart",
         responses = {
-                @ApiResponse(responseCode = "200", description = "Общая стоимость вычислена"),
-                @ApiResponse(responseCode = "404", description = "Корзина не найдена"),
-                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
+                @ApiResponse(responseCode = "200", description = "Total cost calculated"),
+                @ApiResponse(responseCode = "404", description = "Cart not found"),
+                @ApiResponse(responseCode = "403", description = "You don't have access")
         }
 )
 public @interface CalculateTotalPrice {

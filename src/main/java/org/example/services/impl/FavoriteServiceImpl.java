@@ -46,20 +46,18 @@ public class FavoriteServiceImpl implements FavoriteService {
     }
 
     @Override
-    public void addProductToFavorites(Long userId, Long productId) {
-        User user = getCurrentUser();
-        if (favoriteRepository.existsByUserIdAndProductId(userId, productId)) {
+    public void addProductToFavorites(Long productId) {
+        User currentUser = getCurrentUser();
+
+        if (favoriteRepository.existsByUserIdAndProductId(currentUser.getId(), productId)) {
             throw new FavoriteAlreadyExistsException(ErrorMessage.FAVORITE_ALREADY_EXISTS);
         }
-
-
 
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(ErrorMessage.PRODUCT_NOT_FOUND));
 
-
         Favorite favorite = new Favorite();
-        favorite.setUser(user);
+        favorite.setUser(currentUser);
         favorite.setProduct(product);
         favorite.setAddedAt(LocalDateTime.now());
 
@@ -67,13 +65,24 @@ public class FavoriteServiceImpl implements FavoriteService {
     }
 
     @Override
-    public List<ProductDto> getUserFavorites(Long userId) {
+    public List<ProductDto> getUserFavorites() {
         User currentUser = getCurrentUser();
 
-        if (currentUser.getRole() == Role.USER && !currentUser.getId().equals(userId)) {
+        List<Favorite> favorites = favoriteRepository.findByUserId(currentUser.getId());
+
+        return favorites.stream()
+                .map(favorite -> productMapper.toDto(favorite.getProduct()))
+                .collect(Collectors.toList());
+    }
+    @Override
+    public List<ProductDto> getUserFavoritesByAdmin(Long userId) {
+        User currentUser = getCurrentUser();
+
+        if (currentUser.getRole() != Role.ADMIN) {
             throw new AccessDeniedException(ErrorMessage.ACCESS_DENIED);
         }
-        List<Favorite> favorites = favoriteRepository.findByUserId(currentUser.getId());
+
+        List<Favorite> favorites = favoriteRepository.findByUserId(userId);
 
         return favorites.stream()
                 .map(favorite -> productMapper.toDto(favorite.getProduct()))
@@ -81,13 +90,12 @@ public class FavoriteServiceImpl implements FavoriteService {
     }
 
     @Override
-    public void removeProductFromFavorites(Long userId, Long productId) {
-        User user = getCurrentUser();
+    public void removeProductFromFavorites(Long productId) {
+        User currentUser = getCurrentUser();
 
-        Favorite favorite = favoriteRepository.findByUserIdAndProductId(user.getId(), productId)
+        Favorite favorite = favoriteRepository.findByUserIdAndProductId(currentUser.getId(), productId)
                 .orElseThrow(() -> new FavoriteNotFoundException(ErrorMessage.FAVORITE_NOT_FOUND));
 
         favoriteRepository.delete(favorite);
-
     }
 }

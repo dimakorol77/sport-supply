@@ -29,14 +29,9 @@ import java.util.List;
 @Validated
 public class OrderController {
     private final OrderService orderService;
-    private final SecurityUtils securityUtils;
 
-    public OrderController(OrderService orderService, SecurityUtils securityUtils) {
+    public OrderController(OrderService orderService) {
         this.orderService = orderService;
-        this.securityUtils = securityUtils;
-    }
-    private User getCurrentUser() {
-        return securityUtils.getCurrentUser();
     }
 
     @GetAllOrders
@@ -45,7 +40,6 @@ public class OrderController {
         List<OrderDto> orderDtos = orderService.getAllOrders();
         return ResponseEntity.ok(orderDtos);
     }
-
 
     @GetOrdersByUserId
     @PreAuthorize("isAuthenticated()")
@@ -65,19 +59,16 @@ public class OrderController {
     @GetOrderById
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<OrderDto> getOrderById(@PathVariable Long orderId) {
-        User currentUser = getCurrentUser();
-        OrderDto orderDto = orderService.getOrderByIdAndCheckOwnership(orderId, currentUser.getId());
+        OrderDto orderDto = orderService.getOrderByIdAndCheckOwnership(orderId);
         return ResponseEntity.ok(orderDto);
     }
 
     @CancelOrder
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> cancelOrder(@PathVariable Long orderId) {
-        User currentUser = getCurrentUser();
-        orderService.cancelOrderAndCheckOwnership(orderId, currentUser.getId());
-        return ResponseEntity.noContent().build(); // Изменено с ResponseEntity.ok() на ResponseEntity.noContent()
+        orderService.cancelOrderAndCheckOwnership(orderId);
+        return ResponseEntity.noContent().build();
     }
-
 
     @GetOrdersByStatus
     @PreAuthorize("hasRole('ADMIN')")
@@ -93,7 +84,6 @@ public class OrderController {
         List<OrderDto> orderDtos = orderService.getOrdersCreatedAfter(date);
         return ResponseEntity.ok(orderDtos);
     }
-
 
     @GetOrdersByDeliveryMethod
     @PreAuthorize("hasRole('ADMIN')")

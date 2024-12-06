@@ -39,7 +39,6 @@ public class ProductDto {
     @Size(max = 50, message = "The form must not exceed 50 characters")
     private String form;
 
-    // Группы для валидации
     public interface OnCreate {}
     public interface OnUpdate {}
 }

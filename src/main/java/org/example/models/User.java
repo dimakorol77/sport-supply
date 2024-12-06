@@ -51,13 +51,13 @@ public class User {
 
     @PrePersist
     public void prePersist() {
-        this.createdAt = LocalDateTime.now(); // Устанавливаем текущее время при создании
+        this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
 
     @PreUpdate
     public void preUpdate() {
-        this.updatedAt = LocalDateTime.now(); // Обновляем время при изменении
+        this.updatedAt = LocalDateTime.now();
     }
 }
 

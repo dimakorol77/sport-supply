@@ -2,7 +2,6 @@ package org.example.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.dto.UserDto;
-import org.example.dto.UserAfterUpdateDto;
 import org.example.enums.Role;
 import org.example.models.User;
 import org.example.repositories.UserRepository;
@@ -16,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -28,6 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Transactional
 public class UserControllerTest {
 
     @Autowired

@@ -15,14 +15,14 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.PUT)
 @Operation(
-        summary = "Обновление элемента заказа",
-        description = "Обновляет данные указанного элемента заказа",
-        tags = {"Элементы заказа"},
+        summary = "Updating an order item",
+        description = "Updates the data of the specified order item",
+        tags = {"Order Items"},
         responses = {
-                @ApiResponse(responseCode = "200", description = "Элемент заказа успешно обновлен"),
-                @ApiResponse(responseCode = "400", description = "Ошибка в данных запроса"),
-                @ApiResponse(responseCode = "404", description = "Элемент заказа не найден"),
-                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
+                @ApiResponse(responseCode = "200", description = "Order item successfully updated"),
+                @ApiResponse(responseCode = "400", description = "Request data error"),
+                @ApiResponse(responseCode = "404", description = "Order item not found"),
+                @ApiResponse(responseCode = "403", description = "Access denied")
         }
 )
 public @interface UpdateOrderItem {

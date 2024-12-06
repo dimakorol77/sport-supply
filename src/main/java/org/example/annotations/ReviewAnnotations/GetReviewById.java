@@ -13,12 +13,12 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.GET)
 @Operation(
-        summary = "Получение отзыва по ID",
-        description = "Возвращает отзыв с указанным ID",
-        tags = "Отзывы",
+        summary = "Getting a review by ID",
+        description = "Returns the review with the specified ID",
+        tags = "Reviews",
         responses = {
-                @ApiResponse(responseCode = "200", description = "Отзыв найден"),
-                @ApiResponse(responseCode = "404", description = "Отзыв не найден")
+                @ApiResponse(responseCode = "200", description = "Review found"),
+                @ApiResponse(responseCode = "404", description = "Review not found")
         }
 )
 public @interface GetReviewById {

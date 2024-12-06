@@ -12,7 +12,6 @@ public class PromotionDto {
     @Schema(description = "ID акции. Передается только в URL", accessMode = Schema.AccessMode.READ_ONLY)
     private Long id;
 
-
     @NotBlank(message = "The promotion name cannot be empty")
     @Size(max = 200, message = "The promotion name must not exceed 200 characters")
     private String name;

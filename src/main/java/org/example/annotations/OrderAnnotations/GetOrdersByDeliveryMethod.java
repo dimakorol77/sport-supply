@@ -16,13 +16,13 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.GET)
 @Operation(
-        summary = "Получение заказов по методу доставки",
-        description = "Возвращает список заказов с указанным методом доставки",
-        tags = "Заказы",
+        summary = "Getting orders by delivery method",
+        description = "Returns a list of orders with the specified delivery method",
+        tags = "Orders",
         responses = {
-                @ApiResponse(responseCode = "200", description = "Список заказов получен"),
-                @ApiResponse(responseCode = "400", description = "Некорректный метод доставки"),
-                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
+                @ApiResponse(responseCode = "200", description = "Order list retrieved"),
+                @ApiResponse(responseCode = "400", description = "Invalid delivery method"),
+                @ApiResponse(responseCode = "403", description = "Access denied")
         }
 )
 

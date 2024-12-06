@@ -12,14 +12,5 @@ public interface ReviewService {
     ReviewDto updateReview(Long id, ReviewDto reviewDto);
     void deleteReview(Long id);
     List<ReviewDto> getReviewsByProductId(Long productId);
-
-    /**
-     * Получить отзывы пользователя.
-     * Доступ только для самого пользователя или администратора.
-     *
-     * @param userId      ID пользователя
-     * @param currentUser текущий пользователь (аутентифицированный или администратор)
-     * @return список отзывов пользователя
-     */
-    List<ReviewDto> getReviewsByUserId(Long userId, User currentUser);
+    List<ReviewDto> getReviewsByUserId(Long userId);
 }

@@ -1,19 +1,18 @@
 package org.example.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import org.example.dto.UserDto;
 import org.example.dto.UserLoginDto;
 import org.example.enums.Role;
 import org.example.models.User;
 import org.example.repositories.UserRepository;
-import org.example.services.impl.JwtSecurityService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -27,6 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Transactional
 public class AuthControllerTest {
 
     @Autowired
@@ -34,9 +34,6 @@ public class AuthControllerTest {
 
     @Autowired
     private UserRepository userRepository;
-
-    @Autowired
-    private JwtSecurityService jwtSecurityService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;

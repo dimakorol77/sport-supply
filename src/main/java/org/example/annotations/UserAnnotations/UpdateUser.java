@@ -17,14 +17,14 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.PUT)
 @Operation(
-        summary = "Обновление пользователя",
-        description = "Обновляет пользователя по указанному ID",
-        tags = {"Пользователи"},
+        summary = "Updating a user",
+        description = "Updates the user with the specified ID",
+        tags = {"Users"},
         responses = {
-                @ApiResponse(responseCode = "200", description = "Пользователь успешно обновлен"),
-                @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
-                @ApiResponse(responseCode = "400", description = "Некорректные данные"),
-                @ApiResponse(responseCode = "403", description = "Вы не админ, у вас нет доступа")
+                @ApiResponse(responseCode = "200", description = "User successfully updated"),
+                @ApiResponse(responseCode = "404", description = "User not found"),
+                @ApiResponse(responseCode = "400", description = "Invalid data"),
+                @ApiResponse(responseCode = "403", description = "You are not an admin, access denied")
         }
 )
 public @interface UpdateUser {

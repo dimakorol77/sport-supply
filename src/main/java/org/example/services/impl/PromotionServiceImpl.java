@@ -131,6 +131,9 @@ public class PromotionServiceImpl implements PromotionService {
                 .map(promotionMapper::toDto)
                 .collect(Collectors.toList());
     }
+
+
+
     @Override
     public BigDecimal getPromotionDiscountForProduct(Long productId) {
         LocalDateTime now = LocalDateTime.now();

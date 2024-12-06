@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class OrderItemDto {
     @NotNull(message = "Product ID cannot be empty")
-private Long productId;
+    private Long productId;
     @NotBlank(message = "Product name cannot be empty")
     private String productName;
     private String productDescription;

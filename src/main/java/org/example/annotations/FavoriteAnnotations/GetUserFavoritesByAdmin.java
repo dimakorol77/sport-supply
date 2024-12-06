@@ -11,13 +11,13 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.GET)
 @Operation(
-        summary = "Получить избранные товары пользователя (только для администратора)",
-        description = "Администратор может получить список избранных товаров любого пользователя по его ID",
-        tags = {"Избранное"},
+        summary = "Getting user's favorite items (admin only)",
+        description = "The administrator can retrieve a list of favorite items for any user by their ID",
+        tags = {"Favorites"},
         responses = {
-                @ApiResponse(responseCode = "200", description = "Список избранных товаров получен"),
-                @ApiResponse(responseCode = "403", description = "Доступ запрещен"),
-                @ApiResponse(responseCode = "404", description = "Пользователь не найден")
+                @ApiResponse(responseCode = "200", description = "Favorite items list retrieved"),
+                @ApiResponse(responseCode = "403", description = "Access denied"),
+                @ApiResponse(responseCode = "404", description = "User not found")
         }
 )
 public @interface GetUserFavoritesByAdmin {

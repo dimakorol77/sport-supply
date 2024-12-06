@@ -12,11 +12,11 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.GET)
 @Operation(
-        summary = "Получение всех брендов",
-        description = "Возвращает список всех брендов",
-        tags = "Бренды",
+        summary = "Getting all brands",
+        description = "Returns a list of all brands",
+        tags = "Brands",
         responses = {
-                @ApiResponse(responseCode = "200", description = "Бренды найдены")
+                @ApiResponse(responseCode = "200", description = "Brands found")
         }
 )
 public @interface GetAllBrands {

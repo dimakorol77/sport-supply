@@ -13,12 +13,12 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.GET)
 @Operation(
-        summary = "Получение категории по ID",
-        description = "Возвращает категорию с указанным ID",
-        tags = "Категории",
+        summary = "Getting a category by ID",
+        description = "Returns the category with the specified ID",
+        tags = "Categories",
         responses = {
-                @ApiResponse(responseCode = "200", description = "Категория найдена"),
-                @ApiResponse(responseCode = "404", description = "Категория не найдена")
+                @ApiResponse(responseCode = "200", description = "Category found"),
+                @ApiResponse(responseCode = "404", description = "Category not found")
         }
 )
 public @interface GetCategoryById {

@@ -29,7 +29,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         String path = request.getRequestURI();
 
-        // Пропускаем фильтрацию для /api/auth/** и Swagger
+
         if (path.startsWith("/api/auth/") ||
                 path.startsWith("/v3/api-docs/") ||
                 path.startsWith("/swagger-ui/") ||
@@ -38,23 +38,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Получаем заголовок Authorization
+
         String header = request.getHeader("Authorization");
 
-        // Проверка, содержит ли заголовок токен
+
         if (StringUtils.isEmpty(header) || !StringUtils.startsWith(header, "Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        String jwt = header.substring(7);  // Извлекаем JWT из заголовка
+        String jwt = header.substring(7);
         String email = jwtSecurityService.extractUsername(jwt);
 
-        // Проверяем, что email получен и еще нет аутентификации для данного запроса
+
         if (StringUtils.isNotEmpty(email) && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = appUserService.loadUserByUsername(email);
 
-            // Проверяем валидность токена
+
             if (jwtSecurityService.validateToken(jwt, userDetails)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());

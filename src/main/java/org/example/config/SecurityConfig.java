@@ -57,37 +57,37 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/images/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/images/**").hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.GET, "/api/orders/all").hasRole("ADMIN") // Доступ к getAllOrders только для ADMIN
-                        .requestMatchers(HttpMethod.GET, "/api/orders/user").authenticated() // Доступ к getOrdersByUserId для аутентифицированных пользователей
-                        .requestMatchers(HttpMethod.PUT, "/api/orders/{orderId}/status").hasRole("ADMIN") // Доступ к updateOrderStatus только для ADMIN
-                        .requestMatchers(HttpMethod.GET, "/api/orders/{orderId}").authenticated() // Доступ к getOrderById для аутентифицированных пользователей
-                        .requestMatchers(HttpMethod.DELETE, "/api/orders/{orderId}/cancel").authenticated() // Доступ к cancelOrder для аутентифицированных пользователей
-                        .requestMatchers(HttpMethod.GET, "/api/orders/status").hasRole("ADMIN") // Доступ к getOrdersByStatus только для ADMIN
-                        .requestMatchers(HttpMethod.GET, "/api/orders/createdAfter").hasRole("ADMIN") // Доступ к getOrdersCreatedAfter только для ADMIN
-                        .requestMatchers(HttpMethod.GET, "/api/orders/deliveryMethod").hasRole("ADMIN") // Доступ к getOrdersByDeliveryMethod только для ADMIN
+                        .requestMatchers(HttpMethod.GET, "/api/orders/all").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/orders/user").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/orders/{orderId}/status").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/orders/{orderId}").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/orders/{orderId}/cancel").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/orders/status").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/orders/createdAfter").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/orders/deliveryMethod").hasRole("ADMIN")
 
-                        // Открытый доступ к просмотру продуктов
+
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                         
-                        // Доступ к изменению, созданию и удалению только для администраторов
+
                         .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.GET, "/api/promotions/**").permitAll() // Только GET доступен всем
-                        .requestMatchers("/api/promotions/**").hasRole("ADMIN") // Остальные методы только для ADMIN
+                        .requestMatchers(HttpMethod.GET, "/api/promotions/**").permitAll()
+                        .requestMatchers("/api/promotions/**").hasRole("ADMIN")
 
-                        // Разрешаем администраторам доступ к GET /api/users и GET /api/users/{id}/details
+
                         .requestMatchers(HttpMethod.GET, "/api/users").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/users/{id}/details").hasRole("ADMIN")
-                        // Разрешаем аутентифицированным пользователям доступ к GET /api/users/{id}
+
                         .requestMatchers(HttpMethod.GET, "/api/users/{id}").authenticated()
-                        // Разрешаем аутентифицированным пользователям доступ к PUT и DELETE /api/users/{id}
+
                         .requestMatchers(HttpMethod.PUT, "/api/users/{id}").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/users/{id}").authenticated()
-                        // Разрешаем администраторам создавать новых пользователей
+
                         .requestMatchers(HttpMethod.POST, "/api/users").hasRole("ADMIN")
-                        // Все остальные запросы к /api/users/** требуют роль ADMIN
+
                         .requestMatchers("/api/users/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

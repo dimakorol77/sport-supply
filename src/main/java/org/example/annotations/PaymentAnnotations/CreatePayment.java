@@ -15,13 +15,13 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.POST)
 @Operation(
-        summary = "Создание нового платежа",
-        description = "Создает новый платеж для заказа",
-        tags = {"Платежи"},
+        summary = "Creating a new payment",
+        description = "Creates a new payment for an order",
+        tags = {"Payments"},
         responses = {
-                @ApiResponse(responseCode = "201", description = "Платеж успешно создан"),
-                @ApiResponse(responseCode = "404", description = "Заказ не найден"),
-                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
+                @ApiResponse(responseCode = "201", description = "Payment successfully created"),
+                @ApiResponse(responseCode = "404", description = "Order not found"),
+                @ApiResponse(responseCode = "403", description = "Access denied")
         }
 )
 public @interface CreatePayment {

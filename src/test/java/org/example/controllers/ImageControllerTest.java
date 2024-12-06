@@ -1,5 +1,6 @@
 package org.example.controllers;
 
+import jakarta.transaction.Transactional;
 import org.example.enums.Role;
 import org.example.models.Image;
 import org.example.models.Product;
@@ -28,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Transactional
 public class ImageControllerTest {
 
     @Autowired

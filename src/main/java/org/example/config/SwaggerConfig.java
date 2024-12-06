@@ -30,7 +30,7 @@ public class SwaggerConfig {
                                 .type("object")
                                 .addProperties("file", new Schema<>()
                                         .type("string")
-                                        .format("binary"))) // Определение файла
+                                        .format("binary")))
                         .addSecuritySchemes("BearerAuth",
                                 new SecurityScheme()
                                         .type(SecurityScheme.Type.HTTP)

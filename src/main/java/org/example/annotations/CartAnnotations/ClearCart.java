@@ -11,20 +11,20 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target(ElementType.METHOD) // Указывает, что данная аннотация может быть использована только для методов.
-@Retention(RetentionPolicy.RUNTIME) // Аннотация будет доступна во время выполнения программы.
-@RequestMapping(method = RequestMethod.DELETE) // Указывает, что аннотированный метод обрабатывает HTTP DELETE запросы.
-@Operation( // Аннотация из библиотеки Springdoc для генерации документации OpenAPI.
-        summary = "Очистка корзины", // Краткое описание операции.
-        description = "Удаляет все товары из корзины", // Подробное описание, что делает этот метод.
-        tags = "Корзина", // Теги для группировки методов в документации.
-        responses = { // Описание возможных ответов от сервера.
-                @ApiResponse(responseCode = "204", description = "Корзина успешно очищена"), // Ответ при успешном выполнении (статус 204).
-                @ApiResponse(responseCode = "404", description = "Корзина не найдена"), // Ответ при ошибке (статус 404, если корзина не найдена).
-                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+@RequestMapping(method = RequestMethod.DELETE)
+@Operation(
+        summary = "Emptying the cart",
+        description = "Removes all items from the cart",
+        tags = "Cart",
+        responses = {
+                @ApiResponse(responseCode = "204", description = "The cart has been successfully emptied"),
+                @ApiResponse(responseCode = "404", description = "Cart not found"),
+                @ApiResponse(responseCode = "403", description = "You don't have access")
         }
 )
-public @interface ClearCart {// Объявление кастомной аннотации ClearCart.
-    @AliasFor(annotation = RequestMapping.class, attribute = "path")// Позволяет задавать значение для параметра "path" в аннотации RequestMapping.
-    String[] path() default {"/{cartId}/clear"};// Определяет путь URL, по которому будет выполняться запрос (например, /{cartId}/clear).
+public @interface ClearCart {
+    @AliasFor(annotation = RequestMapping.class, attribute = "path")
+    String[] path() default {"/{cartId}/clear"};
 }

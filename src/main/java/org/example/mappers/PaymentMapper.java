@@ -25,7 +25,6 @@ public class PaymentMapper {
         return dto;
     }
 
-
     public Payment toEntity(PaymentRequestDto dto, Order order) {
         if (dto == null) {
             return null;
@@ -38,5 +37,4 @@ public class PaymentMapper {
         payment.setUpdatedAt(LocalDateTime.now());
         return payment;
     }
-
 }

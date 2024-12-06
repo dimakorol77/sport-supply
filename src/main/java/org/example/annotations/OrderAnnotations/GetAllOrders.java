@@ -12,21 +12,19 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
-// Аннотация доступна в процессе выполнения
 @Retention(RetentionPolicy.RUNTIME)
-// Аннотация включает в себя метод GET и указывает путь
+
 @RequestMapping(method = RequestMethod.GET)
 @Operation(
-        summary = "Получение всех заказов", // Описание запроса
-        description = "Возвращает список всех заказов", // Подробное описание операции
-        tags = {"Заказы"}, // Теги для группировки в Swagger UI
-        responses = { // Описание возможных ответов
-                @ApiResponse(responseCode = "200", description = "Заказы найдены"),// Ответ 200 с описанием
-                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
+        summary = "Getting all orders",
+        description = "Returns a list of all orders",
+        tags = {"Orders"},
+        responses = {
+                @ApiResponse(responseCode = "200", description = "Orders found"),
+                @ApiResponse(responseCode = "403", description = "Access denied")
         }
 )
-public @interface GetAllOrders { // Объявление кастомной аннотации `@GetAllOrders`
-    // Позволяет указывать путь при использовании аннотации
+public @interface GetAllOrders {
     @AliasFor(annotation = RequestMapping.class, attribute = "path")
     String[] path() default {"/all"};
 

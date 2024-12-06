@@ -13,6 +13,7 @@ import org.example.annotations.ReviewAnnotations.GetReviewsByProductId;
 import org.example.annotations.ReviewAnnotations.GetReviewsByUserId;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -23,11 +24,9 @@ import java.util.List;
 public class ReviewController {
 
     private final ReviewService reviewService;
-    private final SecurityUtils securityUtils;
 
-    public ReviewController(ReviewService reviewService, SecurityUtils securityUtils) {
+    public ReviewController(ReviewService reviewService) {
         this.reviewService = reviewService;
-        this.securityUtils = securityUtils;
     }
 
     @GetAllReviews
@@ -44,16 +43,16 @@ public class ReviewController {
     }
 
     @CreateReview
-    public ResponseEntity<ReviewDto> createReview(@Valid @RequestBody ReviewDto reviewDto) {
-        User currentUser = securityUtils.getCurrentUser();
-        reviewDto.setUserId(currentUser.getId()); // Устанавливаем userId из текущего пользователя
+    public ResponseEntity<ReviewDto> createReview(
+            @Validated(ReviewDto.OnCreate.class) @RequestBody ReviewDto reviewDto) {
         ReviewDto created = reviewService.createReview(reviewDto);
         return ResponseEntity.status(201).body(created);
     }
 
-
     @UpdateReview
-    public ResponseEntity<ReviewDto> updateReview(@PathVariable Long id, @Valid @RequestBody ReviewDto reviewDto) {
+    public ResponseEntity<ReviewDto> updateReview(
+            @PathVariable Long id,
+            @Validated(ReviewDto.OnUpdate.class) @RequestBody ReviewDto reviewDto) {
         ReviewDto updated = reviewService.updateReview(id, reviewDto);
         return ResponseEntity.ok(updated);
     }
@@ -72,8 +71,7 @@ public class ReviewController {
 
     @GetReviewsByUserId
     public ResponseEntity<List<ReviewDto>> getReviewsByUserId(@PathVariable Long userId) {
-        User currentUser = securityUtils.getCurrentUser();
-        List<ReviewDto> reviews = reviewService.getReviewsByUserId(userId, currentUser);
+        List<ReviewDto> reviews = reviewService.getReviewsByUserId(userId);
         return ResponseEntity.ok(reviews);
     }
 }

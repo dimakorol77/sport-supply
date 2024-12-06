@@ -1,5 +1,6 @@
 package org.example.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.enums.Form;
@@ -30,6 +31,7 @@ public class Product {
 
     @ManyToOne
     @JoinColumn(name = "category_id")
+
     private Category category;
 
     @ManyToOne

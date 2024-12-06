@@ -61,7 +61,6 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<OrderDto> getOrdersByUserId(Long userId) {
         User currentUser = getCurrentUser();
-
         List<Order> orders;
 
         if (userId == null) {
@@ -201,16 +200,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public boolean isOrderOwner(Long orderId, Long userId) {
-        Order order = orderRepository.findById(orderId).orElse(null);
-        if (order == null || order.getUser() == null) {
-            return false;
-        }
-        return order.getUser().getId().equals(userId);
-    }
-
-    @Override
-    public OrderDto getOrderByIdAndCheckOwnership(Long orderId, Long userId) {
+    public OrderDto getOrderByIdAndCheckOwnership(Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException(ErrorMessage.ORDER_NOT_FOUND));
 
@@ -222,7 +212,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     @Override
-    public void cancelOrderAndCheckOwnership(Long orderId, Long userId) {
+    public void cancelOrderAndCheckOwnership(Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException(ErrorMessage.ORDER_NOT_FOUND));
 
@@ -236,7 +226,6 @@ public class OrderServiceImpl implements OrderService {
             addOrderStatusHistory(order, OrderStatus.CANCELLED);
 
             orderRepository.save(order);
-
         } else {
             throw new OrderCancellationException(ErrorMessage.ORDER_CANNOT_BE_CANCELLED);
         }

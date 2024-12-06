@@ -14,13 +14,13 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.PUT)
 @Operation(
-        summary = "Обновление акции",
-        description = "Обновляет акцию по указанному ID",
-        tags = "Акции",
+        summary = "Updating a promotion",
+        description = "Updates the promotion with the specified ID",
+        tags = "Promotions",
         responses = {
-                @ApiResponse(responseCode = "200", description = "Акция успешно обновлена"),
-                @ApiResponse(responseCode = "404", description = "Акция не найдена"),
-                @ApiResponse(responseCode = "400", description = "Некорректные данные")
+                @ApiResponse(responseCode = "200", description = "Promotion successfully updated"),
+                @ApiResponse(responseCode = "404", description = "Promotion not found"),
+                @ApiResponse(responseCode = "400", description = "Invalid data")
         }
 )
 public @interface UpdatePromotion {

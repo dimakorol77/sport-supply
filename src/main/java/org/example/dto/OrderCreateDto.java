@@ -18,5 +18,4 @@ public class OrderCreateDto {
     @Size(min = 5, message = "Contact information must be at least 5 characters long")
     private String contactInfo;
 
-
 }

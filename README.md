@@ -2,182 +2,216 @@
 ## Online Sports Nutrition Store Backend
 
 ## Description
-This project is an online platform for selling sports nutrition products, designed to provide a seamless shopping experience for fitness enthusiasts. Built with a robust technology stack, it incorporates the following features:
+This project is an online platform for selling sports nutrition products, designed to provide a seamless shopping 
+experience for fitness enthusiasts. Built with a robust technology stack, it incorporates the following features:
 
-User Authentication and Authorization: Secure registration and login processes using Spring Security and JWT for token-based authentication.
-Product Management: Users can browse, search, and filter a variety of sports nutrition products. Admins can manage inventory and update product details.
-Order Processing: Users can add products to their cart, place orders, and track their order history.
-Payment Integration: Supports payment processing for secure transactions.
-Database Management: Utilizes MySQL for data storage and Flyway/Liquibase for database versioning and migration.
+- **User Authentication and Authorization**: Secure registration and login processes using Spring Security and JWT 
+for token-based authentication.
+- **Product Management**: Users can browse, search, and filter a variety of sports nutrition products. 
+Admins can manage inventory, update product details, and handle product images.
+- **Order Processing**: Users can add products to their cart, place orders, track their order history, 
+and view order status changes.
+- **Promotion Management**: Admins can create promotions, associate products with promotions, and manage discounts.
+- **Favorites and Reviews**: Users can mark products as favorites and leave reviews with ratings.
+- **Database Management**: Utilizes MySQL for data storage.
+- **API Documentation**: Comprehensive API documentation using Swagger/OpenAPI.
+- **Containerization**: Docker for containerizing the application.
 
 ## Used Technology Stack:
-- Java 11+
-- Spring Boot 2.x
-- Spring Security
-- Spring Data JPA/Hibernate
-- MySQL
-- Flyway/Liquibase
-- JWT (JSON Web Tokens)
-- Swagger/OpenAPI
-- Docker
-- JUnit, Mockito
+- **Programming Language**: Java 21
+- **Framework**: Spring Boot 3.3.4
+- **Security**: Spring Security, JWT (JSON Web Tokens)
+- **ORM**: Spring Data JPA/Hibernate
+- **Database**: MySQL
+- **Documentation**: Swagger/OpenAPI
+- **Containerization**: Docker
+- **Testing**: JUnit, Mockito
+- **Code Simplification**: Lombok
 
 # Database Structure
 
-## Table: users
-| Column        | Type         | Description                                 |
-|---------------|--------------|---------------------------------------------|
-| id            | bigint       | id key of row - unique, not null, primary key |
-| email         | varchar(255) | user email, not null, unique                |
-| password      | varchar(255) | user password, not null                     |
-| name          | varchar(255) | user name                                   |
-| phoneNumber   | varchar(255) | user phone number                           |
-| role          | varchar(255) | user role (enum)                           |
-| createdAt     | timestamp    | timestamp of row creation, not null        |
-| updatedAt     | timestamp    | timestamp of last update                    |
+### Table: users
 
+| Column       | Type         | Description                                           |
+|--------------|--------------|-------------------------------------------------------|
+| id           | bigint       | Unique identifier, primary key, not null              |
+| email        | varchar(255) | User email, unique, not null                          |
+| password     | varchar(255) | User password, not null                               |
+| name         | varchar(255) | User name                                             |
+| phone_number | varchar(255) | User phone number                                     |
+| role         | varchar(255) | User role (enum: USER, ADMIN)                         |
+| created_at   | timestamp    | Timestamp of row creation, not null                   |
+| updated_at   | timestamp    | Timestamp of last update                               |
 
-## Table: products
-| Column        | Type         | Description                                  |
-|---------------|--------------|----------------------------------------------|
-| id            | bigint       | id key of row - unique, not null, primary key |
-| name          | varchar(255) | product name, not null                       |
-| description   | text         | product description                          |
-| price         | decimal      | product price                                |
-| category_id   | bigint       | id of the category associated with the product |
-| brand_id      | bigint       | id of the brand associated with the product  |
-| protein_type  | varchar(255) | type of protein (enum)                      |
-| vitamin_group  | varchar(255) | vitamin group                                |
-| form          | varchar(255) | product form (enum)                         |
-| createdAt     | timestamp    | timestamp of row creation                    |
-| updatedAt     | timestamp    | timestamp of last update                     |
-| isFavorite     | boolean      | flag indicating if the product is favorited (not persisted) |
+### Table: products
 
-## Table: categories
-| Column        | Type         | Description                                  |
-|---------------|--------------|----------------------------------------------|
-| id            | bigint       | id key of row - unique, not null, primary key |
-| name          | varchar(255) | category name, not null, unique              |
-| description   | text         | category description                          |
-| parent_category_id | bigint  | id of the parent category                    |
-| createdAt     | timestamp    | timestamp of row creation                    |
-| updatedAt     | timestamp    | timestamp of last update                     |
+| Column          | Type         | Description                                                 |
+|-----------------|--------------|-------------------------------------------------------------|
+| id              | bigint       | Unique identifier, primary key, not null                    |
+| name            | varchar(255) | Product name, not null                                      |
+| description     | text         | Product description                                         |
+| price           | decimal      | Product price                                               |
+| category_id     | bigint       | Foreign key to `categories.id`, not null                    |
+| brand_id        | bigint       | Foreign key to `brands.id`, not null                        |
+| protein_type    | varchar(255) | Type of protein (enum: WHEY, CASEIN, SOY, etc.)             |
+| vitamin_group   | varchar(255) | Vitamin group associated with the product                   |
+| form            | varchar(255) | Product form (enum: POWDER, CAPSULE, BAR, etc.)             |
+| created_at      | timestamp    | Timestamp of row creation                                   |
+| updated_at      | timestamp    | Timestamp of last update                                    |
+| is_favorite     | boolean      | Flag indicating if the product is favorited (not persisted)  |
 
-## Table: brands
-| Column      | Type         | Description                                         |
-|-------------|--------------|-----------------------------------------------------|
-| id          | bigint       | Unique identifier for the brand (Primary Key)      |
-| name        | varchar(255) | Name of the brand (cannot be null, must be unique) |
-| description | text         | Description of the brand (optional)                 |
-| products    | List<Product>| List of products associated with the brand          |
-| createdAt   | timestamp    | Timestamp indicating when the brand was created     |
-| updatedAt   | timestamp    | Timestamp indicating when the brand was last updated |
+### Table: categories
 
+| Column              | Type         | Description                                                |
+|---------------------|--------------|------------------------------------------------------------|
+| id                  | bigint       | Unique identifier, primary key, not null                   |
+| name                | varchar(255) | Category name, unique, not null                             |
+| description         | text         | Category description                                       |
+| parent_category_id  | bigint       | Foreign key to `categories.id`, nullable (for subcategories) |
+| created_at          | timestamp    | Timestamp of row creation                                  |
+| updated_at          | timestamp    | Timestamp of last update                                   |
 
-## Table: orders
-| Column        | Type         | Description                                  |
-|---------------|--------------|----------------------------------------------|
-| id            | bigint       | id key of row - unique, not null, primary key |
-| total_amount  | decimal      | total amount of the order, not null         |
-| status        | varchar(255) | order status (enum)                         |
-| delivery_method | varchar(255)| delivery method (enum)                      |
-| delivery_address | varchar(255)| address for delivery                       |
-| contact_info  | varchar(255) | contact information                          |
-| createdAt     | timestamp    | timestamp of row creation                    |
-| updatedAt     | timestamp    | timestamp of last update                     |
-| user_id       | bigint       | id of the user who made the order, not null |
-| payment_id    | bigint       | id of the associated payment                 |
+### Table: brands
 
-## Table: order_items
-| Column        | Type         | Description                                  |
-|---------------|--------------|----------------------------------------------|
-| id            | bigint       | id key of row - unique, not null, primary key |
-| quantity      | integer      | quantity of the product in the order        |
-| price         | decimal      | price of the product at the time of order   |
-| discount_price | decimal     | discount price of the product (if applicable) |
-| order_id      | bigint       | id of the order associated with this item, not null |
-| product_id    | bigint       | id of the product that was ordered, not null |
+| Column      | Type         | Description                                              |
+|-------------|--------------|----------------------------------------------------------|
+| id          | bigint       | Unique identifier, primary key                           |
+| name        | varchar(255) | Name of the brand, unique, not null                      |
+| description | text         | Description of the brand (optional)                      |
+| created_at  | timestamp    | Timestamp of row creation                                |
+| updated_at  | timestamp    | Timestamp of last update                                 |
 
-## Table: order_status_histories
-| Column        | Type         | Description                                  |
-|---------------|--------------|----------------------------------------------|
-| id            | bigint       | id key of row - unique, not null, primary key |
-| order_id      | bigint       | id of the order associated with the history, not null |
-| status        | varchar(255) | order status (enum)                         |
-| changedAt     | timestamp    | timestamp when the status was changed       |
+### Table: orders
 
-## Table: payments
-| Column        | Type         | Description                                  |
-|---------------|--------------|----------------------------------------------|
-| id            | bigint       | id key of row - unique, not null, primary key |
-| order_id      | bigint       | id of the order associated with the payment, not null |
-| amount        | decimal      | payment amount                               |
-| status        | varchar(255) | payment status (enum)                       |
-| createdAt     | timestamp    | timestamp of row creation                    |
+| Column           | Type         | Description                                                         |
+|------------------|--------------|---------------------------------------------------------------------|
+| id               | bigint       | Unique identifier, primary key, not null                            |
+| total_amount     | decimal      | Total amount of the order, not null                                 |
+| status           | varchar(255) | Order status (enum: CREATED, PROCESSING, COMPLETED, CANCELED)       |
+| delivery_method  | varchar(255) | Delivery method (enum: COURIER, PICKUP)                             |
+| delivery_address | varchar(255) | Address for delivery                                                |
+| contact_info     | varchar(255) | Contact information                                                 |
+| created_at       | timestamp    | Timestamp of row creation                                           |
+| updated_at       | timestamp    | Timestamp of last update                                            |
+| user_id          | bigint       | Foreign key to `users.id`, not null                                 |
+| payment_id       | bigint       | Foreign key to `payments.id`, nullable                              |
 
-## Table: promotions
-| Column        | Type         | Description                                  |
-|---------------|--------------|----------------------------------------------|
-| id            | bigint       | id key of row - unique, not null, primary key |
-| name          | varchar(255) | promotion name                               |
-| description   | text         | promotion description                        |
-| startDate     | timestamp    | promotion start date                         |
-| endDate       | timestamp    | promotion end date                           |
-| createdAt     | timestamp    | timestamp of row creation                    |
-| updatedAt     | timestamp    | timestamp of last update                     |
+### Table: order_items
 
-## Table: product_promotions
-| Column        | Type         | Description                                  |
-|---------------|--------------|----------------------------------------------|
-| id            | bigint       | id key of row - unique, not null, primary key |
-| product_id    | bigint       | id of the product associated with the promotion, not null |
-| promotion_id   | bigint       | id of the promotion associated with the product, not null |
+| Column                | Type         | Description                                                  |
+|-----------------------|--------------|--------------------------------------------------------------|
+| id                    | bigint       | Unique identifier, primary key, not null                     |
+| quantity              | integer      | Quantity of the product in the order                         |
+| price                 | decimal      | Price of the product at the time of order                    |
+| discount_price        | decimal      | Discount price of the product (if applicable)                |
+| order_id              | bigint       | Foreign key to `orders.id`, not null                          |
+| product_id            | bigint       | Foreign key to `products.id`, not null                        |
+| product_name          | varchar(255) | Name of the product at the time of order                      |
+| product_description   | text         | Description of the product at the time of order               |
+| product_category_name | varchar(255) | Category name of the product at the time of order             |
 
-## Table: discounts
-| Column        | Type         | Description                                  |
-|---------------|--------------|----------------------------------------------|
-| id            | bigint       | id key of row - unique, not null, primary key |
-| product_id    | bigint       | id of the product associated with the discount, not null |
-| discount_price | decimal      | price after discount                         |
-| startDate     | timestamp    | start date of the discount                   |
-| endDate       | timestamp    | end date of the discount                     |
+### Table: order_status_histories
 
-## Table: carts
-| Column        | Type         | Description                                  |
-|---------------|--------------|----------------------------------------------|
-| id            | bigint       | user_id used as cart ID, unique            |
-| createdAt     | timestamp    | timestamp of row creation, not null        |
-| updatedAt     | timestamp    | timestamp of last update                    |
-| user_id       | bigint       | id of the user who owns the cart            |
+| Column     | Type         | Description                                              |
+|------------|--------------|----------------------------------------------------------|
+| id         | bigint       | Unique identifier, primary key, not null                 |
+| order_id   | bigint       | Foreign key to `orders.id`, not null                      |
+| status     | varchar(255) | Order status (enum: CREATED, PROCESSING, COMPLETED, CANCELED) |
+| changed_at | timestamp    | Timestamp when the status was changed                    |
 
-## Table: cart_items
-| Column        | Type         | Description                                  |
-|---------------|--------------|----------------------------------------------|
-| id            | bigint       | id key of row - unique, not null, primary key |
-| cart_id       | bigint       | id of the cart associated with this item, not null |
-| product_id    | bigint       | id of the product associated with this item, not null |
-| quantity       | integer      | quantity of the product in the cart         |
-| price         | decimal      | price of the product at the time of adding to cart |
-| discount_price | decimal      | discount price of the product (if applicable) |
+### Table: payments
 
+| Column      | Type         | Description                                              |
+|-------------|--------------|----------------------------------------------------------|
+| id          | bigint       | Unique identifier, primary key, not null                 |
+| order_id    | bigint       | Foreign key to `orders.id`, not null                      |
+| amount      | decimal      | Payment amount                                           |
+| status      | varchar(255) | Payment status (enum: PENDING, COMPLETED, FAILED)        |
+| created_at  | timestamp    | Timestamp of row creation                                |
+| updated_at  | timestamp    | Timestamp of last update                                 |
 
-## Table: images
-| Column        | Type         | Description                                  |
-|---------------|--------------|----------------------------------------------|
-| id            | bigint       | id key of row - unique, not null, primary key |
-| url           | varchar(255) | URL of the image, not null                  |
-| altText       | varchar(255) | alternative text for the image               |
-| product_id    | bigint       | id of the product associated with the image  |
-| createdAt     | timestamp    | timestamp of row creation                    |
-| updatedAt     | timestamp    | timestamp of last update                     |
+### Table: promotions
 
+| Column      | Type         | Description                                              |
+|-------------|--------------|----------------------------------------------------------|
+| id          | bigint       | Unique identifier, primary key, not null                 |
+| name        | varchar(255) | Promotion name, not null                                 |
+| description | text         | Promotion description                                    |
+| start_date  | timestamp    | Promotion start date                                     |
+| end_date    | timestamp    | Promotion end date                                       |
+| created_at  | timestamp    | Timestamp of row creation                                |
+| updated_at  | timestamp    | Timestamp of last update                                 |
 
-## Table: reviews
-| Column        | Type         | Description                                  |
-|---------------|--------------|----------------------------------------------|
-| id            | bigint       | id key of row - unique, not null, primary key |
-| user_id       | bigint       | id of the user who created the review, not null |
-| product_id    | bigint       | id of the product being reviewed, not null  |
-| rating        | integer      | rating given by the user                     |
-| comment       | text         | review comment                               |
-| createdAt     | timestamp    | timestamp of row creation                    |
+### Table: product_promotions
+
+| Column        | Type         | Description                                              |
+|---------------|--------------|----------------------------------------------------------|
+| id            | bigint       | Unique identifier, primary key, not null                 |
+| product_id    | bigint       | Foreign key to `products.id`, not null                    |
+| promotion_id  | bigint       | Foreign key to `promotions.id`, not null                  |
+
+### Table: discounts
+
+| Column         | Type         | Description                                              |
+|----------------|--------------|----------------------------------------------------------|
+| id             | bigint       | Unique identifier, primary key, not null                 |
+| product_id     | bigint       | Foreign key to `products.id`, not null                    |
+| discount_price | decimal      | Price after discount                                     |
+| start_date     | timestamp    | Start date of the discount                               |
+| end_date       | timestamp    | End date of the discount                                 |
+| created_at     | timestamp    | Timestamp of row creation                                |
+| updated_at     | timestamp    | Timestamp of last update                                 |
+
+### Table: carts
+
+| Column      | Type         | Description                                              |
+|-------------|--------------|----------------------------------------------------------|
+| id          | bigint       | Unique identifier (same as `user_id`), primary key      |
+| created_at  | timestamp    | Timestamp of row creation, not null                      |
+| updated_at  | timestamp    | Timestamp of last update                                 |
+| user_id     | bigint       | Foreign key to `users.id`, unique                        |
+| total_price | decimal      | Total price of the cart, not null                        |
+
+### Table: cart_items
+
+| Column         | Type         | Description                                              |
+|----------------|--------------|----------------------------------------------------------|
+| id             | bigint       | Unique identifier, primary key, not null                 |
+| cart_id        | bigint       | Foreign key to `carts.id`, not null                      |
+| product_id     | bigint       | Foreign key to `products.id`, not null                    |
+| quantity       | integer      | Quantity of the product in the cart                       |
+| price          | decimal      | Price of the product at the time of adding to cart        |
+| discount_price | decimal      | Discount price of the product (if applicable)             |
+| deleted        | boolean      | Flag indicating if the cart item is deleted               |
+
+### Table: images
+
+| Column      | Type         | Description                                              |
+|-------------|--------------|----------------------------------------------------------|
+| id          | bigint       | Unique identifier, primary key, not null                 |
+| url         | varchar(255) | URL of the image, not null                                |
+| alt_text    | varchar(255) | Alternative text for the image                            |
+| product_id  | bigint       | Foreign key to `products.id`, nullable                     |
+| created_at  | timestamp    | Timestamp of row creation                                |
+| updated_at  | timestamp    | Timestamp of last update                                 |
+
+### Table: reviews
+
+| Column          | Type         | Description                                              |
+|-----------------|--------------|----------------------------------------------------------|
+| id              | bigint       | Unique identifier, primary key, not null                 |
+| user_id         | bigint       | Foreign key to `users.id`, not null                      |
+| product_id      | bigint       | Foreign key to `products.id`, not null                    |
+| rating          | integer      | Rating given by the user (e.g., 1-5)                      |
+| user_comment    | text         | Review comment                                           |
+| created_at      | timestamp    | Timestamp of row creation                                |
+| updated_at      | timestamp    | Timestamp of last update                                 |
+
+### Table: favorites
+
+| Column      | Type         | Description                                              |
+|-------------|--------------|----------------------------------------------------------|
+| id          | bigint       | Unique identifier, primary key, not null                 |
+| user_id     | bigint       | Foreign key to `users.id`, not null                      |
+| product_id  | bigint       | Foreign key to `products.id`, not null                    |
+| added_at    | timestamp    | Timestamp when the product was added to favorites         |

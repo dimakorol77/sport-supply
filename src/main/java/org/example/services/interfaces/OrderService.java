@@ -17,8 +17,7 @@ public interface OrderService {
     List<OrderDto> getOrdersByStatus(OrderStatus status);
     List<OrderDto> getOrdersCreatedAfter(LocalDateTime date);
     List<OrderDto> getOrdersByDeliveryMethod(DeliveryMethod deliveryMethod);
-    boolean isOrderOwner(Long orderId, Long userId);
-    OrderDto getOrderByIdAndCheckOwnership(Long orderId, Long userId);
-    void cancelOrderAndCheckOwnership(Long orderId, Long userId);
+    OrderDto getOrderByIdAndCheckOwnership(Long orderId);
+    void cancelOrderAndCheckOwnership(Long orderId);
     OrderDto updateOrderStatusBySystem(Long orderId, OrderStatus status);
 }

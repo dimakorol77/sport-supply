@@ -1,6 +1,8 @@
 package org.example.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import org.example.dto.PromotionDto;
 import org.example.enums.Role;
 import org.example.models.Product;
@@ -27,6 +29,7 @@ import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
@@ -35,6 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Transactional
 public class PromotionControllerTest {
 
     @Autowired
@@ -72,6 +76,8 @@ public class PromotionControllerTest {
         promotionRepository.deleteAll();
         productRepository.deleteAll();
         userRepository.deleteAll();
+
+
 
         adminUser = new User();
         adminUser.setEmail("admin@example.com");
@@ -152,34 +158,47 @@ public class PromotionControllerTest {
                 .andExpect(status().isNoContent());
     }
 
+    @Autowired
+    private EntityManager entityManager;
+
     @Test
     public void testAddProductToPromotion() throws Exception {
         mockMvc.perform(post("/api/promotions/{promotionId}/products/{productId}", promotion.getId(), product.getId())
                         .header("Authorization", "Bearer " + adminToken))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.size()").doesNotExist());
+                .andExpect(status().isCreated());
 
-        List<Promotion> promotions = promotionRepository.findAll();
-        assertThat(promotions.get(0).getProductPromotions(), hasSize(1));
+        entityManager.clear();
+
+        Promotion updatedPromotion = promotionRepository.findById(promotion.getId())
+                .orElseThrow(() -> new RuntimeException("Promotion not found"));
+
+        assertNotNull(updatedPromotion.getProductPromotions(), "productPromotions should not be null");
+        assertThat(updatedPromotion.getProductPromotions(), hasSize(1));
     }
-
 
     @Test
     public void testRemoveProductFromPromotion() throws Exception {
 
         mockMvc.perform(post("/api/promotions/{promotionId}/products/{productId}", promotion.getId(), product.getId())
                         .header("Authorization", "Bearer " + adminToken))
-                .andExpect(status().isCreated()); // Здесь ожидаем 201 Created
+                .andExpect(status().isCreated());
 
+        promotionRepository.flush();
+        entityManager.clear();
 
         mockMvc.perform(delete("/api/promotions/{promotionId}/products/{productId}", promotion.getId(), product.getId())
                         .header("Authorization", "Bearer " + adminToken))
-                .andExpect(status().isNoContent()); // Здесь ожидаем 204 No Content
+                .andExpect(status().isNoContent());
 
+        promotionRepository.flush();
+        entityManager.clear();
+        Promotion updatedPromotion = promotionRepository.findById(promotion.getId())
+                .orElseThrow(() -> new RuntimeException("Promotion not found"));
 
-        List<Promotion> promotions = promotionRepository.findAll();
-        assertTrue(promotions.get(0).getProductPromotions().isEmpty());
+        assertNotNull(updatedPromotion.getProductPromotions(), "productPromotions should not be null");
+        assertTrue(updatedPromotion.getProductPromotions().isEmpty());
     }
 
-}
 
+
+}

@@ -22,40 +22,31 @@ import org.springframework.web.bind.annotation.*;
 @PreAuthorize("isAuthenticated()")
 public class CartItemController {
     private final CartItemService cartItemService;
-    private final SecurityUtils securityUtils;
+
 
     @Autowired
-    public CartItemController(CartItemService cartItemService, SecurityUtils securityUtils) {
+    public CartItemController(CartItemService cartItemService) {
         this.cartItemService = cartItemService;
-        this.securityUtils = securityUtils;
-    }
-    private User getCurrentUser() {
-        return securityUtils.getCurrentUser();
+
     }
 
     @AddItemToCart
     public ResponseEntity<CartItemResponseDto> addItemToCart(@PathVariable Long cartId,
                                                              @RequestBody CartItemDto cartItemDto) {
-        User user = getCurrentUser();
-
-        CartItemResponseDto responseDto = cartItemService.addItemToCart(cartId, user.getId(), cartItemDto);
+        CartItemResponseDto responseDto = cartItemService.addItemToCart(cartId, cartItemDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 
     @UpdateCartItemQuantity
     public ResponseEntity<CartItemResponseDto> updateCartItemQuantity(@PathVariable Long cartItemId,
                                                                       @RequestParam Integer quantity) {
-        User user = getCurrentUser();
-
-        CartItemResponseDto updatedCartItem = cartItemService.updateCartItemQuantity(cartItemId, user.getId(), quantity);
+        CartItemResponseDto updatedCartItem = cartItemService.updateCartItemQuantity(cartItemId, quantity);
         return new ResponseEntity<>(updatedCartItem, HttpStatus.OK);
     }
 
     @RemoveCartItem
     public ResponseEntity<Void> removeCartItem(@PathVariable Long cartItemId) {
-        User user = getCurrentUser();
-
-        cartItemService.removeCartItem(cartItemId, user.getId());
+        cartItemService.removeCartItem(cartItemId);
         return ResponseEntity.noContent().build();
     }
 }

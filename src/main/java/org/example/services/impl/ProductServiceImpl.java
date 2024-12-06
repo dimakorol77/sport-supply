@@ -34,21 +34,18 @@ import java.util.stream.Collectors;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
-    private final DiscountRepository discountRepository;
     private final ProductMapper productMapper;
-    private final DiscountMapper discountMapper;
+
 
 
     @Autowired
     public ProductServiceImpl(ProductRepository productRepository,
-                              DiscountRepository discountRepository,
-                              ProductMapper productMapper,
-                              DiscountMapper discountMapper
+                              ProductMapper productMapper
                               ) {
         this.productRepository = productRepository;
-        this.discountRepository = discountRepository;
+
         this.productMapper = productMapper;
-        this.discountMapper = discountMapper;
+
 
     }
 
@@ -123,11 +120,11 @@ public class ProductServiceImpl implements ProductService {
             throw new IllegalArgumentException(ErrorMessage.INVALID_SORT_FIELD + sortBy);
         }
 
-        // Создаём объект PageRequest с сортировкой
-        Sort sort = Sort.by(Boolean.TRUE.equals(asc) ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy);
-        Pageable pageable = PageRequest.of(0, Integer.MAX_VALUE, sort); // Используем Pageable для сортировки
 
-        // Вызов метода репозитория
+        Sort sort = Sort.by(Boolean.TRUE.equals(asc) ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy);
+        Pageable pageable = PageRequest.of(0, Integer.MAX_VALUE, sort);
+
+
         List<Product> products = productRepository.findAll(spec, pageable).getContent();
         return products.stream().map(productMapper::toDto).collect(Collectors.toList());
     }

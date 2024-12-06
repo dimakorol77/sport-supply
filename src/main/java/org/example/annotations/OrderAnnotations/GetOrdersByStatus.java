@@ -15,13 +15,13 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.GET)
 @Operation(
-        summary = "Получение заказов по статусу",
-        description = "Возвращает список заказов с указанным статусом",
-        tags = "Заказы",
+        summary = "Getting orders by status",
+        description = "Returns a list of orders with the specified status",
+        tags = "Orders",
         responses = {
-                @ApiResponse(responseCode = "200", description = "Список заказов получен"),
-                @ApiResponse(responseCode = "400", description = "Некорректный статус"),
-                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
+                @ApiResponse(responseCode = "200", description = "Order list retrieved"),
+                @ApiResponse(responseCode = "400", description = "Invalid status"),
+                @ApiResponse(responseCode = "403", description = "Access denied")
         }
 )
 public @interface GetOrdersByStatus {

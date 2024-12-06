@@ -50,13 +50,11 @@ public class CategoryServiceImpl implements CategoryService {
 
         Category category = categoryMapper.toEntity(categoryDto);
 
-
         if (categoryDto.getParentCategoryId() != null) {
             Category parentCategory = categoryRepository.findById(categoryDto.getParentCategoryId())
                     .orElseThrow(() -> new CategoryNotFoundException(ErrorMessage.PARENT_CATEGORY_NOT_FOUND));
             category.setParentCategory(parentCategory);
         }
-
         category.setCreatedAt(LocalDateTime.now());
         Category savedCategory = categoryRepository.save(category);
         return categoryMapper.toDto(savedCategory);
@@ -69,7 +67,6 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new CategoryNotFoundException(ErrorMessage.CATEGORY_NOT_FOUND));
 
-
         if (categoryDto.getParentCategoryId() != null && categoryDto.getParentCategoryId() == 0) {
             category.setParentCategory(null);
         } else if (categoryDto.getParentCategoryId() != null) {
@@ -78,7 +75,6 @@ public class CategoryServiceImpl implements CategoryService {
                     .orElseThrow(() -> new CategoryNotFoundException(ErrorMessage.PARENT_CATEGORY_NOT_FOUND));
             category.setParentCategory(parentCategory);
         }
-
 
         categoryMapper.updateEntityFromDto(categoryDto, category);
         category.setUpdatedAt(LocalDateTime.now());

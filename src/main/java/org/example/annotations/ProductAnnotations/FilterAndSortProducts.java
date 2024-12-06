@@ -15,13 +15,13 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.GET)
 @Operation(
-        summary = "Фильтрация и сортировка продуктов",
-        description = "Позволяет фильтровать и сортировать продукты по различным критериям",
-        tags = {"Продукты"},
+        summary = "Filtering and sorting products",
+        description = "Allows filtering and sorting products by various criteria",
+        tags = {"Products"},
         responses = {
-                @ApiResponse(responseCode = "200", description = "Продукты получены"),
-                @ApiResponse(responseCode = "400", description = "Неверные параметры запроса"),
-                @ApiResponse(responseCode = "403", description = "У вас нет доступа")
+                @ApiResponse(responseCode = "200", description = "Products retrieved"),
+                @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
+                @ApiResponse(responseCode = "403", description = "Access denied")
         }
 )
 public @interface FilterAndSortProducts {

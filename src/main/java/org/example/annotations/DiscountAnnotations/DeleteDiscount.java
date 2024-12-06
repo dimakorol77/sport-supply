@@ -14,12 +14,12 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.DELETE)
 @Operation(
-        summary = "Удаление скидки",
-        description = "Удаляет скидку по указанному ID",
-        tags = "Скидки",
+        summary = "Removing a discount",
+        description = "Removes a discount for the specified ID",
+        tags = "Discounts",
         responses = {
-                @ApiResponse(responseCode = "204", description = "Скидка успешно удалена"),
-                @ApiResponse(responseCode = "404", description = "Скидка не найдена")
+                @ApiResponse(responseCode = "204", description = "Discount successfully removed"),
+                @ApiResponse(responseCode = "404", description = "No discount found")
         }
 )
 public @interface DeleteDiscount {

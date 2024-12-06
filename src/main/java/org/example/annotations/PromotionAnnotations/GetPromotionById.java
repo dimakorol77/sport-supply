@@ -13,12 +13,12 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(method = RequestMethod.GET)
 @Operation(
-        summary = "Получение акции по ID",
-        description = "Возвращает акцию с указанным ID",
-        tags = "Акции",
+        summary = "Getting a promotion by ID",
+        description = "Returns the promotion with the specified ID",
+        tags = "Promotions",
         responses = {
-                @ApiResponse(responseCode = "200", description = "Акция найдена"),
-                @ApiResponse(responseCode = "404", description = "Акция не найдена")
+                @ApiResponse(responseCode = "200", description = "Promotion found"),
+                @ApiResponse(responseCode = "404", description = "Promotion not found")
         }
 )
 public @interface GetPromotionById {

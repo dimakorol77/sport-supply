@@ -50,15 +50,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserListDto getUserDetailsById(Long id) {
-        User currentUser = securityUtils.getCurrentUser();
-
-        if (!id.equals(currentUser.getId()) && !currentUser.getRole().equals(Role.ADMIN)) {
-            throw new AccessDeniedException(ErrorMessage.ACCESS_DENIED);
-        }
-
+        validateAccess(id);
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new IdNotFoundException(ErrorMessage.ID_NOT_FOUND));
-
         return userMapper.toUserListDto(user);
     }
 
@@ -82,16 +76,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserAfterUpdateDto updateUser(Long id, UserDto userDto) {
-        User currentUser = securityUtils.getCurrentUser();
-
-
-        if (!id.equals(currentUser.getId()) && !currentUser.getRole().equals(Role.ADMIN)) {
-            throw new AccessDeniedException(ErrorMessage.ACCESS_DENIED);
-        }
-
+        validateAccess(id);
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new IdNotFoundException(ErrorMessage.ID_NOT_FOUND));
-
         userMapper.updateEntityFromDto(userDto, user);
 
         if (userDto.getPassword() != null && !userDto.getPassword().isEmpty()) {
@@ -125,10 +112,13 @@ public class UserServiceImpl implements UserService {
         return userRepository.existsById(id);
     }
 
-    @Override
-    public User getUserByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException(ErrorMessage.USER_NOT_FOUND));
+
+    private void validateAccess(Long id) {
+        User currentUser = securityUtils.getCurrentUser();
+        if (!id.equals(currentUser.getId()) && !currentUser.getRole().equals(Role.ADMIN)) {
+            throw new AccessDeniedException(ErrorMessage.ACCESS_DENIED);
+        }
     }
+
 
 }
