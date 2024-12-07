@@ -1,85 +1,79 @@
 
-INSERT INTO users (email, password, name, phone_number, role, created_at, updated_at)
-VALUES
-    ('user1@example.com', '$2b$12$PMQgpDT6iezdwEebvrtk/ugJ/OSmVMlqOe5yVm01sBmilDNGOY2aa', 'User One', '1234567890', 'USER', NOW(), NOW()),
-    ('user2@example.com', '$2b$12$Y86WOXIOUv9jjMKUCHCS6OC1X0fE.p0M.tzQdwA9p43hLtIhbpqU2', 'User Two', '0987654321', 'ADMIN', NOW(), NOW());
+Таблица users
+INSERT INTO users (id, email, password, name, phone_number, role, created_at, updated_at) VALUES
+(1, 'user1@example.com', 'password1', 'User One', '1234567890', 'USER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(2, 'admin@example.com', 'adminpassword', 'Admin User', '1112223333', 'ADMIN', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
--- Заполнение таблицы brands
-INSERT INTO brands (name, description, created_at, updated_at)
-VALUES ('Brand A', 'Description for Brand A', NOW(), NOW()),
-       ('Brand B', 'Description for Brand B', NOW(), NOW());
+-- Таблица brands
+INSERT INTO brands (id, name, description, created_at, updated_at) VALUES
+(1, 'BrandOne', 'Description of Brand One', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(2, 'BrandTwo', 'Description of Brand Two', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
--- Заполнение таблицы categories
-INSERT INTO categories (name, description, parent_category_id, created_at, updated_at)
-VALUES ('Category 1', 'Description for Category 1', NULL, NOW(), NOW()),
-       ('Category 2', 'Description for Category 2', NULL, NOW(), NOW()),
-       ('Subcategory 1', 'Description for Subcategory 1', 1, NOW(), NOW());
+-- Таблица categories
+INSERT INTO categories (id, name, description, parent_category_id, created_at, updated_at) VALUES
+(1, 'CategoryOne', 'Description of Category One', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(2, 'CategoryTwo', 'Description of Category Two', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
--- Заполнение таблицы products
-INSERT INTO products (name, description, price, category_id, brand_id, protein_type, vitamin_group, form, created_at,
-                      updated_at)
-VALUES ('Product 1', 'Description for Product 1', 10.99, 1, 1, 'WHEY', 'Vitamin C', 'POWDER', NOW(), NOW()),
-       ('Product 2', 'Description for Product 2', 15.49, 2, 2, 'CASEIN', 'Vitamin B', 'POWDER', NOW(), NOW());
+-- Таблица products
+INSERT INTO products (id, name, description, price, category_id, brand_id, protein_type, vitamin_group, form, created_at, updated_at) VALUES
+(1, 'ProductOne', 'Description of Product One', 19.99, 1, 1, 'WHEY', 'B12', 'POWDER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(2, 'ProductTwo', 'Description of Product Two', 29.99, 2, 2, 'CASEIN', 'C', 'CAPSULES', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
--- Заполнение таблицы carts
-INSERT INTO carts (user_id, created_at, updated_at, total_price)
-VALUES
-    (1, NOW(), NOW(), 25.99),
-    (2, NOW(), NOW(), 15.49);
+-- Таблица images
+INSERT INTO images (id, url, alt_text, created_at, updated_at, product_id) VALUES
+(1, 'http://example.com/image1.jpg', 'Image of Product One', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1),
+(2, 'http://example.com/image2.jpg', 'Image of Product Two', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 2);
 
--- Заполнение таблицы cart_items
-INSERT INTO cart_items (cart_id, product_id, quantity, price, discount_price, deleted)
-VALUES (1, 1, 2, 21.98, 19.99, FALSE),
-       (2, 2, 1, 15.49, NULL, FALSE);
+-- Таблица carts
+INSERT INTO carts (id, user_id, created_at, updated_at, total_price) VALUES
+(1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0.00),
+(2, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0.00);
 
--- Заполнение таблицы discounts
-INSERT INTO discounts (product_id, discount_price, start_date, end_date, created_at, updated_at)
-VALUES (1, 9.99, NOW(), DATE_ADD(NOW(), INTERVAL 10 DAY), NOW(), NOW()),
-       (2, 12.99, NOW(), DATE_ADD(NOW(), INTERVAL 5 DAY), NOW(), NOW());
+-- Таблица cart_items
+INSERT INTO cart_items (id, cart_id, product_id, quantity, price, discount_price, deleted) VALUES
+(1, 1, 1, 2, 19.99, 15.99, 0),
+(2, 2, 2, 1, 29.99, 24.99, 0);
 
--- Заполнение таблицы favorites
-INSERT INTO favorites (user_id, product_id, added_at)
-VALUES (1, 1, NOW()),
-       (2, 2, NOW());
+-- Таблица orders
+INSERT INTO orders (id, user_id, total_amount, status, delivery_method, delivery_address, contact_info, created_at, updated_at) VALUES
+(1, 1, 49.99, 'CREATED', 'COURIER', '123 Street, City', 'Contact Info 1', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(2, 2, 79.99, 'SHIPPED', 'PICKUP', '456 Avenue, City', 'Contact Info 2', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
--- Заполнение таблицы images
-INSERT INTO images (url, alt_text, created_at, updated_at, product_id)
-VALUES ('https://example.com/image1.jpg', 'Image 1 Description', NOW(), NOW(), 1),
-       ('https://example.com/image2.jpg', 'Image 2 Description', NOW(), NOW(), 2);
+-- Таблица order_items
+INSERT INTO order_items (id, order_id, product_id, product_name, product_description, product_category_name, quantity, price) VALUES
+(1, 1, 1, 'ProductOne', 'Description of Product One', 'CategoryOne', 2, 19.99),
+(2, 2, 2, 'ProductTwo', 'Description of Product Two', 'CategoryTwo', 1, 29.99);
 
--- Заполнение таблицы orders
-INSERT INTO orders (total_amount, status, delivery_method, delivery_address, contact_info, created_at, updated_at,
-                    user_id)
-VALUES (19.99, 'PROCESSING', 'COURIER', '123 Main St', 'user1@example.com', NOW(), NOW(), 1),
-       (25.99, 'DELIVERED', 'PICKUP', '456 Elm St', 'user2@example.com', NOW(), NOW(), 2);
+-- Таблица order_status_histories
+INSERT INTO order_status_histories (id, order_id, status, changed_at) VALUES
+(1, 1, 'CREATED', CURRENT_TIMESTAMP),
+(2, 2, 'SHIPPED', CURRENT_TIMESTAMP);
 
--- Заполнение таблицы order_items
-INSERT INTO order_items (product_id, product_name, product_description, product_category_name, quantity, price,
-                         order_id)
-VALUES (1, 'Product 1', 'Description for Product 1', 'Category 1', 2, 19.99, 1),
-       (2, 'Product 2', 'Description for Product 2', 'Category 2', 1, 25.99, 2);
+-- Таблица payments
+INSERT INTO payments (id, order_id, amount, status, created_at, updated_at) VALUES
+(1, 1, 1, 'PENDING', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(2, 2, 1, 'COMPLETED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
--- Заполнение таблицы order_status_histories
-INSERT INTO order_status_histories (order_id, status, changed_at)
-VALUES (1, 'PROCESSING', NOW()),
-       (2, 'DELIVERED', NOW());
+-- Таблица reviews
+INSERT INTO reviews (id, user_id, product_id, rating, user_comment, created_at, updated_at) VALUES
+(1, 1, 1, 5, 'Great product!', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(2, 2, 2, 4, 'Good quality.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
--- Заполнение таблицы payments
-INSERT INTO payments (order_id, amount, status, created_at, updated_at)
-VALUES (1, 19.99, 'COMPLETED', NOW(), NOW()),
-       (2, 25.99, 'COMPLETED', NOW(), NOW());
+-- Таблица discounts
+INSERT INTO discounts (id, product_id, discount_price, start_date, end_date, created_at, updated_at) VALUES
+(1, 1, 4.00, CURRENT_TIMESTAMP, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 30 DAY), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(2, 2, 5.00, CURRENT_TIMESTAMP, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 15 DAY), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
--- Заполнение таблицы reviews
-INSERT INTO reviews (user_id, product_id, rating, user_comment, created_at, updated_at)
-VALUES (1, 1, 5, 'Great product!', NOW(), NOW()),
-       (2, 2, 4, 'Good quality', NOW(), NOW());
+-- Таблица promotions
+INSERT INTO promotions (id, name, description, start_date, end_date, created_at, updated_at) VALUES
+(1, 'Summer Sale', 'Discount 10%', CURRENT_TIMESTAMP, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 60 DAY), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
--- Заполнение таблицы promotions
-INSERT INTO promotions (name, description, start_date, end_date, created_at, updated_at)
-VALUES ('Summer Sale', 'Discounts on all products', NOW(), DATE_ADD(NOW(), INTERVAL 30 DAY), NOW(), NOW()),
-       ('Winter Sale', 'Special discounts for winter', NOW(), DATE_ADD(NOW(), INTERVAL 60 DAY), NOW(), NOW());
+-- Таблица product_promotions
+INSERT INTO product_promotions (id, product_id, promotion_id) VALUES
+(1, 1, 1),
+(2, 2, 1);
 
--- Заполнение таблицы product_promotions
-INSERT INTO product_promotions (product_id, promotion_id)
-VALUES (1, 1),
-       (2, 2);
+-- Таблица favorites
+INSERT INTO favorites (id, user_id, product_id, added_at) VALUES
+(1, 1, 1, CURRENT_TIMESTAMP),
+(2, 2, 2, CURRENT_TIMESTAMP);

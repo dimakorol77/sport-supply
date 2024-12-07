@@ -158,7 +158,7 @@ public class PromotionServiceImpl implements PromotionService {
             return new BigDecimal(percentage).divide(BigDecimal.valueOf(100));
         }
 
-        Pattern fixedPattern = Pattern.compile("(\\d+)\\s*руб");
+        Pattern fixedPattern = Pattern.compile("(\\d+)\\s*eur");
         matcher = fixedPattern.matcher(description);
 
         if (matcher.find()) {
