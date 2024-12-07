@@ -26,6 +26,7 @@ public class CartServiceImpl implements CartService {
     private final OrderService orderService;
     private final SecurityUtils securityUtils;
 
+
     @Autowired
     public CartServiceImpl(CartRepository cartRepository, UserRepository userRepository,
                            OrderService orderService, CartMapper cartMapper,
@@ -75,11 +76,7 @@ public class CartServiceImpl implements CartService {
 
         return cart.getCartItems().stream()
                 .filter(cartItem -> !cartItem.isDeleted())
-                .map(cartItem -> {
-                    BigDecimal itemTotalPrice = cartItem.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()));
-                    BigDecimal itemDiscount = cartItem.getDiscountPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()));
-                    return itemTotalPrice.subtract(itemDiscount);
-                })
+                .map(cartItem -> cartItem.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .max(BigDecimal.ZERO);
     }

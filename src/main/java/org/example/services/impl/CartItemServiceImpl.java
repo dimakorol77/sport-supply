@@ -1,11 +1,10 @@
 package org.example.services.impl;
 
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
+
+
 import org.example.dto.CartItemDto;
 import org.example.dto.CartItemResponseDto;
 import org.example.dto.DiscountDto;
-import org.example.dto.PromotionDto;
 import org.example.exceptions.*;
 import org.example.exceptions.errorMessage.ErrorMessage;
 import org.example.mappers.CartItemMapper;
@@ -26,9 +25,8 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
-import java.util.regex.Matcher;
+
 
 @Service
 public class CartItemServiceImpl  implements CartItemService {
@@ -110,15 +108,22 @@ public class CartItemServiceImpl  implements CartItemService {
 
 
     private BigDecimal calculateFinalPrice(BigDecimal itemPrice, BigDecimal discountPrice, BigDecimal promotionDiscount) {
-        BigDecimal discountedPrice = itemPrice.subtract(discountPrice);
+        BigDecimal discountedPrice = itemPrice.subtract(discountPrice).setScale(2, BigDecimal.ROUND_HALF_UP);
 
         if (promotionDiscount.compareTo(BigDecimal.ONE) <= 0) {
-            discountedPrice = discountedPrice.subtract(discountedPrice.multiply(promotionDiscount));
+
+            BigDecimal percentAmount = discountedPrice.multiply(promotionDiscount).setScale(2, BigDecimal.ROUND_HALF_UP);
+            discountedPrice = discountedPrice.subtract(percentAmount).setScale(2, BigDecimal.ROUND_HALF_UP);
         } else {
-            discountedPrice = discountedPrice.subtract(promotionDiscount);
+
+            discountedPrice = discountedPrice.subtract(promotionDiscount).setScale(2, BigDecimal.ROUND_HALF_UP);
         }
 
-        return discountedPrice.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : discountedPrice;
+        if (discountedPrice.compareTo(BigDecimal.ZERO) < 0) {
+            discountedPrice = BigDecimal.ZERO.setScale(2, BigDecimal.ROUND_HALF_UP);
+        }
+
+        return discountedPrice;
     }
 
 
@@ -174,16 +179,13 @@ public class CartItemServiceImpl  implements CartItemService {
     private void updateTotalPrice(Cart cart) {
         BigDecimal newTotalPrice = cart.getCartItems().stream()
                 .filter(cartItem -> !cartItem.isDeleted())
-                .map(cartItem -> {
-                    BigDecimal itemTotalPrice = cartItem.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()));
-                    BigDecimal itemDiscount = cartItem.getDiscountPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()));
-                    return itemTotalPrice.subtract(itemDiscount);
-                })
+                .map(cartItem -> cartItem.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         cart.setTotalPrice(newTotalPrice.max(BigDecimal.ZERO));
         cart.setUpdatedAt(LocalDateTime.now());
         cartRepository.save(cart);
+
     }
 
 }
