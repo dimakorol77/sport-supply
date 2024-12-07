@@ -1,7 +1,7 @@
 -- Таблица users
---INSERT INTO users (id, email, password, name, phone_number, role, created_at, updated_at) VALUES
---(1, 'user1@example.com', 'password1', 'User One', '1234567890', 'USER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
---(2, 'admin@example.com', 'adminpassword', 'Admin User', '1112223333', 'ADMIN', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO users (id, email, password, name, phone_number, role, created_at, updated_at) VALUES
+(1, 'user1@example.com', '$2a$10$k0jMREhXMtnE/Hs9rL46JOIwaIo6XklE5s/VJo2DwKLaNDJkSdVTO', 'User One', '1234567890', 'USER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(2, 'admin@example.com', '$2a$10$k0jMREhXMtnE/Hs9rL46JOIwaIo6XklE5s/VJo2DwKLaNDJkSdVTO', 'Admin User', '1112223333', 'ADMIN', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Таблица brands
 INSERT INTO brands (id, name, description, created_at, updated_at) VALUES
@@ -24,39 +24,39 @@ INSERT INTO images (id, url, alt_text, created_at, updated_at, product_id) VALUE
 (2, 'http://example.com/image2.jpg', 'Image of Product Two', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 2);
 
 -- Таблица carts
---INSERT INTO carts (id, user_id, created_at, updated_at, total_price) VALUES
---(1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0.00),
---(2, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0.00);
+INSERT INTO carts (id, user_id, created_at, updated_at, total_price) VALUES
+(1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0.00),
+(2, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0.00);
 
 -- Таблица cart_items
---INSERT INTO cart_items (id, cart_id, product_id, quantity, price, discount_price, deleted) VALUES
---(1, 1, 1, 2, 19.99, 15.99, 0),
---(2, 2, 2, 1, 29.99, 24.99, 0);
+-- INSERT INTO cart_items (id, cart_id, product_id, quantity, price, discount_price, deleted) VALUES
+-- (1, 1, 1, 2, 19.99, 15.99, 0),
+-- (2, 2, 2, 1, 29.99, 24.99, 0);
 
 -- Таблица orders
---INSERT INTO orders (id, user_id, total_amount, status, delivery_method, delivery_address, contact_info, created_at, updated_at) VALUES
---(1, 1, 49.99, 'CREATED', 'COURIER', '123 Street, City', 'Contact Info 1', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
---(2, 2, 79.99, 'SHIPPED', 'PICKUP', '456 Avenue, City', 'Contact Info 2', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO orders (id, user_id, total_amount, status, delivery_method, delivery_address, contact_info, created_at, updated_at) VALUES
+(1, 1, 49.99, 'CREATED', 'COURIER', '123 Street, City', 'Contact Info 1', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(2, 2, 79.99, 'SHIPPED', 'PICKUP', '456 Avenue, City', 'Contact Info 2', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Таблица order_items
---INSERT INTO order_items (id, order_id, product_id, product_name, product_description, product_category_name, quantity, price) VALUES
---(1, 1, 1, 'ProductOne', 'Description of Product One', 'CategoryOne', 2, 19.99),
---(2, 2, 2, 'ProductTwo', 'Description of Product Two', 'CategoryTwo', 1, 29.99);
+INSERT INTO order_items (id, order_id, product_id, product_name, product_description, product_category_name, quantity, price) VALUES
+(1, 1, 1, 'ProductOne', 'Description of Product One', 'CategoryOne', 2, 19.99),
+(2, 2, 2, 'ProductTwo', 'Description of Product Two', 'CategoryTwo', 1, 29.99);
 
 -- Таблица order_status_histories
---INSERT INTO order_status_histories (id, order_id, status, changed_at) VALUES
---(1, 1, 'CREATED', CURRENT_TIMESTAMP),
---(2, 2, 'SHIPPED', CURRENT_TIMESTAMP);
+INSERT INTO order_status_histories (id, order_id, status, changed_at) VALUES
+(1, 1, 'CREATED', CURRENT_TIMESTAMP),
+(2, 2, 'SHIPPED', CURRENT_TIMESTAMP);
 
 -- Таблица payments
---INSERT INTO payments (id, order_id, amount, status, created_at, updated_at) VALUES
---(1, 1, 1, 'PENDING', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
---(2, 2, 1, 'COMPLETED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO payments (id, order_id, amount, status, created_at, updated_at) VALUES
+(1, 1, 1, 'PENDING', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(2, 2, 1, 'COMPLETED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Таблица reviews
---INSERT INTO reviews (id, user_id, product_id, rating, user_comment, created_at, updated_at) VALUES
---(1, 1, 1, 5, 'Great product!', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
---(2, 2, 2, 4, 'Good quality.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO reviews (id, user_id, product_id, rating, user_comment, created_at, updated_at) VALUES
+(1, 1, 1, 5, 'Great product!', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(2, 2, 2, 4, 'Good quality.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Таблица discounts
 INSERT INTO discounts (id, product_id, discount_price, start_date, end_date, created_at, updated_at) VALUES
@@ -73,6 +73,6 @@ INSERT INTO product_promotions (id, product_id, promotion_id) VALUES
 (2, 2, 1);
 
 -- Таблица favorites
---INSERT INTO favorites (id, user_id, product_id, added_at) VALUES
---(1, 1, 1, CURRENT_TIMESTAMP),
---(2, 2, 2, CURRENT_TIMESTAMP);
+INSERT INTO favorites (id, user_id, product_id, added_at) VALUES
+(1, 1, 1, CURRENT_TIMESTAMP),
+(2, 2, 2, CURRENT_TIMESTAMP);
