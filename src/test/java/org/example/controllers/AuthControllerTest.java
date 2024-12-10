@@ -93,12 +93,12 @@ public class AuthControllerTest {
 
         User user = new User();
         user.setEmail("loginuser@example.com");
-        user.setPassword(passwordEncoder.encode("password123")); // Зашифрованный пароль
+        user.setPassword(passwordEncoder.encode("password123")); // Encrypted password
         user.setName("Login User");
         user.setPhoneNumber("1234567890");
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
-        user.setRole(Role.USER); // Устанавливаем роль пользователя
+        user.setRole(Role.USER); // Setting the user's role
         userRepository.save(user);
 
 
