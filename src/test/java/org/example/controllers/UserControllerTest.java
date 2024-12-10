@@ -111,8 +111,8 @@ public class UserControllerTest {
     public void testUpdateUser() throws Exception {
         UserDto userDto = new UserDto();
         userDto.setName("Updated User");
-        userDto.setEmail("updateduser@example.com"); // Добавлено
-        userDto.setPassword("newpassword123"); // Добавлено
+        userDto.setEmail("updateduser@example.com");
+        userDto.setPassword("newpassword123");
 
         mockMvc.perform(put("/api/users/{id}", user.getId())
                         .header("Authorization", "Bearer " + userToken)

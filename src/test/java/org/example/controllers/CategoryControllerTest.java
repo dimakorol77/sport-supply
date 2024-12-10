@@ -59,7 +59,7 @@ public class CategoryControllerTest {
         categoryRepository.deleteAll();
         userRepository.deleteAll();
 
-        // Создание администратора
+
         adminUser = new User();
         adminUser.setEmail("admin@example.com");
         adminUser.setPassword(passwordEncoder.encode("adminpass"));
@@ -69,7 +69,7 @@ public class CategoryControllerTest {
         adminUser.setUpdatedAt(LocalDateTime.now());
         userRepository.save(adminUser);
 
-        // Генерация токена для администратора
+
         adminToken = jwtSecurityService.generateToken(
                 org.springframework.security.core.userdetails.User.builder()
                         .username(adminUser.getEmail())
@@ -97,7 +97,7 @@ public class CategoryControllerTest {
         category2.setUpdatedAt(LocalDateTime.now());
         categoryRepository.save(category2);
 
-        // Выполнение GET-запроса без авторизации
+        // Executing a GET request without authorization
         mockMvc.perform(get("/api/categories"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
@@ -107,7 +107,7 @@ public class CategoryControllerTest {
 
     @Test
     public void testGetCategoryById() throws Exception {
-        // Создание категории
+
         Category category = new Category();
         category.setName("Category1");
         category.setDescription("Description1");
@@ -115,7 +115,7 @@ public class CategoryControllerTest {
         category.setUpdatedAt(LocalDateTime.now());
         category = categoryRepository.save(category);
 
-        // Выполнение GET-запроса без авторизации
+        // Executing a GET request without authorization
         mockMvc.perform(get("/api/categories/{id}", category.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(category.getId().intValue())))
@@ -130,7 +130,7 @@ public class CategoryControllerTest {
         categoryDto.setDescription("NewDescription");
 
         mockMvc.perform(post("/api/categories")
-                        .header("Authorization", "Bearer " + adminToken) // Админ-токен обязателен
+                        .header("Authorization", "Bearer " + adminToken) // Admin token is required
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(categoryDto)))
                 .andExpect(status().isCreated())
@@ -153,7 +153,7 @@ public class CategoryControllerTest {
         categoryDto.setDescription("UpdatedDescription");
 
         mockMvc.perform(put("/api/categories/{id}", category.getId())
-                        .header("Authorization", "Bearer " + adminToken) // Админ-токен обязателен
+                        .header("Authorization", "Bearer " + adminToken) // Admin token is required
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(categoryDto)))
                 .andExpect(status().isOk())
@@ -172,7 +172,7 @@ public class CategoryControllerTest {
         category = categoryRepository.save(category);
 
         mockMvc.perform(delete("/api/categories/{id}", category.getId())
-                        .header("Authorization", "Bearer " + adminToken)) // Админ-токен обязателен
+                        .header("Authorization", "Bearer " + adminToken)) // Admin token is required
                 .andExpect(status().isNoContent());
     }
 }

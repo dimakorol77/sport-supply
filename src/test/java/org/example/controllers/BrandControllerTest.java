@@ -58,7 +58,7 @@ public class BrandControllerTest {
         brandRepository.deleteAll();
         userRepository.deleteAll();
 
-        // Создаем администратора
+
         adminUser = new User();
         adminUser.setEmail("admin@example.com");
         adminUser.setPassword(passwordEncoder.encode("adminpass"));
@@ -68,7 +68,7 @@ public class BrandControllerTest {
         adminUser.setUpdatedAt(LocalDateTime.now());
         userRepository.save(adminUser);
 
-        // Генерация токена администратора
+
         adminToken = jwtSecurityService.generateToken(
                 org.springframework.security.core.userdetails.User.builder()
                         .username(adminUser.getEmail())
@@ -79,7 +79,7 @@ public class BrandControllerTest {
 
     @Test
     public void testGetAllBrands() throws Exception {
-        // Создаем бренды
+
         Brand brand1 = new Brand();
         brand1.setName("Brand1");
         brand1.setDescription("Description1");
@@ -94,7 +94,7 @@ public class BrandControllerTest {
         brand2.setUpdatedAt(LocalDateTime.now());
         brandRepository.save(brand2);
 
-        // Выполняем GET запрос без авторизации (для гостей)
+        // Perform a GET request without authorization (for guests)
         mockMvc.perform(get("/api/brands"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
@@ -104,7 +104,7 @@ public class BrandControllerTest {
 
     @Test
     public void testGetBrandById() throws Exception {
-        // Создаем бренд
+
         Brand brand = new Brand();
         brand.setName("Brand1");
         brand.setDescription("Description1");
@@ -112,7 +112,7 @@ public class BrandControllerTest {
         brand.setUpdatedAt(LocalDateTime.now());
         brand = brandRepository.save(brand);
 
-        // Выполняем GET запрос без авторизации (для гостей)
+        // Perform a GET request without authorization (for guests)
         mockMvc.perform(get("/api/brands/{id}", brand.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(brand.getId().intValue())))
@@ -122,12 +122,12 @@ public class BrandControllerTest {
 
     @Test
     public void testCreateBrand_Success() throws Exception {
-        // Создаем DTO для бренда
+
         BrandDto brandDto = new BrandDto();
         brandDto.setName("NewBrand");
         brandDto.setDescription("NewDescription");
 
-        // Выполняем POST запрос с токеном администратора
+        // Perform a POST request with an administrator token
         mockMvc.perform(post("/api/brands")
                         .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -140,12 +140,12 @@ public class BrandControllerTest {
 
     @Test
     public void testCreateBrand_Forbidden() throws Exception {
-        // Создаем DTO для бренда
+
         BrandDto brandDto = new BrandDto();
         brandDto.setName("NewBrand");
         brandDto.setDescription("NewDescription");
 
-        // Выполняем POST запрос без токена
+        // Perform a GET request without authorization (for guests)
         mockMvc.perform(post("/api/brands")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(brandDto)))
@@ -154,7 +154,7 @@ public class BrandControllerTest {
 
     @Test
     public void testUpdateBrand_Success() throws Exception {
-        // Создаем бренд
+
         Brand brand = new Brand();
         brand.setName("Brand1");
         brand.setDescription("Description1");
@@ -162,12 +162,12 @@ public class BrandControllerTest {
         brand.setUpdatedAt(LocalDateTime.now());
         brand = brandRepository.save(brand);
 
-        // Создаем DTO для обновления бренда
+
         BrandDto brandDto = new BrandDto();
         brandDto.setName("UpdatedBrand");
         brandDto.setDescription("UpdatedDescription");
 
-        // Выполняем PUT запрос с токеном администратора
+        // Perform a PUT request with an administrator token
         mockMvc.perform(put("/api/brands/{id}", brand.getId())
                         .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -180,7 +180,7 @@ public class BrandControllerTest {
 
     @Test
     public void testDeleteBrand_Success() throws Exception {
-        // Создаем бренд
+
         Brand brand = new Brand();
         brand.setName("BrandToDelete");
         brand.setDescription("Description");
@@ -188,7 +188,7 @@ public class BrandControllerTest {
         brand.setUpdatedAt(LocalDateTime.now());
         brand = brandRepository.save(brand);
 
-        // Выполняем DELETE запрос с токеном администратора
+        // Perform a DELETE request with an administrator token
         mockMvc.perform(delete("/api/brands/{id}", brand.getId())
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isNoContent());
@@ -196,7 +196,7 @@ public class BrandControllerTest {
 
     @Test
     public void testDeleteBrand_Forbidden() throws Exception {
-        // Создаем бренд
+
         Brand brand = new Brand();
         brand.setName("BrandToDelete");
         brand.setDescription("Description");
@@ -204,7 +204,7 @@ public class BrandControllerTest {
         brand.setUpdatedAt(LocalDateTime.now());
         brand = brandRepository.save(brand);
 
-        // Выполняем DELETE запрос без токена
+        // Perform a DELETE request without token
         mockMvc.perform(delete("/api/brands/{id}", brand.getId()))
                 .andExpect(status().isForbidden());
     }

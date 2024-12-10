@@ -212,16 +212,16 @@ public class OrderItemControllerTest {
         product.setCreatedAt(LocalDateTime.now());
         product.setUpdatedAt(LocalDateTime.now());
 
-        // Установка и сохранение категории
+        // Setting and saving the category
         Category category = new Category();
         category.setName("Default Category");
         category.setDescription("Default Description");
         category.setCreatedAt(LocalDateTime.now());
         category.setUpdatedAt(LocalDateTime.now());
-        category = categoryRepository.save(category); // Сохраняем категорию в базе данных
+        category = categoryRepository.save(category);
         product.setCategory(category);
 
-        productRepository.save(product); // Сохраняем продукт
+        productRepository.save(product);
         return product;
     }
 

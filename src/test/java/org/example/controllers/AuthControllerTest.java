@@ -90,7 +90,7 @@ public class AuthControllerTest {
 
     @Test
     public void testAuthenticateUser_Success() throws Exception {
-        // Создание пользователя
+
         User user = new User();
         user.setEmail("loginuser@example.com");
         user.setPassword(passwordEncoder.encode("password123")); // Зашифрованный пароль
@@ -101,19 +101,19 @@ public class AuthControllerTest {
         user.setRole(Role.USER); // Устанавливаем роль пользователя
         userRepository.save(user);
 
-        // DTO для логина
+
         UserLoginDto loginDto = new UserLoginDto();
         loginDto.setEmail("loginuser@example.com");
         loginDto.setPassword("password123");
 
-        // Тестирование логина
+
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginDto)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accessToken", notNullValue())) // Проверяем, что accessToken присутствует
-                .andExpect(jsonPath("$.refreshToken", notNullValue())) // Проверяем, что refreshToken присутствует
-                .andExpect(jsonPath("$.tokenType", is("Bearer"))); // Проверяем, что тип токена Bearer
+                .andExpect(jsonPath("$.accessToken", notNullValue()))
+                .andExpect(jsonPath("$.refreshToken", notNullValue()))
+                .andExpect(jsonPath("$.tokenType", is("Bearer")));
     }
 
 

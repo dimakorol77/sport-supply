@@ -1,6 +1,5 @@
 package org.example.controllers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.enums.DeliveryMethod;
 import org.example.enums.OrderStatus;
 import org.example.enums.Role;
@@ -57,8 +56,6 @@ public class OrderControllerTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private ObjectMapper objectMapper;
 
     private String userToken;
     private String adminToken;
@@ -120,7 +117,7 @@ public class OrderControllerTest {
     @Test
     public void testGetOrdersByUser() throws Exception {
 
-        // Создаём уникального пользователя
+        // Creating a unique user
         String uniqueEmail = "user" + UUID.randomUUID() + "@example.com";
         User regularUser = new User();
         regularUser.setEmail(uniqueEmail);
@@ -131,7 +128,7 @@ public class OrderControllerTest {
         regularUser.setUpdatedAt(LocalDateTime.now());
         userRepository.save(regularUser);
 
-        // Генерируем токен для пользователя
+        // Generating a token for the user
         String userToken = jwtSecurityService.generateToken(
                 org.springframework.security.core.userdetails.User.builder()
                         .username(regularUser.getEmail())
@@ -140,19 +137,19 @@ public class OrderControllerTest {
                         .build()
         );
 
-        // Создаём заказ для пользователя regularUser
+        // Creating an order for the user regularUser
         Order order = new Order();
-        order.setUser(regularUser); // Привязываем заказ к правильному пользователю
+        order.setUser(regularUser); // Associating the order with the correct user
         order.setTotalAmount(BigDecimal.valueOf(100.0));
         order.setStatus(OrderStatus.CREATED);
-        order.setDeliveryMethod(DeliveryMethod.PICKUP); // Добавлено значение
+        order.setDeliveryMethod(DeliveryMethod.PICKUP);
         order.setCreatedAt(LocalDateTime.now());
         order.setUpdatedAt(LocalDateTime.now());
         orderRepository.save(order);
 
 
 
-        // Выполняем запрос
+
         mockMvc.perform(get("/api/orders/user")
                         .header("Authorization", "Bearer " + userToken)
                         .param("userId", regularUser.getId().toString()))

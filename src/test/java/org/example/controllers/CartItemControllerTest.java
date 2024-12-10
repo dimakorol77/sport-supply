@@ -66,7 +66,7 @@ public class CartItemControllerTest {
         productRepository.deleteAll();
         userRepository.deleteAll();
 
-        // Создаем пользователя
+
         user = new User();
         user.setEmail("user@example.com");
         user.setPassword(passwordEncoder.encode("password"));
@@ -76,14 +76,14 @@ public class CartItemControllerTest {
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
 
-        // Создаем корзину для пользователя
+
         cart = new Cart();
         cart.setUser(user);
         cart.setCreatedAt(LocalDateTime.now());
         cart.setUpdatedAt(LocalDateTime.now());
         cartRepository.save(cart);
 
-        // Генерируем JWT токен
+
         userToken = jwtSecurityService.generateToken(
                 org.springframework.security.core.userdetails.User.builder()
                         .username(user.getEmail())
@@ -94,7 +94,7 @@ public class CartItemControllerTest {
 
     @Test
     public void testAddItemToCart() throws Exception {
-        // Создаем продукт
+
         Product product = new Product();
         product.setName("Product1");
         product.setDescription("Description1");
@@ -103,7 +103,7 @@ public class CartItemControllerTest {
         product.setUpdatedAt(LocalDateTime.now());
         productRepository.save(product);
 
-        // Создаем DTO для добавления товара в корзину
+        // Create a DTO for adding a product to the cart
         CartItemDto cartItemDto = new CartItemDto();
         cartItemDto.setProductId(product.getId());
         cartItemDto.setQuantity(2);
@@ -121,7 +121,7 @@ public class CartItemControllerTest {
 
     @Test
     public void testUpdateCartItemQuantity() throws Exception {
-        // Создаем продукт
+
         Product product = new Product();
         product.setName("Product2");
         product.setDescription("Description2");
@@ -130,7 +130,7 @@ public class CartItemControllerTest {
         product.setUpdatedAt(LocalDateTime.now());
         productRepository.save(product);
 
-        // Создаем элемент корзины
+
         CartItem cartItem = new CartItem();
         cartItem.setCart(cart);
         cartItem.setProduct(product);
@@ -139,7 +139,7 @@ public class CartItemControllerTest {
         cartItem.setDeleted(false);
         cartItemRepository.save(cartItem);
 
-        // Обновляем количество товара в корзине
+        // Update the quantity of the product in the cart
         mockMvc.perform(put("/api/cart-items/items/{cartItemId}", cartItem.getId())
                         .header("Authorization", "Bearer " + userToken)
                         .param("quantity", "5"))
@@ -149,7 +149,7 @@ public class CartItemControllerTest {
 
     @Test
     public void testRemoveCartItem() throws Exception {
-        // Создаем продукт
+
         Product product = new Product();
         product.setName("Product3");
         product.setDescription("Description3");
@@ -158,7 +158,7 @@ public class CartItemControllerTest {
         product.setUpdatedAt(LocalDateTime.now());
         productRepository.save(product);
 
-        // Создаем элемент корзины
+
         CartItem cartItem = new CartItem();
         cartItem.setCart(cart);
         cartItem.setProduct(product);
@@ -167,14 +167,14 @@ public class CartItemControllerTest {
         cartItem.setDeleted(false);
         cartItemRepository.save(cartItem);
 
-        // Удаляем элемент из корзины
+        // Remove an item from the cart
         mockMvc.perform(delete("/api/cart-items/items/{cartItemId}", cartItem.getId())
                         .header("Authorization", "Bearer " + userToken))
                 .andExpect(status().isNoContent());
     }
     @Test
     public void testAddItemToNonExistingCart() throws Exception {
-        // Создаем продукт
+
         Product product = new Product();
         product.setName("Product4");
         product.setDescription("Description4");
@@ -183,13 +183,13 @@ public class CartItemControllerTest {
         product.setUpdatedAt(LocalDateTime.now());
         productRepository.save(product);
 
-        // Создаем DTO для добавления товара в корзину
+        // Create a DTO for adding a product to the cart
         CartItemDto cartItemDto = new CartItemDto();
         cartItemDto.setProductId(product.getId());
         cartItemDto.setQuantity(1);
 
-        // Пытаемся добавить товар в несуществующую корзину
-        mockMvc.perform(post("/api/cart-items/{cartId}/items", 9999L) // Несуществующий cartId
+        // Attempt to add a product to a non-existent cart
+        mockMvc.perform(post("/api/cart-items/{cartId}/items", 9999L) // Non-existent cartId
                         .header("Authorization", "Bearer " + userToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(cartItemDto)))

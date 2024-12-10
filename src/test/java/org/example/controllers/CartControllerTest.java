@@ -71,13 +71,13 @@ public class CartControllerTest {
 
 @BeforeEach
 public void setUp() {
-    // Удаляем все данные
+    // Delete all data
     cartItemRepository.deleteAll();
     cartRepository.deleteAll();
     productRepository.deleteAll();
     userRepository.deleteAll();
 
-    // Создаем и сохраняем пользователя
+    // Create and save a user
     user = new User();
     user.setEmail("user@example.com");
     user.setPassword(passwordEncoder.encode("password123"));
@@ -85,23 +85,23 @@ public void setUp() {
     user.setName("Test User");
     user.setCreatedAt(LocalDateTime.now());
     user.setUpdatedAt(LocalDateTime.now());
-    user = userRepository.save(user); // Сохраняем пользователя
+    user = userRepository.save(user);
 
-    // Создаем и сохраняем корзину
+    // Create and save a cart
     cart = new Cart();
-    cart.setUser(user); // Устанавливаем связь с пользователем
+    cart.setUser(user);
     cart.setCreatedAt(LocalDateTime.now());
     cart.setUpdatedAt(LocalDateTime.now());
     cart.setTotalPrice(BigDecimal.ZERO);
 
-    // Сохраняем корзину
-    cart = cartRepository.save(cart); // Сохраняем корзину
 
-    // Устанавливаем корзину у пользователя и сохраняем пользователя
+    cart = cartRepository.save(cart);
+
+    // Set the cart for the user and save the user
     user.setCart(cart);
     userRepository.save(user);
 
-    // Генерируем токен
+    // Generate userToken
     userToken = jwtSecurityService.generateToken(
             org.springframework.security.core.userdetails.User.builder()
                     .username(user.getEmail())
@@ -123,7 +123,7 @@ public void setUp() {
 
     @Test
     public void testConvertCartToOrder() throws Exception {
-        // Создаем продукт и сохраняем его
+        // Create a product and save it
         Product product = new Product();
         product.setName("Product1");
         product.setDescription("Description1");
@@ -132,7 +132,7 @@ public void setUp() {
         product.setUpdatedAt(LocalDateTime.now());
         product = productRepository.save(product);
 
-        // Создаем и сохраняем элемент корзины
+        // Create and save a cart item
         CartItem cartItem = new CartItem();
         cartItem.setCart(cart);
         cartItem.setProduct(product);
@@ -141,19 +141,19 @@ public void setUp() {
         cartItem.setDeleted(false);
         cartItem = cartItemRepository.save(cartItem);
 
-        // Инициализируем коллекцию cartItems, если она null
+        // Initialize the cartItems collection if it is null
         if (cart.getCartItems() == null) {
             cart.setCartItems(new ArrayList<>());
         }
 
-        // Добавляем cartItem в коллекцию cartItems корзины
+        // Add cartItem to the cart's cartItems collection
         cart.getCartItems().add(cartItem);
 
-        // Обновляем общую стоимость корзины
+        // Update the total cost of the cart
         cart.setTotalPrice(product.getPrice());
         cartRepository.save(cart);
 
-        // Создаем OrderCreateDto
+
         OrderCreateDto orderCreateDto = new OrderCreateDto();
         orderCreateDto.setDeliveryMethod(DeliveryMethod.COURIER);
         orderCreateDto.setDeliveryAddress("123 Street");
@@ -180,19 +180,19 @@ public void setUp() {
 
     @Test
     public void testCartUserRelationship() {
-        // Извлекаем корзину из базы данных
+        // Retrieve the cart from the database
         Cart retrievedCart = cartRepository.findById(cart.getId()).orElse(null);
         assertNotNull(retrievedCart, "Корзина не должна быть null");
 
-        // Проверяем, что у корзины установлен пользователь
+        // Verify that the cart has a user assigned
         assertNotNull(retrievedCart.getUser(), "У корзины должен быть установлен пользователь");
         assertEquals(user.getId(), retrievedCart.getUser().getId(), "ID пользователя в корзине должен совпадать");
 
-        // Извлекаем пользователя из базы данных
+        // Retrieve the user from the database
         User retrievedUser = userRepository.findById(user.getId()).orElse(null);
         assertNotNull(retrievedUser, "Пользователь не должен быть null");
 
-        // Проверяем, что у пользователя установлена корзина
+        // Verify that the user has a cart assigned
         assertNotNull(retrievedUser.getCart(), "У пользователя должна быть установлена корзина");
         assertEquals(cart.getId(), retrievedUser.getCart().getId(), "ID корзины у пользователя должен совпадать");
     }

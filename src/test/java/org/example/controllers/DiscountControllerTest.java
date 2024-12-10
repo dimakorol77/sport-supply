@@ -57,7 +57,7 @@ public class DiscountControllerTest {
     private ObjectMapper objectMapper;
 
     private String adminToken;
-    private String userToken; // Добавлен токен для пользователя без роли ADMIN
+    private String userToken;
     private User adminUser;
     private User regularUser;
     private Product product;
@@ -68,7 +68,7 @@ public class DiscountControllerTest {
         productRepository.deleteAll();
         userRepository.deleteAll();
 
-        // Создаем администратора
+
         adminUser = new User();
         adminUser.setEmail("admin@example.com");
         adminUser.setPassword(passwordEncoder.encode("adminpass"));
@@ -86,7 +86,7 @@ public class DiscountControllerTest {
                         .build()
         );
 
-        // Создаем обычного пользователя
+
         regularUser = new User();
         regularUser.setEmail("user@example.com");
         regularUser.setPassword(passwordEncoder.encode("userpass"));
@@ -125,7 +125,7 @@ public class DiscountControllerTest {
         discount.setUpdatedAt(LocalDateTime.now());
         discountRepository.save(discount);
 
-        // GET запрос без авторизации
+        // GET request without authorization
         mockMvc.perform(get("/api/discounts"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)));
@@ -139,7 +139,7 @@ public class DiscountControllerTest {
         discountDto.setStartDate(LocalDateTime.now().minusDays(1));
         discountDto.setEndDate(LocalDateTime.now().plusDays(1));
 
-        // POST запрос от пользователя без роли ADMIN
+        // POST request from a user without the ADMIN role
         mockMvc.perform(post("/api/discounts")
                         .header("Authorization", "Bearer " + userToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -164,7 +164,7 @@ public class DiscountControllerTest {
         discountDto.setStartDate(LocalDateTime.now());
         discountDto.setEndDate(LocalDateTime.now().plusDays(2));
 
-        // PUT запрос от пользователя без роли ADMIN
+        // PUT request from a user without the ADMIN role
         mockMvc.perform(put("/api/discounts/{id}", discount.getId())
                         .header("Authorization", "Bearer " + userToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -183,7 +183,7 @@ public class DiscountControllerTest {
         discount.setUpdatedAt(LocalDateTime.now());
         discount = discountRepository.save(discount);
 
-        // DELETE запрос от пользователя без роли ADMIN
+        // DELETE request from a user without the ADMIN role
         mockMvc.perform(delete("/api/discounts/{id}", discount.getId())
                         .header("Authorization", "Bearer " + userToken))
                 .andExpect(status().isForbidden());
@@ -196,7 +196,7 @@ public class DiscountControllerTest {
         discountDto.setStartDate(LocalDateTime.now().minusDays(1));
         discountDto.setEndDate(LocalDateTime.now().plusDays(1));
 
-        // POST запрос от администратора
+        // POST request from an administrator
         mockMvc.perform(post("/api/discounts")
                         .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -224,7 +224,7 @@ public class DiscountControllerTest {
         discountDto.setStartDate(LocalDateTime.now());
         discountDto.setEndDate(LocalDateTime.now().plusDays(2));
 
-        // PUT запрос от администратора
+        // PUT request from an administrator
         mockMvc.perform(put("/api/discounts/{id}", discount.getId())
                         .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -245,7 +245,7 @@ public class DiscountControllerTest {
         discount.setUpdatedAt(LocalDateTime.now());
         discount = discountRepository.save(discount);
 
-        // DELETE запрос от администратора
+        // DELETE request from an administrator
         mockMvc.perform(delete("/api/discounts/{id}", discount.getId())
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isNoContent());

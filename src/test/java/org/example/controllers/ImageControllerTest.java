@@ -118,7 +118,7 @@ public class ImageControllerTest {
 
     @Test
     public void testGetImagesByProductIdForUser() throws Exception {
-        // Создание тестового изображения
+        // Creating a test image
         Image image = new Image();
         image.setProduct(product);
         image.setUrl("/uploads/images/test.jpg");
@@ -127,7 +127,7 @@ public class ImageControllerTest {
         image.setUpdatedAt(LocalDateTime.now());
         imageRepository.save(image);
 
-        // Генерация токена обычного пользователя
+        // Generating a regular user token
         User regularUser = new User();
         regularUser.setEmail("user@example.com");
         regularUser.setPassword(passwordEncoder.encode("userpass"));
@@ -145,9 +145,9 @@ public class ImageControllerTest {
                         .build()
         );
 
-        // Выполнение запроса от имени обычного пользователя
+        // Executing a request on behalf of a regular user
         mockMvc.perform(get("/images/product/{productId}", product.getId())
-                        .header("Authorization", "Bearer " + userToken)) // Используем токен обычного пользователя
+                        .header("Authorization", "Bearer " + userToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].url", is("/uploads/images/test.jpg")))
@@ -156,7 +156,7 @@ public class ImageControllerTest {
 
     @Test
     public void testGetImagesByProductIdForGuest() throws Exception {
-        // Создание тестового изображения
+        // Creating a test image
         Image image = new Image();
         image.setProduct(product);
         image.setUrl("/uploads/images/test.jpg");
@@ -165,7 +165,7 @@ public class ImageControllerTest {
         image.setUpdatedAt(LocalDateTime.now());
         imageRepository.save(image);
 
-        // Выполнение запроса без авторизации
+        // Executing a request without authorization
         mockMvc.perform(get("/images/product/{productId}", product.getId())) // Без токена
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))

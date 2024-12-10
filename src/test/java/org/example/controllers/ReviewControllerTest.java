@@ -172,7 +172,7 @@ public class ReviewControllerTest {
     @Test
     public void testGetReviewsByProductId() throws Exception {
         mockMvc.perform(get("/api/reviews/product/{productId}", product.getId())
-                        .header("Authorization", "Bearer " + userToken)) // Используем userToken
+                        .header("Authorization", "Bearer " + userToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].userComment", is("Good product")));
     }
@@ -184,7 +184,7 @@ public class ReviewControllerTest {
         mockMvc.perform(get("/api/reviews/user/{userId}", user.getId())
                         .header("Authorization", "Bearer " + userToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].userComment", is("Good product"))); // Исправлено на userComment
+                .andExpect(jsonPath("$[0].userComment", is("Good product")));
     }
 
 }
