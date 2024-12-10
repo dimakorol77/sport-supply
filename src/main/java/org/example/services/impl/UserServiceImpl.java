@@ -5,7 +5,7 @@ import org.example.dto.*;
 import org.example.enums.Role;
 import org.example.exceptions.IdNotFoundException;
 import org.example.exceptions.UserAlreadyExistsException;
-import org.example.exceptions.UserNotFoundException;
+
 import org.example.exceptions.errorMessage.ErrorMessage;
 import org.example.mappers.UserMapper;
 import org.example.models.User;
@@ -15,11 +15,9 @@ import org.example.services.interfaces.CartService;
 import org.example.services.interfaces.UserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import org.springframework.security.access.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service

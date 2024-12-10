@@ -1,19 +1,13 @@
 package org.example.services.impl;
 
-import org.example.dto.DiscountDto;
+
 import org.example.dto.ProductDto;
-import org.example.dto.PromotionDto;
+
 import org.example.exceptions.ProductAlreadyExistsException;
 import org.example.exceptions.ProductNotFoundException;
 import org.example.exceptions.errorMessage.ErrorMessage;
-import org.example.mappers.DiscountMapper;
 import org.example.mappers.ProductMapper;
-import org.example.mappers.PromotionMapper;
-import org.example.models.Discount;
 import org.example.models.Product;
-import org.example.models.ProductPromotion;
-import org.example.repositories.DiscountRepository;
-import org.example.repositories.ProductPromotionRepository;
 import org.example.repositories.ProductRepository;
 import org.example.services.interfaces.ProductService;
 import org.example.specifications.ProductSpecification;
@@ -23,7 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
+
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -64,7 +58,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductDto createProduct(@Validated(ProductDto.OnCreate.class) ProductDto productDto) {
+    public ProductDto createProduct(ProductDto productDto) {
 
         productRepository.findByName(productDto.getName()).ifPresent(product -> {
             throw new ProductAlreadyExistsException(ErrorMessage.PRODUCT_ALREADY_EXISTS);

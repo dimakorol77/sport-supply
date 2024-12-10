@@ -7,7 +7,7 @@ import org.example.models.CartItem;
 import org.example.models.Product;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
+
 
 @Component
 public class CartItemMapper {

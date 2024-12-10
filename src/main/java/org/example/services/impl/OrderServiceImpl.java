@@ -4,7 +4,6 @@ import jakarta.transaction.Transactional;
 import org.example.dto.OrderDto;
 import org.example.enums.DeliveryMethod;
 import org.example.enums.OrderStatus;
-import org.example.enums.PaymentStatus;
 import org.example.enums.Role;
 import org.example.exceptions.*;
 import org.example.exceptions.errorMessage.ErrorMessage;
@@ -14,15 +13,12 @@ import org.example.models.*;
 import org.example.repositories.*;
 import org.example.security.SecurityUtils;
 import org.example.services.interfaces.OrderService;
-import org.example.services.interfaces.PaymentService;
-import org.example.services.interfaces.UserService;
 import org.springframework.stereotype.Service;
 import org.example.dto.OrderCreateDto;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 

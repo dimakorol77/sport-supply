@@ -36,14 +36,4 @@ public class ProductSpecification {
     }
 
 
-    public static Specification<Product> sortBy(String field, boolean asc) {
-        return (root, query, criteriaBuilder) -> {
-            if (asc) {
-                query.orderBy(criteriaBuilder.asc(root.get(field)));
-            } else {
-                query.orderBy(criteriaBuilder.desc(root.get(field)));
-            }
-            return criteriaBuilder.conjunction();
-        };
-    }
 }

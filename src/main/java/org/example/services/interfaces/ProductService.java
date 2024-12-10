@@ -1,6 +1,6 @@
 package org.example.services.interfaces;
 
-import org.example.dto.DiscountDto;
+
 import org.example.dto.ProductDto;
 
 import java.math.BigDecimal;

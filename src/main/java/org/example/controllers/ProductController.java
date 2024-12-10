@@ -1,12 +1,9 @@
 package org.example.controllers;
 
-import jakarta.validation.Valid;
+
 import org.example.annotations.ProductAnnotations.*;
-import org.example.dto.DiscountDto;
 import org.example.dto.ProductDto;
-import org.example.dto.PromotionDto;
 import org.example.services.interfaces.ProductService;
-import org.example.services.interfaces.PromotionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;

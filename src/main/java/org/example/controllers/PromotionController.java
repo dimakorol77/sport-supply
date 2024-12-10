@@ -1,6 +1,6 @@
 package org.example.controllers;
 
-import jakarta.validation.Valid;
+
 import org.example.annotations.PromotionAnnotations.*;
 import org.example.dto.PromotionDto;
 import org.example.services.interfaces.PromotionService;

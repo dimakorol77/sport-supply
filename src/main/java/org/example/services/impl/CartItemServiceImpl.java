@@ -18,7 +18,6 @@ import org.example.repositories.ProductRepository;
 import org.example.security.SecurityUtils;
 import org.example.services.interfaces.CartItemService;
 import org.example.services.interfaces.DiscountService;
-import org.example.services.interfaces.ProductService;
 import org.example.services.interfaces.PromotionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

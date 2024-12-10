@@ -19,7 +19,6 @@ import org.example.repositories.OrderStatusHistoryRepository;
 import org.example.repositories.PaymentRepository;
 import org.example.security.SecurityUtils;
 import org.example.services.interfaces.PaymentService;
-import org.example.services.interfaces.UserService;
 import org.springframework.stereotype.Service;
 import org.springframework.security.access.AccessDeniedException;
 
