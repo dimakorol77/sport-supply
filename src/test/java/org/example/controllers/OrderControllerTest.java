@@ -236,7 +236,7 @@ public class OrderControllerTest {
 
         mockMvc.perform(get("/api/orders/created-after")
                         .header("Authorization", "Bearer " + adminToken)
-                        .param("date", formattedDate)) // Дата в формате ISO 8601
+                        .param("date", formattedDate))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id", is(order.getId().intValue())))
                 .andExpect(jsonPath("$[0].createdAt", notNullValue()));

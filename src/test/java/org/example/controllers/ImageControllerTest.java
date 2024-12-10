@@ -110,7 +110,7 @@ public class ImageControllerTest {
                         .content(imageUrl)
                         .contentType("text/plain"))
                 .andExpect(status().isOk())
-                // Проверяем, что возвращается URL сохраненного изображения
+
                 .andExpect(jsonPath("$.url", containsString("/uploads/images/")))
                 .andExpect(jsonPath("$.productId", is(product.getId().intValue())));
     }
@@ -166,7 +166,7 @@ public class ImageControllerTest {
         imageRepository.save(image);
 
         // Executing a request without authorization
-        mockMvc.perform(get("/images/product/{productId}", product.getId())) // Без токена
+        mockMvc.perform(get("/images/product/{productId}", product.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].url", is("/uploads/images/test.jpg")))

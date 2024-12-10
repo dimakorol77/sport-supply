@@ -96,7 +96,7 @@ public class PaymentControllerTest {
         order.setStatus(OrderStatus.WAITING_PAYMENT);
         order.setCreatedAt(LocalDateTime.now());
         order.setUpdatedAt(LocalDateTime.now());
-        order.setDeliveryMethod(DeliveryMethod.PICKUP); // Или другой подходящий метод доставки
+        order.setDeliveryMethod(DeliveryMethod.PICKUP);
 
         orderRepository.save(order);
 
@@ -158,7 +158,7 @@ public class PaymentControllerTest {
         payment.setUpdatedAt(LocalDateTime.now());
         paymentRepository.save(payment);
 
-        mockMvc.perform(patch("/api/payment/{paymentId}/status", payment.getId()) // Здесь используем PATCH
+        mockMvc.perform(patch("/api/payment/{paymentId}/status", payment.getId())
                         .header("Authorization", "Bearer " + adminToken)
                         .param("status", "COMPLETED"))
                 .andExpect(status().isOk());
